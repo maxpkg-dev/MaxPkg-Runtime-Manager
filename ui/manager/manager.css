@@ -570,34 +570,7 @@
 }
 
 .context-menu {
-    position: fixed;
-    z-index: 800;
     width: 190px;
-    padding: 5px;
-    border: 1px solid #565d67;
-    border-radius: 5px;
-    background: #333840;
-    box-shadow: 0 4px 16px #15171a;
-}
-
-.context-menu button,
-.context-menu a {
-    display: block;
-    width: 100%;
-    min-height: 29px;
-    padding: 5px 8px;
-    border: 0;
-    background: transparent;
-    color: #d9dde4;
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.context-menu button:hover,
-.context-menu a:hover {
-    background: #4a5d81;
-    color: #fff;
 }
 
 .context-menu a.context-danger {

@@ -15,7 +15,7 @@
 
         fn reloadRuntime = (
             local startupFile = runtimeRoot + "startup.ms"
-            if not (doesFileExist startupFile) do return false
+            if (not (doesFileExist startupFile)) do return false
             try (
                 local isReloaded = fileIn startupFile
                 return isReloaded == true and MaxPkg != undefined
@@ -26,11 +26,11 @@
         ),
 
         fn update = (
-            if owner.settings.runtimeUpdateUrl == "" do (
+            if (owner.settings.runtimeUpdateUrl == "") do (
                 logger.logInfo "self-updater" "RuntimeUrl is not configured; staying offline"
                 return false
             )
-            if not (operations.begin "selfUpdate") do return false
+            if (not (operations.begin "selfUpdate")) do return false
             local isSuccess = false
             try (
                 isSuccess = installer.installSource owner.settings.runtimeUpdateUrl
@@ -38,8 +38,8 @@
                 logger.logError "self-updater" ("Self-update operation failed: " + getCurrentException())
                 isSuccess = false
             )
-            operations.finish success:isSuccess
-            if isSuccess do isSuccess = reloadRuntime()
+            operations.finish success: isSuccess
+            if (isSuccess) do isSuccess = reloadRuntime()
             return isSuccess
         )
     )

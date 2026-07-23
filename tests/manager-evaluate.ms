@@ -10,9 +10,9 @@
     local runtimeRoot = getFilenamePath (substring testRoot 1 (testRoot.count - 1))
     local startupFile = runtimeRoot + "startup.ms"
 
-    if not (fileIn startupFile) do throw "MaxPkg Runtime startup failed."
-    if MaxPkg == undefined or not (MaxPkg.isStarted()) do throw "MaxPkg Runtime is not ready."
-    if not (MaxPkg.openManager()) do throw "MaxPkg Manager could not be opened."
+    if (not (fileIn startupFile)) do throw "MaxPkg Runtime startup failed."
+    if (MaxPkg == undefined or not (MaxPkg.isStarted())) do throw "MaxPkg Runtime is not ready."
+    if (not (MaxPkg.openManager())) do throw "MaxPkg Manager could not be opened."
 
     format "MAXPKG_MANAGER_READY\n"
     true

@@ -15,7 +15,7 @@
 
         fn runHook package = (
             local hookPath = package.installPath + package.uninstall
-            if package.uninstall == "" or not (doesFileExist hookPath) do return true
+            if (package.uninstall == "" or not (doesFileExist hookPath)) do return true
             try (
                 fileIn hookPath
                 return true
@@ -26,11 +26,11 @@
         ),
 
         fn isSafePackageFolder package = (
-            if package.installPath == "" or package.manifestPath == "" or not (doesFileExist package.manifestPath) do (
+            if (package.installPath == "" or package.manifestPath == "" or not (doesFileExist package.manifestPath)) do (
                 logger.logError "uninstaller" ("Refused unresolved package path for " + package.guid)
                 return false
             )
-            if not (utils.pathInside package.manifestPath package.installPath) do (
+            if (not (utils.pathInside package.manifestPath package.installPath)) do (
                 logger.logError "uninstaller" ("Manifest is outside package folder: " + package.manifestPath)
                 return false
             )
@@ -47,8 +47,8 @@
         ),
 
         fn removeFolder package = (
-            if not (doesDirectoryExist package.installPath) do return true
-            if not (isSafePackageFolder package) do return false
+            if (not (doesDirectoryExist package.installPath)) do return true
+            if (not (isSafePackageFolder package)) do return false
             try (
                 local directoryClass = dotNetClass "System.IO.Directory"
                 directoryClass.Delete package.installPath true
@@ -60,15 +60,15 @@
         ),
 
         fn uninstall package = (
-            if package == undefined do return false
-            if not (operations.begin "uninstall" packageGuid:package.guid) do return false
+            if (package == undefined) do return false
+            if (not (operations.begin "uninstall" packageGuid: package.guid)) do return false
             local isSuccess = false
             try (
                 isSuccess = isSafePackageFolder package
-                if isSuccess do isSuccess = runHook package
-                if isSuccess do isSuccess = removeFolder package
+                if (isSuccess) do isSuccess = runHook package
+                if (isSuccess) do isSuccess = removeFolder package
                 owner.scan()
-                if api.contains owner.packages package.guid do isSuccess = false
+                if (api.contains owner.packages package.guid) do isSuccess = false
                 owner.rebuildToolbar()
                 try (
                     manager.refresh()
@@ -79,7 +79,7 @@
                 logger.logError "uninstaller" ("Uninstall operation failed for " + package.guid + ": " + getCurrentException())
                 isSuccess = false
             )
-            return operations.finish success:isSuccess
+            return operations.finish success: isSuccess
         )
     )
 

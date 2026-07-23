@@ -14,14 +14,14 @@
         utils,
 
         fn isUrl sourceContent = (
-            if sourceContent == undefined or sourceContent == "" do return false
-            return ((matchPattern sourceContent pattern:"http://*" ignoreCase:true) or (matchPattern sourceContent pattern:"https://*" ignoreCase:true))
+            if (sourceContent == undefined or sourceContent == "") do return false
+            return ((matchPattern sourceContent pattern: "http://*" ignoreCase: true) or (matchPattern sourceContent pattern: "https://*" ignoreCase: true))
         ),
 
         fn expectedGuid packageSource = (
-            if packageSource == undefined or packageSource == "" do return ""
+            if (packageSource == undefined or packageSource == "") do return ""
             local sourcePath = packageSource as string
-            if isUrl sourcePath do (
+            if (isUrl sourcePath) do (
                 try (
                     local sourceUri = dotNetObject "System.Uri" sourcePath
                     sourcePath = sourceUri.LocalPath
@@ -30,12 +30,12 @@
                 )
             )
             local nameParts = filterString (getFilenameFile sourcePath) "@"
-            if nameParts.count < 3 do return ""
+            if (nameParts.count < 3) do return ""
             return nameParts[nameParts.count]
         ),
 
         fn cleanupDownload downloadPath = (
-            if downloadPath == "" or not (doesFileExist downloadPath) do return true
+            if (downloadPath == "" or not (doesFileExist downloadPath)) do return true
             try (
                 deleteFile downloadPath
                 return not (doesFileExist downloadPath)
@@ -46,24 +46,24 @@
         ),
 
         fn installSource packageSource = (
-            if packageSource == undefined or packageSource == "" do (
+            if (packageSource == undefined or packageSource == "") do (
                 logger.logError "installer" "Package source is empty."
                 return false
             )
             local sourcePath = packageSource as string
             local downloadPath = ""
-            if isUrl sourcePath do (
+            if (isUrl sourcePath) do (
                 local guidClass = dotNetClass "System.Guid"
                 local guidValue = guidClass.NewGuid()
                 local downloadId = guidValue.ToString()
                 downloadPath = (utils.ensureSlash (getDir #temp)) + "maxpkg-download-" + downloadId + ".mzp"
-                if not (http.download sourcePath downloadPath) do (
+                if (not (http.download sourcePath downloadPath)) do (
                     cleanupDownload downloadPath
                     return false
                 )
                 sourcePath = downloadPath
             )
-            if not (doesFileExist sourcePath) do (
+            if (not (doesFileExist sourcePath)) do (
                 logger.logError "installer" ("Package file not found: " + sourcePath)
                 return false
             )
@@ -76,20 +76,20 @@
                 logger.logError "installer" ("Installation failed: " + getCurrentException())
                 isInstalled = false
             )
-            if downloadPath != "" do cleanupDownload downloadPath
+            if (downloadPath != "") do cleanupDownload downloadPath
             return isInstalled
         ),
 
         fn install packageSource = (
-            if not (operations.begin "install") do return false
+            if (not (operations.begin "install")) do return false
             local isSuccess = false
             try (
                 local packageCountBefore = owner.packages.count
                 local packageGuid = expectedGuid packageSource
                 isSuccess = installSource packageSource
                 owner.scan()
-                if isSuccess do (
-                    if packageGuid != "" then
+                if (isSuccess) do (
+                    if (packageGuid != "") then
                         isSuccess = api.contains owner.packages packageGuid
                     else
                         isSuccess = owner.packages.count >= packageCountBefore
@@ -104,7 +104,7 @@
                 logger.logError "installer" ("Install operation failed: " + getCurrentException())
                 isSuccess = false
             )
-            return operations.finish success:isSuccess
+            return operations.finish success: isSuccess
         )
     )
 

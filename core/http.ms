@@ -8,26 +8,26 @@
         logger,
 
         fn download url targetPath = (
-            if url == undefined or url == "" or targetPath == undefined or targetPath == "" do return false
+            if (url == undefined or url == "" or targetPath == undefined or targetPath == "") do return false
             local client = undefined
             try (
-                makeDir (getFilenamePath targetPath) all:true
+                makeDir (getFilenamePath targetPath) all: true
                 client = dotNetObject "System.Net.WebClient"
                 client.Headers.Add "User-Agent" "MaxPkg-Runtime/1.0"
                 client.DownloadFile url targetPath
                 client.Dispose()
                 client = undefined
                 local isDownloaded = doesFileExist targetPath
-                if not isDownloaded do logger.logError "http" ("Download completed without a file: " + targetPath)
+                if (not isDownloaded) do logger.logError "http" ("Download completed without a file: " + targetPath)
                 return isDownloaded
             ) catch (
                 logger.logError "http" ("Download failed: " + getCurrentException())
                 try (
-                    if client != undefined do client.Dispose()
+                    if (client != undefined) do client.Dispose()
                 ) catch (
                 )
                 try (
-                    if doesFileExist targetPath do deleteFile targetPath
+                    if (doesFileExist targetPath) do deleteFile targetPath
                 ) catch (
                 )
                 return false
@@ -35,8 +35,8 @@
         ),
 
         fn post url body = (
-            if url == undefined or url == "" do return undefined
-            if body == undefined do body = ""
+            if (url == undefined or url == "") do return undefined
+            if (body == undefined) do body = ""
             local client = undefined
             try (
                 client = dotNetObject "System.Net.WebClient"
@@ -48,7 +48,7 @@
             ) catch (
                 logger.logError "http" ("Request failed: " + getCurrentException())
                 try (
-                    if client != undefined do client.Dispose()
+                    if (client != undefined) do client.Dispose()
                 ) catch (
                 )
                 return undefined

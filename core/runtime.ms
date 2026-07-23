@@ -7,9 +7,9 @@
     global MaxPkg
 
     local previousRuntime = MaxPkg
-    if previousRuntime != undefined do (
+    if (previousRuntime != undefined) do (
         local isPreviousRuntimeReleased = false
-        if isProperty previousRuntime #shutdown then (
+        if (isProperty previousRuntime #shutdown) then (
             try (
                 isPreviousRuntimeReleased = previousRuntime.shutdown()
             ) catch (
@@ -17,7 +17,7 @@
             )
         ) else (
             try (
-                if isProperty previousRuntime #settings and previousRuntime.settings != undefined and isProperty previousRuntime #rebuildToolbar then (
+                if (isProperty previousRuntime #settings and previousRuntime.settings != undefined and isProperty previousRuntime #rebuildToolbar) then (
                     local previousToolbarVisibility = previousRuntime.settings.toolbarVisible
                     previousRuntime.settings.toolbarVisible = false
                     isPreviousRuntimeReleased = previousRuntime.rebuildToolbar()
@@ -29,41 +29,41 @@
                 format "MaxPkg could not release the legacy Runtime toolbar: %\n" (getCurrentException())
             )
         )
-        if not isPreviousRuntimeReleased do throw "The previous MaxPkg Runtime UI could not be released. Restart 3ds Max before reloading."
+        if (not isPreviousRuntimeReleased) do throw "The previous MaxPkg Runtime UI could not be released. Restart 3ds Max before reloading."
         MaxPkg = undefined
     )
 
     local sourcePath = getSourceFileName()
-    if sourcePath == undefined or sourcePath == "" do sourcePath = getThisScriptFileName()
+    if (sourcePath == undefined or sourcePath == "") do sourcePath = getThisScriptFileName()
     local coreRoot = getFilenamePath sourcePath
     local runtimeRoot = getFilenamePath (substring coreRoot 1 (coreRoot.count - 1))
 
-    local utilsModule = fileIn (coreRoot + "utils.ms")
-    local iniModule = fileIn (coreRoot + "ini.ms")
-    local loggerModule = fileIn (coreRoot + "logger.ms")
+    local utilsModule = fileIn (coreRoot + @"utils.ms")
+    local iniModule = fileIn (coreRoot + @"ini.ms")
+    local loggerModule = fileIn (coreRoot + @"logger.ms")
     loggerModule.initialize runtimeRoot
     iniModule.logger = loggerModule
-    local settingsModule = fileIn (coreRoot + "settings.ms")
+    local settingsModule = fileIn (coreRoot + @"settings.ms")
     settingsModule.utils = utilsModule
     settingsModule.ini = iniModule
     settingsModule.logger = loggerModule
-    local scannerModule = fileIn (coreRoot + "scanner.ms")
+    local scannerModule = fileIn (coreRoot + @"scanner.ms")
     scannerModule.utils = utilsModule
     scannerModule.ini = iniModule
     scannerModule.logger = loggerModule
-    local launcherModule = fileIn (coreRoot + "launcher.ms")
+    local launcherModule = fileIn (coreRoot + @"launcher.ms")
     launcherModule.logger = loggerModule
-    local operationModule = fileIn (coreRoot + "operations.ms")
+    local operationModule = fileIn (coreRoot + @"operations.ms")
     operationModule.logger = loggerModule
-    local httpModule = fileIn (coreRoot + "http.ms")
+    local httpModule = fileIn (coreRoot + @"http.ms")
     httpModule.logger = loggerModule
-    local apiModule = fileIn (coreRoot + "api.ms")
-    local toolbarModule = fileIn (coreRoot + "toolbar.ms")
-    local managerModule = fileIn (runtimeRoot + "ui\\manager\\manager.ms")
-    local installerModule = fileIn (coreRoot + "installer.ms")
-    local uninstallerModule = fileIn (coreRoot + "uninstaller.ms")
-    local updaterModule = fileIn (coreRoot + "updater.ms")
-    local selfUpdaterModule = fileIn (coreRoot + "self-updater.ms")
+    local apiModule = fileIn (coreRoot + @"api.ms")
+    local toolbarModule = fileIn (coreRoot + @"toolbar.ms")
+    local managerModule = fileIn (runtimeRoot + @"ui\manager\manager.ms")
+    local installerModule = fileIn (coreRoot + @"installer.ms")
+    local uninstallerModule = fileIn (coreRoot + @"uninstaller.ms")
+    local updaterModule = fileIn (coreRoot + @"updater.ms")
+    local selfUpdaterModule = fileIn (coreRoot + @"self-updater.ms")
 
     struct MaxPkgRuntimeStatusData (
         isStarted = false,
@@ -83,9 +83,9 @@
         started = false,
 
         fn packageRoots = (
-            local roots = #((getDir #temp), runtimeRoot + "data\\packages")
-            if settings != undefined do join roots settings.packageRoots
-            return utilsModule.uniqueStrings roots
+            local rootPaths = #((getDir #temp), runtimeRoot + @"data\packages")
+            if (settings != undefined) do join rootPaths settings.packageRoots
+            return utilsModule.uniqueStrings rootPaths
         ),
 
         fn refreshManager context = (
@@ -107,7 +107,7 @@
             settings = undefined
             operation = undefined
             operationModule.current = undefined
-            if isManagerClosed and isToolbarClosed then
+            if (isManagerClosed and isToolbarClosed) then
                 loggerModule.logInfo "shutdown" "MaxPkg Runtime UI was released"
             else
                 loggerModule.logError "shutdown" "MaxPkg Runtime UI could not be fully released"
@@ -130,14 +130,14 @@
         ),
 
         fn start = (
-            if started do return true
+            if (started) do return true
             try (
                 settings = settingsModule.load runtimeRoot
-                version = iniModule.read (runtimeRoot + "version.ini") "Runtime" "Version" defaultValue:"1.0.0"
+                version = iniModule.read (runtimeRoot + "version.ini") "Runtime" "Version" defaultValue: "1.0.0"
                 scan()
                 started = true
-                if settings.toolbarVisible and not (toolbarModule.build()) do loggerModule.logWarning "startup" "Toolbar could not be created."
-                if settings.openManagerOnStartup do managerModule.showManager()
+                if (settings.toolbarVisible and not (toolbarModule.build())) do loggerModule.logWarning "startup" "Toolbar could not be created."
+                if (settings.openManagerOnStartup) do managerModule.showManager()
                 loggerModule.logInfo "startup" ("MaxPkg Runtime " + version + " is ready")
                 return true
             ) catch (
@@ -163,7 +163,7 @@
         ),
 
         fn saveSettings = (
-            if settings == undefined do return false
+            if (settings == undefined) do return false
             return settingsModule.save()
         ),
 
@@ -173,14 +173,14 @@
             statusInfo.isBusy = operationModule.isBusy()
             statusInfo.packageCount = packages.count
             for packageInfo in packages where packageInfo.updateAvailable do statusInfo.updateCount += 1
-            statusInfo.connection = if settings != undefined and settings.updateUrl != "" then "configured" else "offline"
+            statusInfo.connection = if (settings != undefined and settings.updateUrl != "") then "configured" else "offline"
             statusInfo.runtimeVersion = version
             return statusInfo
         ),
 
         fn run package = (
             local resolved = apiModule.resolve packages package
-            if resolved == undefined do (
+            if (resolved == undefined) do (
                 loggerModule.logError "api" ("Package not found: " + (package as string))
                 return false
             )
@@ -193,7 +193,7 @@
 
         fn uninstall package = (
             local resolved = apiModule.resolve packages package
-            if resolved == undefined do return false
+            if (resolved == undefined) do return false
             return uninstallerModule.uninstall resolved
         ),
 
@@ -209,8 +209,8 @@
 
         fn updatePackage packageReference = (
             local resolvedPackage = apiModule.resolve packages packageReference
-            if resolvedPackage == undefined do return false
-            if not resolvedPackage.updateAvailable or resolvedPackage.downloadUrl == "" do return false
+            if (resolvedPackage == undefined) do return false
+            if (not resolvedPackage.updateAvailable or resolvedPackage.downloadUrl == "") do return false
             return installerModule.install resolvedPackage.downloadUrl
         ),
 
@@ -219,22 +219,22 @@
         ),
 
         fn rebuildToolbar = (
-            if settings == undefined do return false
+            if (settings == undefined) do return false
             return toolbarModule.build()
         ),
 
         fn setToolbarVisible packageReference isVisible = (
             local resolvedPackage = apiModule.resolve packages packageReference
-            if resolvedPackage == undefined do return false
+            if (resolvedPackage == undefined) do return false
             local previousHiddenPackages = copy settings.hiddenPackages
             local hiddenPackageIndex = 0
-            for index in 1 to settings.hiddenPackages.count where (toLower settings.hiddenPackages[index]) == (toLower resolvedPackage.guid) do hiddenPackageIndex = index
-            if isVisible then (
-                if hiddenPackageIndex > 0 do deleteItem settings.hiddenPackages hiddenPackageIndex
-            ) else if hiddenPackageIndex == 0 do (
+            for hiddenIndex in 1 to settings.hiddenPackages.count where (toLower settings.hiddenPackages[hiddenIndex]) == (toLower resolvedPackage.guid) do hiddenPackageIndex = hiddenIndex
+            if (isVisible) then (
+                if (hiddenPackageIndex > 0) do deleteItem settings.hiddenPackages hiddenPackageIndex
+            ) else if (hiddenPackageIndex == 0) then (
                 append settings.hiddenPackages resolvedPackage.guid
             )
-            if not (settingsModule.save()) do (
+            if (not (settingsModule.save())) do (
                 settings.hiddenPackages = previousHiddenPackages
                 loggerModule.logError "runtime" ("Could not save toolbar visibility for " + resolvedPackage.guid)
                 return false
@@ -247,7 +247,7 @@
         fn resetToolbarOrder = (
             local previousToolbarOrder = copy settings.toolbarOrder
             settings.toolbarOrder = #()
-            if not (settingsModule.save()) do (
+            if (not (settingsModule.save())) do (
                 settings.toolbarOrder = previousToolbarOrder
                 loggerModule.logError "runtime" "Could not reset toolbar order."
                 return false
@@ -259,7 +259,7 @@
 
         fn openPackageFolder packageReference = (
             local resolvedPackage = apiModule.resolve packages packageReference
-            if resolvedPackage == undefined or resolvedPackage.installPath == "" or not (doesDirectoryExist resolvedPackage.installPath) do return false
+            if (resolvedPackage == undefined or resolvedPackage.installPath == "" or not (doesDirectoryExist resolvedPackage.installPath)) do return false
             try (
                 shellLaunch resolvedPackage.installPath ""
                 return true

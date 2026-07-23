@@ -16,23 +16,23 @@
         installer,
         api,
 
-        fn versionParts version = (
-            local versionTokens = filterString version ".-"
+        fn versionParts versionContent = (
+            local versionTokens = filterString versionContent ".-"
             local versionNumbers = #(0,0,0)
-            for index in 1 to (amin versionTokens.count 3) do versionNumbers[index] = try (
-                versionTokens[index] as integer
+            for versionIndex in 1 to (amin versionTokens.count 3) do versionNumbers[versionIndex] = try (
+                versionTokens[versionIndex] as integer
             ) catch (
                 0
             )
             return versionNumbers
         ),
 
-        fn newer candidate installed = (
-            local candidateParts = versionParts candidate
-            local installedParts = versionParts installed
-            for index in 1 to 3 do (
-                if candidateParts[index] > installedParts[index] do return true
-                if candidateParts[index] < installedParts[index] do return false
+        fn newer candidateVersion installedVersion = (
+            local candidateParts = versionParts candidateVersion
+            local installedParts = versionParts installedVersion
+            for versionIndex in 1 to 3 do (
+                if (candidateParts[versionIndex] > installedParts[versionIndex]) do return true
+                if (candidateParts[versionIndex] < installedParts[versionIndex]) do return false
             )
             return false
         ),
@@ -41,36 +41,36 @@
             local packageVersions = #()
             for package in owner.packages do append packageVersions (package.guid + "@" + package.version)
             local uriClass = dotNetClass "System.Uri"
-            return "packages=" + (uriClass.EscapeDataString (utils.join packageVersions separator:","))
+            return "packages=" + (uriClass.EscapeDataString (utils.join packageVersions separator: ","))
         ),
 
         fn checkUpdates = (
-            if owner.settings.updateUrl == "" do (
+            if (owner.settings.updateUrl == "") do (
                 logger.logInfo "updater" "BatchUrl is not configured; staying offline"
                 return #()
             )
-            local response = http.post owner.settings.updateUrl (requestBody())
-            if response == undefined do return #()
-            local responseFile = runtimeRoot + "data\\update-response.ini"
-            if not (utils.writeText responseFile response) do (
+            local responseBody = http.post owner.settings.updateUrl (requestBody())
+            if (responseBody == undefined) do return #()
+            local responseFile = runtimeRoot + @"data\update-response.ini"
+            if (not (utils.writeText responseFile responseBody)) do (
                 logger.logError "updater" ("Could not write update response: " + responseFile)
                 return #()
             )
             local updates = #()
             for package in owner.packages do (
-                local latest = ini.read responseFile package.guid "Version"
-                local url = ini.read responseFile package.guid "DownloadUrl"
-                package.latestVersion = latest
-                package.downloadUrl = url
-                package.updateAvailable = latest != "" and url != "" and newer latest package.version
-                if package.updateAvailable do append updates package
+                local latestVersion = ini.read responseFile package.guid "Version"
+                local downloadUrl = ini.read responseFile package.guid "DownloadUrl"
+                package.latestVersion = latestVersion
+                package.downloadUrl = downloadUrl
+                package.updateAvailable = latestVersion != "" and downloadUrl != "" and newer latestVersion package.version
+                if (package.updateAvailable) do append updates package
             )
             logger.logInfo "updater" ("Available updates: " + (updates.count as string))
             return updates
         ),
 
         fn updateAll = (
-            if not (operations.begin "updateAll") do return false
+            if (not (operations.begin "updateAll")) do return false
             local isSuccess = false
             try (
                 local updates = checkUpdates()
@@ -79,12 +79,12 @@
                 owner.scan()
                 for updatePackage in updates while isSuccess do (
                     local installedPackage = api.resolve owner.packages updatePackage.guid
-                    if installedPackage == undefined then
+                    if (installedPackage == undefined) then
                         isSuccess = false
-                    else if newer updatePackage.latestVersion installedPackage.version do
+                    else if (newer updatePackage.latestVersion installedPackage.version) then
                         isSuccess = false
                 )
-                if not isSuccess do logger.logError "updater" "One or more updates could not be verified after installation."
+                if (not isSuccess) do logger.logError "updater" "One or more updates could not be verified after installation."
                 owner.rebuildToolbar()
                 try (
                     manager.refresh()
@@ -95,7 +95,7 @@
                 logger.logError "updater" ("Update-all operation failed: " + getCurrentException())
                 isSuccess = false
             )
-            return operations.finish success:isSuccess
+            return operations.finish success: isSuccess
         )
     )
 

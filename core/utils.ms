@@ -6,39 +6,39 @@
 (
     struct MaxPkgUtilsModule (
         fn ensureSlash folderPath = (
-            if folderPath == undefined or folderPath == "" do return ""
-            local normalizedPath = substituteString (folderPath as string) "/" "\\"
-            if (substring normalizedPath normalizedPath.count 1) == "\\" do return normalizedPath
-            return normalizedPath + "\\"
+            if (folderPath == undefined or folderPath == "") do return ""
+            local normalizedPath = substituteString (folderPath as string) "/" @"\"
+            if ((substring normalizedPath normalizedPath.count 1) == @"\") do return normalizedPath
+            return normalizedPath + @"\"
         ),
 
         fn trim sourceContent = (
-            if sourceContent == undefined do return ""
+            if (sourceContent == undefined) do return ""
             return trimLeft (trimRight (sourceContent as string))
         ),
 
-        fn boolValue sourceContent defaultValue:false = (
+        fn boolValue sourceContent defaultValue: false = (
             local normalizedContent = toLower (trim sourceContent)
-            if normalizedContent == "true" or normalizedContent == "1" or normalizedContent == "yes" do return true
-            if normalizedContent == "false" or normalizedContent == "0" or normalizedContent == "no" do return false
+            if (normalizedContent == "true" or normalizedContent == "1" or normalizedContent == "yes") do return true
+            if (normalizedContent == "false" or normalizedContent == "0" or normalizedContent == "no") do return false
             return defaultValue
         ),
 
         fn uniqueStrings sourceStrings = (
             local uniqueEntries = #()
             for sourceString in sourceStrings where sourceString != undefined and sourceString != "" do (
-                local exists = false
-                for existingString in uniqueEntries while not exists where (toLower existingString) == (toLower sourceString) do exists = true
-                if not exists do append uniqueEntries sourceString
+                local sourceExists = false
+                for existingString in uniqueEntries while not sourceExists where (toLower existingString) == (toLower sourceString) do sourceExists = true
+                if (not sourceExists) do append uniqueEntries sourceString
             )
             return uniqueEntries
         ),
 
         fn pathInside childPath parentPath = (
-            local child = toLower (ensureSlash childPath)
-            local parent = toLower (ensureSlash parentPath)
-            if child == "" or parent == "" do return false
-            return matchPattern child pattern:(parent + "*") ignoreCase:true
+            local normalizedChildPath = toLower (ensureSlash childPath)
+            local normalizedParentPath = toLower (ensureSlash parentPath)
+            if (normalizedChildPath == "" or normalizedParentPath == "") do return false
+            return matchPattern normalizedChildPath pattern: (normalizedParentPath + "*") ignoreCase: true
         ),
 
         fn htmlEscape sourceContent = (
@@ -52,7 +52,7 @@
         ),
 
         fn jsonEscape sourceContent = (
-            if sourceContent == undefined do return ""
+            if (sourceContent == undefined) do return ""
             local escapedContent = sourceContent as string
             escapedContent = substituteString escapedContent "\\" "\\\\"
             escapedContent = substituteString escapedContent "\"" "\\\""
@@ -67,23 +67,23 @@
         ),
 
         fn fileUrl filePath = (
-            if filePath == undefined or filePath == "" do return ""
+            if (filePath == undefined or filePath == "") do return ""
             local uri = dotNetObject "System.Uri" filePath
             return uri.AbsoluteUri
         ),
 
-        fn writeText filePath content = (
+        fn writeText filePath sourceContent = (
             local stream = undefined
             try (
-                makeDir (getFilenamePath filePath) all:true
+                makeDir (getFilenamePath filePath) all: true
                 stream = createFile filePath
-                if stream == undefined do return false
-                format "%" content to:stream
+                if (stream == undefined) do return false
+                format "%" sourceContent to: stream
                 close stream
                 return true
             ) catch (
                 try (
-                    if stream != undefined do close stream
+                    if (stream != undefined) do close stream
                 ) catch (
                 )
                 return false
@@ -91,7 +91,7 @@
         ),
 
         fn readText filePath = (
-            if filePath == undefined or filePath == "" or not (doesFileExist filePath) do return ""
+            if (filePath == undefined or filePath == "" or not (doesFileExist filePath)) do return ""
             try (
                 local fileClass = dotNetClass "System.IO.File"
                 return fileClass.ReadAllText filePath
@@ -100,11 +100,11 @@
             )
         ),
 
-        fn join sourceValues separator:"," = (
+        fn join sourceValues separator: "," = (
             local joinedContent = ""
-            for index in 1 to sourceValues.count do (
-                if index > 1 do joinedContent += separator
-                joinedContent += (sourceValues[index] as string)
+            for sourceIndex in 1 to sourceValues.count do (
+                if (sourceIndex > 1) do joinedContent += separator
+                joinedContent += (sourceValues[sourceIndex] as string)
             )
             return joinedContent
         )
