@@ -36,7 +36,6 @@
                     <div class="search-box">
                         <img class="search-icon" src="../common/icons/search.svg" alt="">
                         <input id="searchInput" type="text" autocomplete="off" placeholder="Search packages">
-                        <button id="clearSearchButton" class="search-clear is-hidden" type="button" title="Clear">&times;</button>
                     </div>
                 </div>
                 <div id="headerActions" class="header-actions">
@@ -75,15 +74,13 @@
                     </div>
                 </div>
             </div>
-            <div id="discoverTools" class="is-hidden">
-                <span class="text-muted">Repository browsing is provided by the Runtime API.</span>
-            </div>
+            <div id="discoverTools" class="is-hidden"></div>
         </div>
 
         <div id="detailsNavigation" class="details-navigation is-hidden">
             <a class="details-back-link" href="#" data-action="details-back"><img class="details-back-icon" src="../common/icons/arrow-left.svg" alt="">Back</a>
             <span class="details-pathway">
-                <span>Installed</span>
+                <span id="detailsPathRoot">Installed</span>
                 <span class="details-pathway-separator">/</span>
                 <strong id="detailsPathName">Package</strong>
             </span>
@@ -171,6 +168,19 @@
                     <div class="settings-page is-hidden" data-settings-panel="toolbar">
                         <h3>Toolbar</h3>
                         <label class="check-row"><input id="toolbarVisibleCheck" type="checkbox">Show MaxPkg toolbar</label>
+                        <div class="field">
+                            <span id="toolbarTitleLabel" class="field-label">Button primary text</span>
+                            <div id="toolbarTitleSelect" class="html-select html-select-wide" data-value="packageName">
+                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarTitleLabel" data-dropdown-trigger="true">
+                                    <span data-select-label="toolbarTitleSelect">Package name</span>
+                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                </button>
+                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                    <button type="button" data-dropdown-option="packageName">Package name</button>
+                                    <button type="button" data-dropdown-option="buttonName">Button name</button>
+                                </div>
+                            </div>
+                        </div>
                         <div class="field">
                             <span id="toolbarButtonSizeLabel" class="field-label">Button size</span>
                             <div id="toolbarButtonSizeSelect" class="html-select html-select-wide" data-value="medium">

@@ -58,6 +58,7 @@
     local httpModule = fileIn (coreRoot + @"http.ms")
     httpModule.logger = loggerModule
     local apiModule = fileIn (coreRoot + @"api.ms")
+    local repositoryModule = fileIn (coreRoot + @"repository.ms")
     local toolbarModule = fileIn (coreRoot + @"toolbar.ms")
     local managerModule = fileIn (runtimeRoot + @"ui\manager\manager.ms")
     local installerModule = fileIn (coreRoot + @"installer.ms")
@@ -76,7 +77,10 @@
 
     struct MaxPkgRuntimeFacade (
         version = "1.0.0",
+        runtimeChannel = "stable",
         packages = #(),
+        catalogState = undefined,
+        remotePackageDetails = undefined,
         settings = undefined,
         operation = undefined,
         private
@@ -104,6 +108,8 @@
             local isToolbarClosed = toolbarModule.shutdownToolbar()
             started = false
             packages = #()
+            catalogState = undefined
+            remotePackageDetails = undefined
             settings = undefined
             operation = undefined
             operationModule.current = undefined
@@ -134,11 +140,19 @@
             try (
                 settings = settingsModule.load runtimeRoot
                 version = iniModule.read (runtimeRoot + "version.ini") "Runtime" "Version" defaultValue: "1.0.0"
+                runtimeChannel = iniModule.read (runtimeRoot + "version.ini") "Runtime" "Channel" defaultValue: "stable"
                 scan()
                 started = true
                 if (settings.toolbarVisible and not (toolbarModule.build())) do loggerModule.logWarning "startup" "Toolbar could not be created."
                 if (settings.openManagerOnStartup) do managerModule.showManager()
                 loggerModule.logInfo "startup" ("MaxPkg Runtime " + version + " is ready")
+                if (settings.autoCheckRuntime) do (
+                    try (
+                        selfUpdaterModule.startAutoUpdateCheck currentVersion: version currentChannel: runtimeChannel
+                    ) catch (
+                        loggerModule.logWarning "startup" ("Runtime background update check could not start: " + getCurrentException())
+                    )
+                )
                 return true
             ) catch (
                 loggerModule.logError "startup" (getCurrentException())
@@ -156,6 +170,20 @@
 
         fn getPackage packageReference = (
             return apiModule.resolve packages packageReference
+        ),
+
+        fn browsePackages queryText: "" categoryFilter: "" sortMode: "popular" pageNumber: 1 pageSize: 24 = (
+            catalogState = repositoryModule.catalog queryText: queryText categoryFilter: categoryFilter sortMode: sortMode pageNumber: pageNumber pageSize: pageSize channelName: runtimeChannel
+            return catalogState
+        ),
+
+        fn getRemotePackageDetails packageReference = (
+            remotePackageDetails = repositoryModule.packageDetails packageReference channelName: runtimeChannel
+            return remotePackageDetails
+        ),
+
+        fn resolveRemotePackage packageReference = (
+            return repositoryModule.resolvePackage packageReference channelName: runtimeChannel
         ),
 
         fn getSettings = (
@@ -209,8 +237,8 @@
 
         fn updatePackage packageReference = (
             local resolvedPackage = apiModule.resolve packages packageReference
-            if (resolvedPackage == undefined) do return false
-            if (not resolvedPackage.updateAvailable or resolvedPackage.downloadUrl == "") do return false
+            if (resolvedPackage == undefined) do return installerModule.failureStatus "PACKAGE_NOT_FOUND" "The installed package was not found."
+            if (not resolvedPackage.updateAvailable or resolvedPackage.downloadUrl == "") do return installerModule.failureStatus "VERSION_NOT_FOUND" "No compatible package update is available." packageGuid: resolvedPackage.guid
             return installerModule.install resolvedPackage.downloadUrl
         ),
 
@@ -282,6 +310,10 @@
 
         fn openPackageLink packageReference packageLinkKind = (
             local resolvedPackage = apiModule.resolve packages packageReference
+            if (resolvedPackage == undefined and remotePackageDetails != undefined and remotePackageDetails.success) do (
+                local remoteInfo = remotePackageDetails.packageInfo
+                if (remoteInfo != undefined and ((toLower remoteInfo.guid) == (toLower packageReference) or (toLower remoteInfo.slug) == (toLower packageReference))) do resolvedPackage = remoteInfo
+            )
             if (resolvedPackage == undefined) do return false
             local packageUrl = packageLinkUrl resolvedPackage packageLinkKind
             if (packageUrl == "") do return false
@@ -330,6 +362,12 @@
     managerModule.initialize MaxPkg runtimeRoot utilsModule managerModule
     managerModule.logger = loggerModule
     operationModule.owner = MaxPkg
+    repositoryModule.owner = MaxPkg
+    repositoryModule.runtimeRoot = runtimeRoot
+    repositoryModule.http = httpModule
+    repositoryModule.ini = iniModule
+    repositoryModule.utils = utilsModule
+    repositoryModule.logger = loggerModule
     installerModule.owner = MaxPkg
     installerModule.operations = operationModule
     installerModule.manager = managerModule
@@ -337,6 +375,7 @@
     installerModule.http = httpModule
     installerModule.logger = loggerModule
     installerModule.utils = utilsModule
+    installerModule.repository = repositoryModule
     uninstallerModule.owner = MaxPkg
     uninstallerModule.operations = operationModule
     uninstallerModule.api = apiModule
@@ -347,13 +386,10 @@
     updaterModule.owner = MaxPkg
     updaterModule.operations = operationModule
     updaterModule.manager = managerModule
-    updaterModule.runtimeRoot = runtimeRoot
-    updaterModule.http = httpModule
-    updaterModule.ini = iniModule
-    updaterModule.utils = utilsModule
     updaterModule.logger = loggerModule
     updaterModule.installer = installerModule
     updaterModule.api = apiModule
+    updaterModule.repository = repositoryModule
     selfUpdaterModule.owner = MaxPkg
     selfUpdaterModule.operations = operationModule
     selfUpdaterModule.installer = installerModule

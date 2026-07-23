@@ -8,13 +8,10 @@
         owner,
         operations,
         manager,
-        runtimeRoot,
-        http,
-        ini,
-        utils,
         logger,
         installer,
         api,
+        repository,
 
         fn versionParts versionContent = (
             local versionTokens = filterString versionContent ".-"
@@ -37,29 +34,26 @@
             return false
         ),
 
-        fn requestBody = (
+        fn packageVersions = (
             local packageVersions = #()
             for package in owner.packages do append packageVersions (package.guid + "@" + package.version)
-            local uriClass = dotNetClass "System.Uri"
-            return "packages=" + (uriClass.EscapeDataString (utils.join packageVersions separator: ","))
+            return packageVersions
         ),
 
         fn checkUpdates = (
-            local updatesEndpoint = utils.apiEndpointUrl owner.settings.apiEndpoint "updates"
-            local responseBody = http.post updatesEndpoint (requestBody())
-            if (responseBody == undefined) do return #()
-            local responseFile = runtimeRoot + @"data\update-response.ini"
-            if (not (utils.writeText responseFile responseBody)) do (
-                logger.logError "updater" ("Could not write update response: " + responseFile)
+            local installedVersions = packageVersions()
+            if (installedVersions.count == 0) do return #()
+            local updateResponse = repository.updates installedVersions channelName: owner.runtimeChannel
+            if (not updateResponse.success) do (
+                logger.logError "updater" ((if (updateResponse.errorCode != "") then updateResponse.errorCode + ": " else "") + updateResponse.errorMessage)
                 return #()
             )
             local updates = #()
             for package in owner.packages do (
-                local latestVersion = ini.read responseFile package.guid "Version"
-                local downloadUrl = ini.read responseFile package.guid "DownloadUrl"
-                package.latestVersion = latestVersion
-                package.downloadUrl = downloadUrl
-                package.updateAvailable = latestVersion != "" and downloadUrl != "" and newer latestVersion package.version
+                local updateInfo = api.resolve updateResponse.packages package.guid
+                package.latestVersion = if (updateInfo != undefined) then updateInfo.latestVersion else ""
+                package.downloadUrl = if (updateInfo != undefined) then updateInfo.downloadUrl else ""
+                package.updateAvailable = package.latestVersion != "" and package.downloadUrl != "" and newer package.latestVersion package.version
                 if (package.updateAvailable) do append updates package
             )
             logger.logInfo "updater" ("Available updates: " + (updates.count as string))

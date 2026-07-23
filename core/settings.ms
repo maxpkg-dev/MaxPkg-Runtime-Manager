@@ -10,6 +10,7 @@
         hiddenPackages = #(),
         toolbarOrder = #(),
         toolbarVisible = true,
+        toolbarTitleMode = "packageName",
         toolbarSubtitleMode = "version",
         toolbarButtonSize = "medium",
         updateFrequencyHours = 24,
@@ -67,6 +68,14 @@
             return "version"
         ),
 
+        fn normalizeToolbarTitleMode requestedMode = (
+            local normalizedMode = toLower (utils.trim requestedMode)
+            if (normalizedMode == "packagename" or normalizedMode == "package") do return "packageName"
+            if (normalizedMode == "buttonname" or normalizedMode == "button") do return "buttonName"
+            logger.logWarning "settings" ("Unsupported toolbar title mode: " + (requestedMode as string) + "; using packageName")
+            return "packageName"
+        ),
+
         fn normalizeToolbarButtonSize requestedSize = (
             local normalizedSize = toLower (utils.trim requestedSize)
             if (normalizedSize == "large" or normalizedSize == "medium" or normalizedSize == "small" or normalizedSize == "icon") do return normalizedSize
@@ -106,8 +115,16 @@
         ),
 
         fn saveEndpointSetting = (
-            if (settingsData.apiEndpoint != "") do return ini.write settingsData.filePath "Endpoint" "BaseUrl" settingsData.apiEndpoint
+            if (settingsData.apiEndpoint != "") do (
+                local isEndpointSaved = ini.write settingsData.filePath "Endpoint" "apiEndpoint" settingsData.apiEndpoint
+                try (
+                    delIniSetting settingsData.filePath "Endpoint" "BaseUrl"
+                ) catch (
+                )
+                return isEndpointSaved
+            )
             try (
+                delIniSetting settingsData.filePath "Endpoint" "apiEndpoint"
                 delIniSetting settingsData.filePath "Endpoint" "BaseUrl"
                 return true
             ) catch (
@@ -135,6 +152,7 @@
             settingsData.hiddenPackages = splitList (ini.read settingsData.filePath "Toolbar" "Hidden")
             settingsData.toolbarOrder = splitList (ini.read settingsData.filePath "Toolbar" "Order")
             settingsData.toolbarVisible = utils.boolValue (ini.read settingsData.filePath "Toolbar" "Visible" defaultValue: "true") defaultValue: true
+            settingsData.toolbarTitleMode = normalizeToolbarTitleMode (ini.read settingsData.filePath "Toolbar" "TitleMode" defaultValue: "packageName")
             settingsData.toolbarSubtitleMode = normalizeToolbarSubtitleMode (ini.read settingsData.filePath "Toolbar" "SubtitleMode" defaultValue: "version")
             settingsData.toolbarButtonSize = normalizeToolbarButtonSize (ini.read settingsData.filePath "Toolbar" "ButtonSize" defaultValue: "medium")
             settingsData.updateFrequencyHours = normalizeUpdateFrequency (integerValue (ini.read settingsData.filePath "Updates" "FrequencyHours" defaultValue: "24") 24 "Updates.FrequencyHours")
@@ -155,7 +173,8 @@
             settingsData.openManagerOnStartup = utils.boolValue (ini.read settingsData.filePath "General" "OpenManagerOnStartup" defaultValue: "false") defaultValue: false
             settingsData.developerMode = utils.boolValue (ini.read settingsData.filePath "Developer" "Enabled" defaultValue: "false") defaultValue: false
             settingsData.debugLogging = utils.boolValue (ini.read settingsData.filePath "Developer" "DebugLogging" defaultValue: "false") defaultValue: false
-            local configuredApiEndpoint = ini.read settingsData.filePath "Endpoint" "BaseUrl"
+            local configuredApiEndpoint = ini.read settingsData.filePath "Endpoint" "apiEndpoint"
+            if (configuredApiEndpoint == "") do configuredApiEndpoint = ini.read settingsData.filePath "Endpoint" "BaseUrl"
             if (configuredApiEndpoint == "") do (
                 local legacyUpdateUrl = ini.read settingsData.filePath "Updates" "BatchUrl"
                 local legacyRuntimeUrl = ini.read settingsData.filePath "Updates" "RuntimeUrl"
@@ -173,6 +192,7 @@
         fn save = (
             if (settingsData == undefined) do return false
             settingsData.updateFrequencyHours = normalizeUpdateFrequency settingsData.updateFrequencyHours
+            settingsData.toolbarTitleMode = normalizeToolbarTitleMode settingsData.toolbarTitleMode
             settingsData.toolbarSubtitleMode = normalizeToolbarSubtitleMode settingsData.toolbarSubtitleMode
             settingsData.toolbarButtonSize = normalizeToolbarButtonSize settingsData.toolbarButtonSize
             settingsData.apiEndpoint = utils.normalizeApiEndpoint settingsData.apiEndpoint
@@ -181,6 +201,7 @@
             if (not (ini.write settingsData.filePath "Toolbar" "Hidden" (utils.join settingsData.hiddenPackages separator: "|"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "Order" (utils.join settingsData.toolbarOrder separator: "|"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "Visible" (if (settingsData.toolbarVisible) then "true" else "false"))) do isSaved = false
+            if (not (ini.write settingsData.filePath "Toolbar" "TitleMode" settingsData.toolbarTitleMode)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "SubtitleMode" settingsData.toolbarSubtitleMode)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "ButtonSize" settingsData.toolbarButtonSize)) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "FrequencyHours" (settingsData.updateFrequencyHours as string))) do isSaved = false

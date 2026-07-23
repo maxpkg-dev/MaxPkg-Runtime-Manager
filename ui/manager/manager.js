@@ -15,7 +15,8 @@
         updateCount: 0,
         connection: "offline",
         settings: {},
-        discover: { available: false, message: "Repository is unavailable." }
+        discover: { available: false, message: "Repository is unavailable.", packages: [] },
+        remoteDetails: null
     };
     var activeTab = "installed";
     var activeFilter = "all";
@@ -23,6 +24,7 @@
     var searchText = "";
     var detailsGuid = "";
     var detailsTab = "information";
+    var activeScreenshotIndex = 0;
     var detailsListScrollTop = 0;
     var settingsSaveTimer = null;
 
@@ -32,6 +34,67 @@
 
     function boolText(isEnabled) {
         return isEnabled ? "true" : "false";
+    }
+
+    function packageDescriptionPreview(descriptionText) {
+        var maxLength = 118;
+        var normalizedText = (descriptionText || "No description provided.").replace(/\s+/g, " ");
+        if (normalizedText.length <= maxLength) {
+            return normalizedText;
+        }
+        return normalizedText.substring(0, maxLength - 3).replace(/\s+$/g, "") + "...";
+    }
+
+    function safeHttpImageUrl(sourceUrl) {
+        var normalizedUrl = String(sourceUrl || "").replace(/^\s+|\s+$/g, "");
+        if (/^https?:\/\//i.test(normalizedUrl)) {
+            return normalizedUrl;
+        }
+        return "";
+    }
+
+    function discoverPackageForGuid(packageGuid) {
+        var packageIndex;
+        var remotePackages = currentState.discover && currentState.discover.packages ? currentState.discover.packages : [];
+        var normalizedGuid = String(packageGuid || "").toLowerCase();
+        if (!normalizedGuid) {
+            return null;
+        }
+        for (packageIndex = 0; packageIndex < remotePackages.length; packageIndex += 1) {
+            if (String(remotePackages[packageIndex].guid || "").toLowerCase() === normalizedGuid) {
+                return remotePackages[packageIndex];
+            }
+        }
+        return null;
+    }
+
+    function safePackageImageUrl(packageInfo, includeCover) {
+        var discoverPackage = discoverPackageForGuid(packageInfo.guid);
+        var packageIconUrl = safeHttpImageUrl(packageInfo.packageIconUrl);
+        var iconUrl = safeHttpImageUrl(packageInfo.iconUrl);
+        var coverImageUrl = includeCover ? safeHttpImageUrl(packageInfo.coverImageUrl) : "";
+        if (!packageIconUrl && discoverPackage) {
+            packageIconUrl = safeHttpImageUrl(discoverPackage.packageIconUrl);
+        }
+        if (!iconUrl && discoverPackage) {
+            iconUrl = safeHttpImageUrl(discoverPackage.iconUrl);
+        }
+        if (!coverImageUrl && includeCover && discoverPackage) {
+            coverImageUrl = safeHttpImageUrl(discoverPackage.coverImageUrl);
+        }
+        if (packageIconUrl) {
+            return packageIconUrl;
+        }
+        if (iconUrl) {
+            return iconUrl;
+        }
+        if (coverImageUrl) {
+            return coverImageUrl;
+        }
+        if (!packageInfo.isRemote && packageInfo.iconUrl) {
+            return packageInfo.iconUrl;
+        }
+        return "";
     }
 
     function layoutHeader() {
@@ -65,6 +128,16 @@
                 return currentState.packages[packageIndex];
             }
         }
+        if (currentState.remoteDetails && currentState.remoteDetails.guid.toLowerCase() === packageGuid.toLowerCase()) {
+            return currentState.remoteDetails;
+        }
+        if (currentState.discover && currentState.discover.packages) {
+            for (packageIndex = 0; packageIndex < currentState.discover.packages.length; packageIndex += 1) {
+                if (currentState.discover.packages[packageIndex].guid.toLowerCase() === packageGuid.toLowerCase()) {
+                    return currentState.discover.packages[packageIndex];
+                }
+            }
+        }
         return null;
     }
 
@@ -77,9 +150,10 @@
         return Common.escapeHtml(initials.toUpperCase());
     }
 
-    function packageIcon(packageInfo, cssClass) {
-        if (packageInfo.iconUrl) {
-            return "<img class='" + cssClass + "' src='" + Common.escapeHtml(packageInfo.iconUrl) + "' alt=''>";
+    function packageIcon(packageInfo, cssClass, includeCover) {
+        var imageUrl = safePackageImageUrl(packageInfo, includeCover);
+        if (imageUrl) {
+            return "<img class='" + cssClass + "' src='" + Common.escapeHtml(imageUrl) + "' alt=''>";
         }
         return "<span class='" + cssClass + " package-icon-fallback'>" + packageInitials(packageInfo) + "</span>";
     }
@@ -134,11 +208,11 @@
         return "<div class='card' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
             "<div class='card-content clearfix'>" +
                 "<button class='package-summary clearfix' type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "' title='Open package details'>" +
-                    packageIcon(packageInfo, "package-icon") +
+                    packageIcon(packageInfo, "package-icon", true) +
                     "<span class='package-heading'><span class='package-title ellipsis'>" + Common.escapeHtml(packageInfo.name) + "</span>" +
                     "<span class='package-meta ellipsis'>v" + Common.escapeHtml(packageInfo.version) + " &middot; " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</span></span>" +
                 "</button>" +
-                "<p class='package-description'>" + Common.escapeHtml(packageInfo.description || "No description provided.") + "</p>" +
+                "<p class='package-description'>" + Common.escapeHtml(packageDescriptionPreview(packageInfo.description)) + "</p>" +
                 "<div>" + badges + "</div>" +
             "</div>" +
             "<div class='card-actions'>" + updateAction +
@@ -167,9 +241,60 @@
 
     function renderDiscover() {
         var discoverState = currentState.discover || {};
-        var message = discoverState.message || "Runtime did not provide repository data.";
-        Common.byId("discoverPage").innerHTML = "<div class='state-panel'><img class='state-icon' src='../common/icons/cloud-off.svg' alt=''><h2>Discover is offline</h2>" +
-            "<p>" + Common.escapeHtml(message) + "</p><a class='button' href='maxpkg://manager/check-updates' data-busy='Checking connection...'>" + icon("refresh-cw") + "Retry</a></div>";
+        var remotePackages = discoverState.packages || [];
+        var packageCards = [];
+        var packageIndex;
+        var pagination = "";
+        if (!discoverState.available) {
+            Common.byId("discoverPage").innerHTML = "<div class='state-panel'><img class='state-icon' src='../common/icons/cloud-off.svg' alt=''><h2>Catalog unavailable</h2>" +
+                "<p>" + Common.escapeHtml(discoverState.message || "Load the catalog to browse packages.") + "</p><button class='button' type='button' data-action='catalog-retry'>" + icon("refresh-cw") + "Retry</button></div>";
+            return;
+        }
+        for (packageIndex = 0; packageIndex < remotePackages.length; packageIndex += 1) {
+            packageCards.push(remotePackageCard(remotePackages[packageIndex]));
+        }
+        if (discoverState.totalPages > 1) {
+            pagination = "<div class='catalog-pagination'>" +
+                "<button class='button' type='button' data-action='discover-page' data-page='" + (discoverState.page - 1) + "'" + (discoverState.page <= 1 ? " disabled='disabled'" : "") + ">" + icon("arrow-left") + "Previous</button>" +
+                "<span>Page " + discoverState.page + " of " + discoverState.totalPages + "</span>" +
+                "<button class='button' type='button' data-action='discover-page' data-page='" + (discoverState.page + 1) + "'" + (discoverState.page >= discoverState.totalPages ? " disabled='disabled'" : "") + ">Next</button></div>";
+        }
+        Common.byId("discoverPage").innerHTML = packageCards.length ? "<div class='catalog-summary'>" + discoverState.total + " packages</div><div class='card-grid'>" + packageCards.join("") + "</div>" + pagination :
+            "<div class='state-panel'><img class='state-icon' src='../common/icons/search.svg' alt=''><h2>No packages found</h2><p>Try a different search phrase.</p></div>";
+    }
+
+    function remotePackageCard(packageInfo) {
+        var badges = "";
+        var resolvedPackage = findPackage(packageInfo.guid);
+        var installAction = "<a class='button button-primary' href='maxpkg://manager/install/" + Common.encode(packageInfo.guid) + "' data-busy='Installing package...'>" + icon("download") + "Install</a>";
+        if (resolvedPackage && !resolvedPackage.isRemote) {
+            installAction = "<button class='button' type='button' disabled='disabled'>" + icon("check") + "Installed</button>";
+        }
+        if (packageInfo.runtime) {
+            badges += "<span class='badge'>" + Common.escapeHtml(packageInfo.runtime) + "</span>";
+        }
+        if (packageInfo.category) {
+            badges += "<span class='badge'>" + Common.escapeHtml(packageInfo.category) + "</span>";
+        }
+        return "<div class='card' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
+            "<div class='card-content clearfix'>" +
+                "<button class='package-summary clearfix' type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "' title='Open package details'>" +
+                    packageIcon(packageInfo, "package-icon", true) +
+                    "<span class='package-heading'><span class='package-title ellipsis'>" + Common.escapeHtml(packageInfo.name) + "</span>" +
+                    "<span class='package-meta ellipsis'>v" + Common.escapeHtml(packageInfo.version) + " &middot; " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</span></span>" +
+                "</button>" +
+                "<p class='package-description'>" + Common.escapeHtml(packageDescriptionPreview(packageInfo.description)) + "</p>" +
+                "<div>" + badges + "</div>" +
+            "</div>" +
+            "<div class='card-actions'>" + installAction + "</div>" +
+        "</div>";
+    }
+
+    function requestCatalog(pageNumber) {
+        var normalizedPage = pageNumber > 0 ? pageNumber : 1;
+        Common.byId("busyMessage").innerHTML = "Loading package catalog...";
+        Common.removeClass(Common.byId("busyShade"), "is-hidden");
+        window.location.href = "maxpkg://manager/catalog?query=" + Common.encode(searchText) + "&category=&sort=popular&page=" + normalizedPage + "&pageSize=24";
     }
 
     function detailRow(rowLabel, fieldContent, cssClass) {
@@ -180,13 +305,10 @@
     }
 
     function compatibilityLabel(packageInfo) {
-        if (packageInfo.minimumMaxVersion && packageInfo.maximumMaxVersion) {
-            return packageInfo.minimumMaxVersion + "–" + packageInfo.maximumMaxVersion;
-        }
         if (packageInfo.minimumMaxVersion) {
             return packageInfo.minimumMaxVersion + " and newer";
         }
-        return packageInfo.maximumMaxVersion || "";
+        return "Any version";
     }
 
     function packageLinkButton(packageInfo, linkKind, buttonLabel) {
@@ -224,8 +346,267 @@
         return "<div class='details-section'><h3>Full changelog</h3><ul class='changelog-list'>" + changelogItems.join("") + "</ul></div>";
     }
 
+    function normalizedFullDescription(sourceContent) {
+        var normalizedContent = String(sourceContent || "");
+        normalizedContent = normalizedContent.replace(/\\r\\n/g, "\n");
+        normalizedContent = normalizedContent.replace(/\\n/g, "\n");
+        normalizedContent = normalizedContent.replace(/\r\n/g, "\n");
+        normalizedContent = normalizedContent.replace(/\r/g, "\n");
+        return normalizedContent.replace(/^\s+|\s+$/g, "");
+    }
+
+    function markdownInlineTextHtml(sourceContent) {
+        var escapedContent = Common.escapeHtml(sourceContent);
+        escapedContent = escapedContent.replace(/`([^`]+)`/g, "<code>$1</code>");
+        escapedContent = escapedContent.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        escapedContent = escapedContent.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+        escapedContent = escapedContent.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        escapedContent = escapedContent.replace(/_([^_]+)_/g, "<em>$1</em>");
+        return escapedContent;
+    }
+
+    function markdownInlineHtml(sourceContent) {
+        var rawContent = String(sourceContent || "");
+        var linkExpression = /\[([^\]]+)\]\(([^)]+)\)/g;
+        var outputParts = [];
+        var lastIndex = 0;
+        var linkMatch;
+        var linkUrl;
+        var linkLabel;
+
+        while ((linkMatch = linkExpression.exec(rawContent)) !== null) {
+            outputParts.push(markdownInlineTextHtml(rawContent.substring(lastIndex, linkMatch.index)));
+            linkUrl = safeHttpImageUrl(linkMatch[2]);
+            linkLabel = markdownInlineTextHtml(linkMatch[1]);
+            if (linkUrl) {
+                outputParts.push("<a href='" + Common.escapeHtml(linkUrl) + "' target='_blank'>" + linkLabel + "</a>");
+            } else {
+                outputParts.push(markdownInlineTextHtml(linkMatch[0]));
+            }
+            lastIndex = linkMatch.index + linkMatch[0].length;
+        }
+
+        outputParts.push(markdownInlineTextHtml(rawContent.substring(lastIndex)));
+        return outputParts.join("");
+    }
+
+    function markdownListHtml(listLines, isOrderedList) {
+        var listItems = [];
+        var lineIndex;
+        var lineContent;
+        var tagName = isOrderedList ? "ol" : "ul";
+
+        for (lineIndex = 0; lineIndex < listLines.length; lineIndex += 1) {
+            lineContent = listLines[lineIndex].replace(/^\s*(?:[-*+]|\d+\.)\s+/, "");
+            listItems.push("<li>" + markdownInlineHtml(lineContent) + "</li>");
+        }
+        return "<" + tagName + ">" + listItems.join("") + "</" + tagName + ">";
+    }
+
+    function markdownParagraphHtml(paragraphLines) {
+        if (!paragraphLines.length) {
+            return "";
+        }
+        return "<p>" + markdownInlineHtml(paragraphLines.join("\n")).replace(/\n/g, "<br>") + "</p>";
+    }
+
+    function fullDescriptionContentHtml(sourceContent) {
+        var normalizedContent = normalizedFullDescription(sourceContent);
+        var lines = normalizedContent ? normalizedContent.split("\n") : [];
+        var outputItems = [];
+        var paragraphLines = [];
+        var lineIndex = 0;
+        var lineContent;
+        var trimmedLine;
+        var headingMatch;
+        var headingLevel;
+        var listLines;
+        var quoteLines;
+        var codeLines;
+        var isOrderedList;
+
+        while (lineIndex < lines.length) {
+            lineContent = lines[lineIndex];
+            trimmedLine = lineContent.replace(/^\s+|\s+$/g, "");
+
+            if (!trimmedLine) {
+                outputItems.push(markdownParagraphHtml(paragraphLines));
+                paragraphLines = [];
+                lineIndex += 1;
+                continue;
+            }
+
+            if (/^```/.test(trimmedLine)) {
+                outputItems.push(markdownParagraphHtml(paragraphLines));
+                paragraphLines = [];
+                codeLines = [];
+                lineIndex += 1;
+                while (lineIndex < lines.length && !(/^```/.test(lines[lineIndex].replace(/^\s+|\s+$/g, "")))) {
+                    codeLines.push(lines[lineIndex]);
+                    lineIndex += 1;
+                }
+                if (lineIndex < lines.length) {
+                    lineIndex += 1;
+                }
+                outputItems.push("<pre><code>" + Common.escapeHtml(codeLines.join("\n")) + "</code></pre>");
+                continue;
+            }
+
+            headingMatch = /^(#{1,4})\s+(.+)$/.exec(trimmedLine);
+            if (headingMatch) {
+                outputItems.push(markdownParagraphHtml(paragraphLines));
+                paragraphLines = [];
+                headingLevel = headingMatch[1].length + 2;
+                outputItems.push("<h" + headingLevel + ">" + markdownInlineHtml(headingMatch[2]) + "</h" + headingLevel + ">");
+                lineIndex += 1;
+                continue;
+            }
+
+            if (/^>\s*/.test(trimmedLine)) {
+                outputItems.push(markdownParagraphHtml(paragraphLines));
+                paragraphLines = [];
+                quoteLines = [];
+                while (lineIndex < lines.length && /^>\s*/.test(lines[lineIndex].replace(/^\s+|\s+$/g, ""))) {
+                    quoteLines.push(lines[lineIndex].replace(/^\s*>\s*/, ""));
+                    lineIndex += 1;
+                }
+                outputItems.push("<blockquote>" + markdownParagraphHtml(quoteLines) + "</blockquote>");
+                continue;
+            }
+
+            if (/^\s*(?:[-*+]|\d+\.)\s+/.test(lineContent)) {
+                outputItems.push(markdownParagraphHtml(paragraphLines));
+                paragraphLines = [];
+                isOrderedList = /^\s*\d+\.\s+/.test(lineContent);
+                listLines = [];
+                while (lineIndex < lines.length && (/^\s*(?:[-*+]|\d+\.)\s+/.test(lines[lineIndex])) && (/^\s*\d+\.\s+/.test(lines[lineIndex]) === isOrderedList)) {
+                    listLines.push(lines[lineIndex]);
+                    lineIndex += 1;
+                }
+                outputItems.push(markdownListHtml(listLines, isOrderedList));
+                continue;
+            }
+
+            paragraphLines.push(lineContent);
+            lineIndex += 1;
+        }
+        outputItems.push(markdownParagraphHtml(paragraphLines));
+        return outputItems.join("");
+    }
+
+    function fullDescriptionHtml(packageInfo) {
+        var fullDescriptionContent = packageInfo.fullDescription || "";
+        var descriptionMarkup = fullDescriptionContentHtml(fullDescriptionContent);
+        if (!descriptionMarkup) {
+            return "<div class='details-section'><h3>Full description</h3><p class='text-muted'>No full description was provided with this package.</p></div>";
+        }
+        return "<div class='details-section full-description-section'><h3>Full description</h3><div class='full-description-content'>" + descriptionMarkup + "</div></div>";
+    }
+
+    function validScreenshots(packageInfo) {
+        var screenshots = packageInfo.screenshots || [];
+        var validItems = [];
+        var screenshotIndex;
+        var screenshotInfo;
+        var fullImageUrl;
+        var thumbnailUrl;
+
+        for (screenshotIndex = 0; screenshotIndex < screenshots.length; screenshotIndex += 1) {
+            screenshotInfo = screenshots[screenshotIndex] || {};
+            fullImageUrl = safeHttpImageUrl(screenshotInfo.url);
+            thumbnailUrl = safeHttpImageUrl(screenshotInfo.thumbnailUrl) || fullImageUrl;
+            if (fullImageUrl && thumbnailUrl) {
+                validItems.push({
+                    url: fullImageUrl,
+                    thumbnailUrl: thumbnailUrl,
+                    title: screenshotInfo.title || ("Screenshot " + (screenshotIndex + 1)),
+                    caption: screenshotInfo.caption || ""
+                });
+            }
+        }
+
+        return validItems;
+    }
+
+    function screenshotGalleryHtml(packageInfo) {
+        var screenshots = validScreenshots(packageInfo);
+        var galleryItems = [];
+        var screenshotIndex;
+        var screenshotInfo;
+        var activeScreenshot;
+        var previousIndex;
+        var nextIndex;
+
+        for (screenshotIndex = 0; screenshotIndex < screenshots.length; screenshotIndex += 1) {
+            screenshotInfo = screenshots[screenshotIndex];
+            galleryItems.push("<button class='screenshot-thumb" + (screenshotIndex === activeScreenshotIndex ? " is-active" : "") + "' type='button' data-action='select-screenshot' data-screenshot-index='" + screenshotIndex + "'>" +
+                "<img src='" + Common.escapeHtml(screenshotInfo.thumbnailUrl) + "' alt='" + Common.escapeHtml(screenshotInfo.title) + "'>" +
+                "<span>" + Common.escapeHtml(screenshotInfo.title) + "</span>" +
+            "</button>");
+        }
+
+        if (!galleryItems.length) {
+            return "<div class='details-section'><h3>Screenshots</h3><p class='text-muted'>No screenshots available.</p></div>";
+        }
+
+        if (activeScreenshotIndex < 0 || activeScreenshotIndex >= screenshots.length) {
+            activeScreenshotIndex = 0;
+        }
+        activeScreenshot = screenshots[activeScreenshotIndex];
+        previousIndex = activeScreenshotIndex <= 0 ? screenshots.length - 1 : activeScreenshotIndex - 1;
+        nextIndex = activeScreenshotIndex >= screenshots.length - 1 ? 0 : activeScreenshotIndex + 1;
+
+        return "<div class='details-section screenshot-section'><h3>Screenshots</h3>" +
+            "<div class='screenshot-viewer'>" +
+                "<button class='screenshot-nav screenshot-nav-left' type='button' data-action='select-screenshot' data-screenshot-index='" + previousIndex + "' title='Previous screenshot'>" + icon("gallery-chevron-left") + "</button>" +
+                "<button class='screenshot-main' type='button' data-action='screenshot-preview' data-image-url='" + Common.escapeHtml(activeScreenshot.url) + "' data-title='" + Common.escapeHtml(activeScreenshot.title) + "' data-caption='" + Common.escapeHtml(activeScreenshot.caption) + "'>" +
+                    "<img src='" + Common.escapeHtml(activeScreenshot.url) + "' alt='" + Common.escapeHtml(activeScreenshot.title) + "'>" +
+                "</button>" +
+                "<button class='screenshot-nav screenshot-nav-right' type='button' data-action='select-screenshot' data-screenshot-index='" + nextIndex + "' title='Next screenshot'>" + icon("gallery-chevron-right") + "</button>" +
+            "</div>" +
+            "<div class='screenshot-viewer-copy'><h3>" + Common.escapeHtml(activeScreenshot.title) + "</h3>" +
+            (activeScreenshot.caption ? "<p>" + Common.escapeHtml(activeScreenshot.caption) + "</p>" : "") + "</div>" +
+            "<div class='screenshot-gallery'>" + galleryItems.join("") + "</div></div>";
+    }
+
+    function closeScreenshotPreview() {
+        var previewElement = Common.byId("screenshotPreview");
+        if (previewElement) {
+            previewElement.parentNode.removeChild(previewElement);
+        }
+    }
+
+    function showScreenshotPreview() {
+        var packageInfo = findPackage(detailsGuid);
+        var screenshots = packageInfo ? validScreenshots(packageInfo) : [];
+        var activeScreenshot;
+        var previousIndex;
+        var nextIndex;
+        if (!screenshots.length) {
+            return false;
+        }
+        if (activeScreenshotIndex < 0 || activeScreenshotIndex >= screenshots.length) {
+            activeScreenshotIndex = 0;
+        }
+        activeScreenshot = screenshots[activeScreenshotIndex];
+        previousIndex = activeScreenshotIndex <= 0 ? screenshots.length - 1 : activeScreenshotIndex - 1;
+        nextIndex = activeScreenshotIndex >= screenshots.length - 1 ? 0 : activeScreenshotIndex + 1;
+        closeScreenshotPreview();
+        document.body.insertAdjacentHTML("beforeend", "<div id='screenshotPreview' class='screenshot-preview'>" +
+            "<div class='screenshot-preview-dialog'>" +
+                "<button class='screenshot-preview-close' type='button' data-action='close-screenshot-preview' title='Close preview'>" + icon("x") + "</button>" +
+                "<button class='screenshot-preview-nav screenshot-preview-nav-left' type='button' data-action='select-screenshot' data-screenshot-index='" + previousIndex + "' title='Previous screenshot'>" + icon("gallery-chevron-left") + "</button>" +
+                "<div class='screenshot-preview-image-wrap'><img src='" + Common.escapeHtml(activeScreenshot.url) + "' alt='" + Common.escapeHtml(activeScreenshot.title) + "'></div>" +
+                "<button class='screenshot-preview-nav screenshot-preview-nav-right' type='button' data-action='select-screenshot' data-screenshot-index='" + nextIndex + "' title='Next screenshot'>" + icon("gallery-chevron-right") + "</button>" +
+                "<div class='screenshot-preview-copy'><h3>" + Common.escapeHtml(activeScreenshot.title) + "</h3>" +
+                (activeScreenshot.caption ? "<p>" + Common.escapeHtml(activeScreenshot.caption) + "</p>" : "") + "</div>" +
+            "</div>" +
+        "</div>");
+        return true;
+    }
+
     function showDetailsTab(tabName) {
-        var normalizedTabName = tabName === "changelog" ? "changelog" : "information";
+        var normalizedTabName = tabName === "description" || tabName === "screenshots" || tabName === "changelog" ? tabName : "information";
         var detailsPage = Common.byId("detailsPage");
         var tabButtons = detailsPage.getElementsByTagName("button");
         var tabPanels = detailsPage.getElementsByTagName("div");
@@ -250,7 +631,10 @@
         var linkButtons;
         var releaseBadges;
         var updateButton;
+        var actionMarkup;
         var changelogCount;
+        var screenshotCount;
+        var hasFullDescription;
         if (!packageInfo) {
             showTab(activeTab);
             return;
@@ -272,7 +656,7 @@
             packageLinkButton(packageInfo, "documentation", "Documentation") +
             packageLinkButton(packageInfo, "support", "Support") +
             packageLinkButton(packageInfo, "license", "License");
-        releaseBadges = "<span class='badge'>" + Common.escapeHtml(packageInfo.runtime) + "</span>";
+        releaseBadges = packageInfo.runtime ? "<span class='badge'>" + Common.escapeHtml(packageInfo.runtime) + "</span>" : "";
         if (packageInfo.releaseChannel) {
             releaseBadges += "<span class='badge'>" + Common.escapeHtml(packageInfo.releaseChannel) + "</span>";
         }
@@ -282,18 +666,31 @@
         if (packageInfo.toolbarVisible) {
             releaseBadges += "<span class='badge badge-success'>Toolbar</span>";
         }
-        updateButton = packageInfo.updateAvailable ? "<a class='button' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update to " + Common.escapeHtml(packageInfo.latestVersion) + "</a>" : "";
+        updateButton = packageInfo.updateAvailable ? "<a class='button details-action-button' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update to " + Common.escapeHtml(packageInfo.latestVersion) + "</a>" : "";
+        actionMarkup = packageInfo.isRemote ?
+            "<a class='button button-primary details-action-button' href='maxpkg://manager/install/" + Common.encode(packageInfo.guid) + "' data-busy='Installing package...'>" + icon("download") + "Install</a>" :
+            "<a class='button button-primary details-action-button' href='maxpkg://manager/run/" + Common.encode(packageInfo.guid) + "' data-busy='Starting package...'>" + icon("play") + "Run</a>" +
+            updateButton + "<a class='button details-action-button' href='maxpkg://manager/open-folder/" + Common.encode(packageInfo.guid) + "'>" + icon("folder-open") + "Open Folder</a>";
         changelogCount = (packageInfo.changelogEntries || []).length;
+        screenshotCount = validScreenshots(packageInfo).length;
+        hasFullDescription = fullDescriptionContentHtml(packageInfo.fullDescription || "") !== "";
+        if (!hasFullDescription && detailsTab === "description") {
+            detailsTab = "information";
+        }
         Common.byId("detailsPathName").innerHTML = Common.escapeHtml(packageInfo.name);
-        Common.byId("detailsPage").innerHTML = "<div class='details-hero clearfix'>" + packageIcon(packageInfo, "details-icon") +
+        Common.byId("detailsPathRoot").innerHTML = packageInfo.isRemote ? "Discover" : "Installed";
+        Common.byId("detailsPage").innerHTML = "<div class='details-hero clearfix'>" + packageIcon(packageInfo, "details-icon", false) +
+            "<div class='details-hero-actions'>" + actionMarkup + "</div>" +
             "<div class='details-copy'><h1>" + Common.escapeHtml(packageInfo.name) + "</h1><p>Version " + Common.escapeHtml(packageInfo.version) + " by " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</p><div class='details-badges'>" + releaseBadges + "</div></div></div>" +
-            "<div class='details-primary-actions'><a class='button button-primary' href='maxpkg://manager/run/" + Common.encode(packageInfo.guid) + "' data-busy='Starting package...'>" + icon("play") + "Run</a>" +
-            updateButton + "<a class='button' href='maxpkg://manager/open-folder/" + Common.encode(packageInfo.guid) + "'>" + icon("folder-open") + "Open Folder</a></div>" +
             "<div class='details-section'><h3>Description</h3><p>" + Common.escapeHtml(packageInfo.description || "No description provided.") + "</p></div>" +
             "<div class='details-tabs' role='tablist'><button class='details-tab' type='button' data-action='details-tab' data-details-tab='information'>Information</button>" +
+            (hasFullDescription ? "<button class='details-tab' type='button' data-action='details-tab' data-details-tab='description'>Description</button>" : "") +
+            "<button class='details-tab' type='button' data-action='details-tab' data-details-tab='screenshots'>Screenshots<span class='details-tab-count'>" + screenshotCount + "</span></button>" +
             "<button class='details-tab' type='button' data-action='details-tab' data-details-tab='changelog'>Changelog<span class='details-tab-count'>" + changelogCount + "</span></button></div>" +
             "<div class='details-tab-panel' data-details-panel='information'><div class='details-section'><h3>Package information</h3><table class='table details-table'>" + packageRows + "</table></div>" +
             (linkButtons ? "<div class='details-section'><h3>Links</h3><div class='details-link-actions'>" + linkButtons + "</div></div>" : "") + "</div>" +
+            (hasFullDescription ? "<div class='details-tab-panel is-hidden' data-details-panel='description'>" + fullDescriptionHtml(packageInfo) + "</div>" : "") +
+            "<div class='details-tab-panel is-hidden' data-details-panel='screenshots'>" + screenshotGalleryHtml(packageInfo) + "</div>" +
             "<div class='details-tab-panel is-hidden' data-details-panel='changelog'>" + changelogHtml(packageInfo) + "</div>";
         showDetailsTab(detailsTab);
     }
@@ -327,13 +724,20 @@
     }
 
     function showDetails(packageGuid) {
+        var packageInfo = findPackage(packageGuid);
         if (!detailsGuid) {
             detailsListScrollTop = Common.byId("pageHost").scrollTop;
         }
         if (detailsGuid !== packageGuid) {
             detailsTab = "information";
+            activeScreenshotIndex = 0;
         }
         detailsGuid = packageGuid;
+        if (packageInfo && packageInfo.isRemote && !packageInfo.detailsLoaded) {
+            Common.byId("busyMessage").innerHTML = "Loading package details...";
+            Common.removeClass(Common.byId("busyShade"), "is-hidden");
+            window.location.href = "maxpkg://manager/remote-details/" + Common.encode(packageGuid);
+        }
         Common.addClass(Common.byId("installedPage"), "is-hidden");
         Common.addClass(Common.byId("discoverPage"), "is-hidden");
         Common.removeClass(Common.byId("detailsPage"), "is-hidden");
@@ -372,6 +776,9 @@
             activeSort = currentState.settings.managerSort || activeSort;
             window.MaxPkgDropdown.setSelectValue(Common.byId("sortSelect"), activeSort);
             renderAll();
+            if (activeTab === "discover" && !currentState.discover.available && !currentState.discover.errorCode) {
+                requestCatalog(1);
+            }
         } catch (parseError) {
             showNotification("Manager could not read Runtime state.", "error");
             Common.addClass(Common.byId("busyShade"), "is-hidden");
@@ -390,7 +797,7 @@
         } else if (normalizedNotificationType === "warning") {
             notificationIcon = "!";
         } else if (normalizedNotificationType === "error") {
-            notificationIcon = "&#215;";
+            notificationIcon = "<img class='notification-icon-image' src='../common/icons/circle-x.svg' alt=''>";
         }
         notificationElement.className = "notification notification-" + normalizedNotificationType;
         notificationElement.innerHTML = "<span class='notification-icon'>" + notificationIcon + "</span><span class='notification-message'>" + Common.escapeHtml(messageText) + "</span>";
@@ -471,6 +878,7 @@
         Common.byId("autoDownloadCheck").checked = !!settings.downloadUpdatesAutomatically;
         Common.byId("apiEndpointInput").value = settings.apiEndpoint || settings.defaultApiEndpoint || "";
         Common.byId("toolbarVisibleCheck").checked = !!settings.toolbarVisible;
+        window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarTitleSelect"), settings.toolbarTitleMode || "packageName");
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarButtonSizeSelect"), settings.toolbarButtonSize || "medium");
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarSubtitleSelect"), settings.toolbarSubtitleMode || "version");
         Common.byId("developerModeCheck").checked = !!settings.developerMode;
@@ -503,6 +911,7 @@
         }
         queryParts.push("apiEndpoint=" + Common.encode(endpointOverride));
         queryParts.push("toolbarVisible=" + boolText(Common.byId("toolbarVisibleCheck").checked));
+        queryParts.push("toolbarTitleMode=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarTitleSelect"))));
         queryParts.push("toolbarButtonSize=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarButtonSizeSelect"))));
         queryParts.push("toolbarSubtitleMode=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarSubtitleSelect"))));
         queryParts.push("developerMode=" + boolText(Common.byId("developerModeCheck").checked));
@@ -564,7 +973,11 @@
         }
         if (tabElement) {
             showTab(tabElement.getAttribute("data-tab"));
-            window.location.href = "maxpkg://manager/view?tab=" + Common.encode(activeTab) + "&filter=" + Common.encode(activeFilter) + "&sort=" + Common.encode(activeSort);
+            if (activeTab === "discover") {
+                requestCatalog(1);
+            } else {
+                window.location.href = "maxpkg://manager/view?tab=" + Common.encode(activeTab) + "&filter=" + Common.encode(activeFilter) + "&sort=" + Common.encode(activeSort);
+            }
             return;
         }
         if (filterElement) {
@@ -592,6 +1005,26 @@
         } else if (actionName === "details-tab") {
             Common.preventDefault(eventObject);
             showDetailsTab(actionElement.getAttribute("data-details-tab"));
+        } else if (actionName === "catalog-retry") {
+            Common.preventDefault(eventObject);
+            requestCatalog(1);
+        } else if (actionName === "discover-page") {
+            Common.preventDefault(eventObject);
+            requestCatalog(parseInt(actionElement.getAttribute("data-page"), 10) || 1);
+        } else if (actionName === "screenshot-preview") {
+            Common.preventDefault(eventObject);
+            showScreenshotPreview();
+        } else if (actionName === "select-screenshot") {
+            Common.preventDefault(eventObject);
+            activeScreenshotIndex = parseInt(actionElement.getAttribute("data-screenshot-index"), 10) || 0;
+            if (Common.byId("screenshotPreview")) {
+                showScreenshotPreview();
+            } else {
+                renderDetails();
+            }
+        } else if (actionName === "close-screenshot-preview") {
+            Common.preventDefault(eventObject);
+            closeScreenshotPreview();
         } else if (actionName === "copy") {
             Common.preventDefault(eventObject);
             if (Common.copyText(actionElement.getAttribute("data-copy"))) {
@@ -604,20 +1037,32 @@
     }
 
     function initialize() {
+        var searchInput = Common.byId("searchInput");
+        var observedSearchContent = searchInput.value;
         var debouncedSearch = window.MaxPkgSearch.debounce(function () {
-            searchText = Common.byId("searchInput").value.toLowerCase().replace(/^\s+|\s+$/g, "");
-            Common.toggleClass(Common.byId("clearSearchButton"), "is-hidden", !searchText);
-            renderInstalled();
+            searchText = searchInput.value.toLowerCase().replace(/^\s+|\s+$/g, "");
+            if (activeTab === "discover") {
+                requestCatalog(1);
+            } else {
+                renderInstalled();
+            }
         }, 300);
+        var queueSearch = function () {
+            var currentSearchContent = searchInput.value;
+            if (currentSearchContent === observedSearchContent) {
+                return;
+            }
+            observedSearchContent = currentSearchContent;
+            debouncedSearch();
+        };
         Common.on(document, "click", handleDocumentClick);
         Common.on(window, "resize", layoutHeader);
-        Common.on(Common.byId("searchInput"), "keyup", debouncedSearch);
-        Common.on(Common.byId("clearSearchButton"), "click", function () {
-            Common.byId("searchInput").value = "";
-            searchText = "";
-            Common.addClass(Common.byId("clearSearchButton"), "is-hidden");
-            renderInstalled();
-        });
+        Common.on(searchInput, "keyup", queueSearch);
+        Common.on(searchInput, "input", queueSearch);
+        Common.on(searchInput, "propertychange", queueSearch);
+        Common.on(searchInput, "paste", queueSearch);
+        Common.on(searchInput, "cut", queueSearch);
+        window.setInterval(queueSearch, 200);
         window.MaxPkgDropdown.bindSelect(Common.byId("sortSelect"), function (selectedValue) {
             activeSort = selectedValue;
             renderInstalled();
@@ -625,6 +1070,7 @@
         });
         window.MaxPkgDropdown.bindSelect(Common.byId("languageSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("frequencySelect"), saveSettings);
+        window.MaxPkgDropdown.bindSelect(Common.byId("toolbarTitleSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarButtonSizeSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarSubtitleSelect"), saveSettings);
         bindImmediateSettingsSave("autoStartCheck");

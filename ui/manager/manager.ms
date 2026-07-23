@@ -144,9 +144,41 @@
             return "[" + (utils.join changelogContent separator: ",") + "]"
         ),
 
+        fn screenshotsJson screenshotEntries = (
+            local screenshotContent = #()
+            for screenshotEntry in screenshotEntries do (
+                local entryContent = "{"
+                entryContent += "\"url\":" + (utils.jsonString screenshotEntry.imageUrl) + ","
+                entryContent += "\"thumbnailUrl\":" + (utils.jsonString screenshotEntry.thumbnailUrl) + ","
+                entryContent += "\"title\":" + (utils.jsonString screenshotEntry.titleContent) + ","
+                entryContent += "\"caption\":" + (utils.jsonString screenshotEntry.captionContent) + ","
+                entryContent += "\"sortOrder\":" + (screenshotEntry.sortOrder as string)
+                entryContent += "}"
+                append screenshotContent entryContent
+            )
+            return "[" + (utils.join screenshotContent separator: ",") + "]"
+        ),
+
+        fn optionalString sourceData propertyName = (
+            if (not (isProperty sourceData propertyName)) do return ""
+            local propertyContent = getProperty sourceData propertyName
+            if (propertyContent == undefined) do return ""
+            return propertyContent as string
+        ),
+
+        fn optionalBoolean sourceData propertyName = (
+            if (not (isProperty sourceData propertyName)) do return false
+            return getProperty sourceData propertyName
+        ),
+
         fn packageJson packageInfo = (
-            local toolbarVisible = packageInfo.toolbarVisible and not (packageIsHidden packageInfo.guid)
-            local iconUrl = if (packageInfo.iconFile != "" and doesFileExist packageInfo.iconFile) then utils.fileUrl packageInfo.iconFile else ""
+            local isRemotePackage = optionalBoolean packageInfo #isRemote
+            local toolbarVisible = if (isRemotePackage) then false else packageInfo.toolbarVisible and not (packageIsHidden packageInfo.guid)
+            local iconUrl = optionalString packageInfo #iconUrl
+            local packageIconUrl = optionalString packageInfo #packageIconUrl
+            local coverImageUrl = optionalString packageInfo #coverImageUrl
+            local screenshotEntries = if (isProperty packageInfo #screenshotEntries) then packageInfo.screenshotEntries else #()
+            if (iconUrl == "" and packageInfo.iconFile != "" and doesFileExist packageInfo.iconFile) do iconUrl = utils.fileUrl packageInfo.iconFile
             local packageContent = "{"
             packageContent += "\"guid\":" + (utils.jsonString packageInfo.guid) + ","
             packageContent += "\"slug\":" + (utils.jsonString packageInfo.slug) + ","
@@ -155,6 +187,8 @@
             packageContent += "\"version\":" + (utils.jsonString packageInfo.version) + ","
             packageContent += "\"developer\":" + (utils.jsonString packageInfo.developer) + ","
             packageContent += "\"description\":" + (utils.jsonString packageInfo.description) + ","
+            packageContent += "\"fullDescription\":" + (utils.jsonString (optionalString packageInfo #fullDescription)) + ","
+            packageContent += "\"category\":" + (utils.jsonString (optionalString packageInfo #category)) + ","
             packageContent += "\"helpUrl\":" + (utils.jsonString packageInfo.helpUrl) + ","
             packageContent += "\"documentationUrl\":" + (utils.jsonString packageInfo.documentationUrl) + ","
             packageContent += "\"homepageUrl\":" + (utils.jsonString packageInfo.homepageUrl) + ","
@@ -172,10 +206,16 @@
             packageContent += "\"runtime\":" + (utils.jsonString packageInfo.runtime) + ","
             packageContent += "\"entry\":" + (utils.jsonString packageInfo.entry) + ","
             packageContent += "\"iconUrl\":" + (utils.jsonString iconUrl) + ","
+            packageContent += "\"packageIconUrl\":" + (utils.jsonString packageIconUrl) + ","
+            packageContent += "\"coverImageUrl\":" + (utils.jsonString coverImageUrl) + ","
+            packageContent += "\"screenshots\":" + (screenshotsJson screenshotEntries) + ","
+            packageContent += "\"downloadUrl\":" + (utils.jsonString (optionalString packageInfo #downloadUrl)) + ","
             packageContent += "\"installPath\":" + (utils.jsonString packageInfo.installPath) + ","
             packageContent += "\"toolbarVisible\":" + (boolJson toolbarVisible) + ","
             packageContent += "\"updateAvailable\":" + (boolJson packageInfo.updateAvailable) + ","
-            packageContent += "\"latestVersion\":" + (utils.jsonString packageInfo.latestVersion)
+            packageContent += "\"latestVersion\":" + (utils.jsonString packageInfo.latestVersion) + ","
+            packageContent += "\"isRemote\":" + (boolJson isRemotePackage) + ","
+            packageContent += "\"detailsLoaded\":" + (boolJson (optionalBoolean packageInfo #detailsLoaded))
             packageContent += "}"
             return packageContent
         ),
@@ -186,10 +226,42 @@
             return "[" + (utils.join packageEntries separator: ",") + "]"
         ),
 
+        fn apiPackagesJson responseInfo = (
+            local packageEntries = #()
+            if (responseInfo != undefined) do (
+                for packageInfo in responseInfo.packages do append packageEntries (packageJson packageInfo)
+            )
+            return "[" + (utils.join packageEntries separator: ",") + "]"
+        ),
+
+        fn discoverJson = (
+            local responseInfo = owner.catalogState
+            if (responseInfo == undefined) do return "{\"available\":false,\"message\":\"Load the catalog to browse packages.\",\"packages\":[],\"page\":1,\"pageSize\":24,\"total\":0,\"totalPages\":0}"
+            local discoverContent = "{"
+            discoverContent += "\"available\":" + (boolJson responseInfo.success) + ","
+            discoverContent += "\"message\":" + (utils.jsonString responseInfo.errorMessage) + ","
+            discoverContent += "\"errorCode\":" + (utils.jsonString responseInfo.errorCode) + ","
+            discoverContent += "\"requestId\":" + (utils.jsonString responseInfo.requestId) + ","
+            discoverContent += "\"packages\":" + (apiPackagesJson responseInfo) + ","
+            discoverContent += "\"page\":" + (responseInfo.page as string) + ","
+            discoverContent += "\"pageSize\":" + (responseInfo.pageSize as string) + ","
+            discoverContent += "\"total\":" + (responseInfo.total as string) + ","
+            discoverContent += "\"totalPages\":" + (responseInfo.totalPages as string)
+            discoverContent += "}"
+            return discoverContent
+        ),
+
+        fn remoteDetailsJson = (
+            local responseInfo = owner.remotePackageDetails
+            if (responseInfo == undefined or not responseInfo.success or responseInfo.packageInfo == undefined) do return "null"
+            return packageJson responseInfo.packageInfo
+        ),
+
         fn settingsJson = (
             local settings = owner.settings
             local settingsContent = "{"
             settingsContent += "\"toolbarVisible\":" + (boolJson settings.toolbarVisible) + ","
+            settingsContent += "\"toolbarTitleMode\":" + (utils.jsonString settings.toolbarTitleMode) + ","
             settingsContent += "\"toolbarSubtitleMode\":" + (utils.jsonString settings.toolbarSubtitleMode) + ","
             settingsContent += "\"toolbarButtonSize\":" + (utils.jsonString settings.toolbarButtonSize) + ","
             settingsContent += "\"notifications\":" + (boolJson settings.notifications) + ","
@@ -215,14 +287,15 @@
             local updateCount = 0
             for packageInfo in owner.packages where packageInfo.updateAvailable do updateCount += 1
             local isRepositoryConfigured = (utils.resolveApiEndpoint owner.settings.apiEndpoint) != ""
-            local discoverMessage = if (isRepositoryConfigured) then "The configured endpoint supports installed-package update checks, but no Discover catalog contract is configured." else "No repository endpoint is configured. Installed packages remain fully available offline."
+            local isRepositoryOnline = owner.catalogState != undefined and owner.catalogState.success
             local stateContent = "{"
             stateContent += "\"runtimeVersion\":" + (utils.jsonString owner.version) + ","
             stateContent += "\"packages\":" + packagesJson() + ","
             stateContent += "\"updateCount\":" + (updateCount as string) + ","
-            stateContent += "\"connection\":" + (utils.jsonString (if (isRepositoryConfigured) then "configured" else "offline")) + ","
+            stateContent += "\"connection\":" + (utils.jsonString (if (isRepositoryOnline) then "online" else if (isRepositoryConfigured) then "configured" else "offline")) + ","
             stateContent += "\"settings\":" + settingsJson() + ","
-            stateContent += "\"discover\":{\"available\":false,\"message\":" + (utils.jsonString discoverMessage) + "}"
+            stateContent += "\"discover\":" + discoverJson() + ","
+            stateContent += "\"remoteDetails\":" + remoteDetailsJson()
             stateContent += "}"
             return stateContent
         ),
@@ -295,6 +368,7 @@
 
         fn saveSettings queryString = (
             local previousToolbarVisibility = owner.settings.toolbarVisible
+            local previousToolbarTitleMode = owner.settings.toolbarTitleMode
             local previousToolbarSubtitleMode = owner.settings.toolbarSubtitleMode
             local previousToolbarButtonSize = owner.settings.toolbarButtonSize
             owner.settings.language = queryParameter queryString "language" defaultContent: owner.settings.language
@@ -307,12 +381,13 @@
             owner.settings.updateFrequencyHours = amax 1 (amin 720 (integerParameter queryString "updateFrequencyHours" owner.settings.updateFrequencyHours))
             owner.settings.apiEndpoint = queryParameter queryString "apiEndpoint" defaultContent: owner.settings.apiEndpoint
             owner.settings.toolbarVisible = boolParameter queryString "toolbarVisible" defaultState: owner.settings.toolbarVisible
+            owner.settings.toolbarTitleMode = queryParameter queryString "toolbarTitleMode" defaultContent: owner.settings.toolbarTitleMode
             owner.settings.toolbarSubtitleMode = queryParameter queryString "toolbarSubtitleMode" defaultContent: owner.settings.toolbarSubtitleMode
             owner.settings.toolbarButtonSize = queryParameter queryString "toolbarButtonSize" defaultContent: owner.settings.toolbarButtonSize
             owner.settings.developerMode = boolParameter queryString "developerMode" defaultState: owner.settings.developerMode
             owner.settings.debugLogging = boolParameter queryString "debugLogging" defaultState: owner.settings.debugLogging
             if (not (owner.saveSettings())) do return false
-            if (previousToolbarVisibility != owner.settings.toolbarVisible or previousToolbarSubtitleMode != owner.settings.toolbarSubtitleMode or previousToolbarButtonSize != owner.settings.toolbarButtonSize) do owner.rebuildToolbar()
+            if (previousToolbarVisibility != owner.settings.toolbarVisible or previousToolbarTitleMode != owner.settings.toolbarTitleMode or previousToolbarSubtitleMode != owner.settings.toolbarSubtitleMode or previousToolbarButtonSize != owner.settings.toolbarButtonSize) do owner.rebuildToolbar()
             return true
         ),
 
@@ -336,6 +411,13 @@
                 local availableUpdates = owner.checkUpdates()
                 notify ((availableUpdates.count as string) + " update(s) available.")
             )
+            if (commandPath == "catalog") do (
+                owner.settings.managerLastTab = "discover"
+                owner.saveSettings()
+                local catalogResponse = owner.browsePackages queryText: (queryParameter queryString "query") categoryFilter: (queryParameter queryString "category") sortMode: (queryParameter queryString "sort" defaultContent: "popular") pageNumber: (integerParameter queryString "page" 1) pageSize: (integerParameter queryString "pageSize" 24)
+                isSuccess = catalogResponse.success
+                if (not isSuccess) do notify (if (catalogResponse.errorMessage != "") then catalogResponse.errorMessage else "Could not load the package catalog.") notificationType: "error"
+            )
             if (commandPath == "update-all") do (
                 isSuccess = owner.updateAll()
                 notify (if (isSuccess) then "Packages updated." else "Package update failed. Check the Runtime log.") notificationType: (if (isSuccess) then "success" else "error")
@@ -355,8 +437,20 @@
                 if (not isSuccess) do notify "Package could not be started." notificationType: "error"
             )
             if (matchPattern commandPath pattern: "update/*" ignoreCase: true) do (
-                isSuccess = owner.updatePackage (commandArgument commandPath "update/")
-                notify (if (isSuccess) then "Package updated." else "Package update failed.") notificationType: (if (isSuccess) then "success" else "error")
+                local installStatus = owner.updatePackage (commandArgument commandPath "update/")
+                isSuccess = installStatus.success
+                notify (if (isSuccess) then "Package updated." else installStatus.errorMessage) notificationType: (if (isSuccess) then "success" else "error")
+            )
+            if (matchPattern commandPath pattern: "install/*" ignoreCase: true) do (
+                local installStatus = owner.install (commandArgument commandPath "install/")
+                isSuccess = installStatus.success
+                if (isSuccess) do owner.remotePackageDetails = undefined
+                notify (if (isSuccess) then "Package installed." else installStatus.errorMessage) notificationType: (if (isSuccess) then "success" else "error")
+            )
+            if (matchPattern commandPath pattern: "remote-details/*" ignoreCase: true) do (
+                local detailsResponse = owner.getRemotePackageDetails (commandArgument commandPath "remote-details/")
+                isSuccess = detailsResponse.success
+                if (not isSuccess) do notify (if (detailsResponse.errorMessage != "") then detailsResponse.errorMessage else "Could not load package details.") notificationType: "error"
             )
             if (matchPattern commandPath pattern: "uninstall/*" ignoreCase: true) do (
                 local packageGuid = commandArgument commandPath "uninstall/"

@@ -1,5 +1,6 @@
 settings.ini
 data/settings.ini
 data/update-response.ini
+data/api-response.ini
 logs/*.log
 tests/*.log

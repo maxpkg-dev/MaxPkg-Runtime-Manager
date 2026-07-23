@@ -40,8 +40,11 @@
             local client = undefined
             try (
                 client = dotNetObject "System.Net.WebClient"
+                local encodingClass = dotNetClass "System.Text.Encoding"
+                client.Encoding = encodingClass.UTF8
                 client.Headers.Add "User-Agent" "MaxPkg-Runtime/1.0"
                 client.Headers.Add "Content-Type" "application/x-www-form-urlencoded"
+                client.Headers.Add "Accept" "text/plain"
                 local responseBody = client.UploadString url body
                 client.Dispose()
                 return responseBody

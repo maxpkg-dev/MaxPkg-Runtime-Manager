@@ -79,7 +79,12 @@
             if (packageInfo.iconFile != "" and doesFileExist packageInfo.iconFile) do (
                 iconHtml = "<img class='ico' src='" + (utils.htmlEscape (utils.fileUrl packageInfo.iconFile)) + "'>"
             )
-            local buttonLabel = utils.htmlEscape packageInfo.buttonName
+            local titleSource = case owner.settings.toolbarTitleMode of (
+                "buttonName": packageInfo.buttonName
+                default: packageInfo.packageName
+            )
+            if (titleSource == "") do titleSource = packageInfo.packageName
+            local buttonLabel = utils.htmlEscape titleSource
             local subtitleLabel = case owner.settings.toolbarSubtitleMode of (
                 "none": ""
                 "developer": utils.htmlEscape packageInfo.developer

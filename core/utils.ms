@@ -119,6 +119,21 @@
             return "\"" + (jsonEscape sourceContent) + "\""
         ),
 
+        fn formEncode sourceContent = (
+            local uriClass = dotNetClass "System.Uri"
+            return uriClass.EscapeDataString (trim sourceContent)
+        ),
+
+        fn formField fieldName fieldContent = (
+            return (formEncode fieldName) + "=" + (formEncode fieldContent)
+        ),
+
+        fn current3dsMaxYear = (
+            local versionInfo = maxVersion()
+            if (versionInfo.count >= 8) do return versionInfo[8]
+            return 1998 + ((versionInfo[1] / 1000) as integer)
+        ),
+
         fn normalizeApiEndpoint endpointContent = (
             local normalizedEndpoint = trim endpointContent
             if (normalizedEndpoint == "") do return ""

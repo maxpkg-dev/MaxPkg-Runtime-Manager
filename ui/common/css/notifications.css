@@ -73,7 +73,7 @@
 }
 
 .notification-error .notification-icon {
-    background: #b64f5d;
+    background: transparent;
 }
 
 .busy-shade {

@@ -9,8 +9,11 @@
     local runtimeRoot = getFilenamePath (substring testRoot 1 (testRoot.count - 1))
     local startupFile = runtimeRoot + "startup.ms"
     local utilsModule = fileIn (runtimeRoot + @"core\utils.ms")
+    local iniModule = fileIn (runtimeRoot + @"core\ini.ms")
+    local repositoryModule = fileIn (runtimeRoot + @"core\repository.ms")
     local guidClass = dotNetClass "System.Guid"
-    local deleteTestId = guidClass.NewGuid().ToString()
+    local deleteTestGuid = guidClass.NewGuid()
+    local deleteTestId = deleteTestGuid.ToString()
     local deleteTestRoot = (utilsModule.ensureSlash (getDir #temp)) + "maxpkg-delete-test-" + deleteTestId + @"\"
     local deleteTestFilePath = deleteTestRoot + "read-only.tmp"
     local deleteTestStream = undefined
@@ -27,6 +30,20 @@
     close deleteTestStream
     setFileAttribute deleteTestFilePath #readOnly true
     if (not (utilsModule.forceDeleteFolder deleteTestRoot)) do throw "Read-only folder deletion failed."
+    local apiTestFilePath = (utilsModule.ensureSlash (getDir #temp)) + "maxpkg-api-response-" + deleteTestId + ".ini"
+    local apiTestStream = createFile apiTestFilePath
+    if (apiTestStream == undefined) do throw "Could not create the Runtime API parser test file."
+    format "[Catalog]\nPage=1\nPageSize=24\nTotal=1\nTotalPages=1\n\n[test-package-guid]\nGuid=test-package-guid\nSlug=test-package\nName=Test Package\nVersion=1.2.3\nDescription=Line one\\nLine two\nMin3dsMax=2012\nMax3dsMax=2026\nDownloadUrl=https://maxpkg.dev/api/runtime/v1/download/package/test-package-guid/1.2.3\n" to: apiTestStream
+    close apiTestStream
+    repositoryModule.ini = iniModule
+    repositoryModule.utils = utilsModule
+    local parsedApiResponse = repositoryModule.parsePackages apiTestFilePath
+    if (not parsedApiResponse.success or parsedApiResponse.packages.count != 1) do throw "Runtime API catalog response parsing failed."
+    if (parsedApiResponse.packageInfo.description != "Line one\r\nLine two") do throw "Runtime API escaped newline parsing failed."
+    if (parsedApiResponse.packageInfo.downloadUrl == "") do throw "Runtime API DownloadUrl parsing failed."
+    local compatibleApiResponse = repositoryModule.enforceMinimum3dsMax parsedApiResponse requireCompatiblePackage: true
+    if (not compatibleApiResponse.success or compatibleApiResponse.packages.count != 1) do throw "Maximum 3ds Max version incorrectly restricted package compatibility."
+    utilsModule.forceDeleteFile apiTestFilePath
     if (not (fileIn startupFile)) do throw "Initial Runtime startup failed."
     if (MaxPkg == undefined) do throw "MaxPkg global was not created."
     if (maxpkg != MaxPkg) do throw "Lowercase maxpkg did not resolve to the MaxPkg global."
@@ -37,7 +54,8 @@
     if (not (isProperty MaxPkg.settings #toolbarSubtitleMode)) do throw "Toolbar subtitle mode is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarButtonSize)) do throw "Toolbar button size is unavailable."
     if (not (isProperty MaxPkg.settings #apiEndpoint)) do throw "API endpoint setting is unavailable."
-    if (MaxPkg.getStatus().connection != "configured") do throw "Default API endpoint fallback is unavailable."
+    local runtimeStatus = MaxPkg.getStatus()
+    if (runtimeStatus.connection != "configured") do throw "Default API endpoint fallback is unavailable."
     if ((classOf (MaxPkg.getPackages())) != Array) do throw "MaxPkg.getPackages() did not return an array."
     if (MaxPkg.getSettings() == undefined) do throw "MaxPkg.getSettings() is unavailable."
     if (MaxPkg.getStatus() == undefined) do throw "MaxPkg.getStatus() is unavailable."
@@ -61,8 +79,10 @@
     local discoveredPackages = MaxPkg.scan()
     if ((classOf discoveredPackages) != Array) do throw "MaxPkg.scan() did not return an array."
     if ((MaxPkg.run "__maxpkg_missing_package__") != false) do throw "Missing package resolution did not fail safely."
-    if (maxpkg.install undefined != false) do throw "Lowercase maxpkg installation call did not fail safely."
-    if ((MaxPkg.updatePackage "__maxpkg_missing_package__") != false) do throw "Missing package update did not fail safely."
+    local invalidInstallStatus = maxpkg.install undefined
+    if (invalidInstallStatus.success or invalidInstallStatus.errorMessage == "") do throw "Lowercase maxpkg installation call did not return a useful failure status."
+    local missingUpdateStatus = MaxPkg.updatePackage "__maxpkg_missing_package__"
+    if (missingUpdateStatus.success or missingUpdateStatus.errorMessage == "") do throw "Missing package update did not return a useful failure status."
     if ((MaxPkg.setToolbarVisible "__maxpkg_missing_package__" true) != false) do throw "Missing toolbar package did not fail safely."
     if ((MaxPkg.openPackageFolder "__maxpkg_missing_package__") != false) do throw "Missing package folder did not fail safely."
     if (MaxPkg.openPackageLink "__maxpkg_missing_package__" "homepage" != false) do throw "Missing package link did not fail safely."

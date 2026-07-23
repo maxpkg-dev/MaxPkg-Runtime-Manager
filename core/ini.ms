@@ -48,6 +48,16 @@
                 if (logger != undefined) do logger.logWarning "ini" ("Could not read section [" + iniSection + "] from " + filePath + ": " + getCurrentException())
                 return #()
             )
+        ),
+
+        fn sections filePath = (
+            if (not (doesFileExist filePath)) do return #()
+            try (
+                return getINISetting filePath
+            ) catch (
+                if (logger != undefined) do logger.logWarning "ini" ("Could not list sections in " + filePath + ": " + getCurrentException())
+                return #()
+            )
         )
     )
 
