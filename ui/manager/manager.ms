@@ -1,170 +1,505 @@
+-- Hosts Manager HTML UI and routes commands to Runtime.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
     local managerOwner = undefined
 
-    rollout MaxPkgRuntimeManagerRollout "MaxPkg Manager" width:520 height:410 (
-        listBox packageList "Installed packages" pos:[12,12] width:496 height:15
-        button runButton "Run" pos:[12,292] width:90 height:26
-        button uninstallButton "Uninstall" pos:[108,292] width:90 height:26
-        button hideButton "Hide button" pos:[214,292] width:90 height:26
-        button upButton "Move up" pos:[310,292] width:90 height:26
-        button downButton "Move down" pos:[406,292] width:90 height:26
-        button toolbarButton "Hide toolbar" pos:[12,330] width:110 height:26
-        button refreshButton "Refresh" pos:[310,330] width:90 height:26
-        button closeButton "Close" pos:[406,330] width:90 height:26
+    rollout MaxPkgRuntimeManagerRollout "MaxPkg Manager" width:900 height:650 (
+        dotNetControl browser "System.Windows.Forms.WebBrowser" pos:[0,0] width:900 height:650
 
-        on MaxPkgRuntimeManagerRollout open do if managerOwner != undefined do managerOwner.refresh()
-        on runButton pressed do if managerOwner != undefined do managerOwner.runSelected()
-        on uninstallButton pressed do if managerOwner != undefined do managerOwner.uninstallSelected()
-        on hideButton pressed do if managerOwner != undefined do managerOwner.toggleSelected()
-        on upButton pressed do if managerOwner != undefined do managerOwner.moveSelected -1
-        on downButton pressed do if managerOwner != undefined do managerOwner.moveSelected 1
-        on toolbarButton pressed do if managerOwner != undefined do managerOwner.toggleToolbar()
-        on refreshButton pressed do if managerOwner != undefined do managerOwner.refreshAll()
-        on closeButton pressed do destroyDialog MaxPkgRuntimeManagerRollout
+        on browser Navigating sender navigationArgs do (
+            if managerOwner != undefined do managerOwner.onNavigate navigationArgs
+        )
+
+        on browser DocumentCompleted sender documentArgs do (
+            if managerOwner != undefined do managerOwner.onDocumentReady sender documentArgs
+        )
+
+        on browser Enter sender focusArgs do (
+            if (managerOwner != undefined) do managerOwner.setBrowserInputActive true
+        )
+
+        on browser Leave sender focusArgs do (
+            if (managerOwner != undefined) do managerOwner.setBrowserInputActive false
+        )
+
+        on MaxPkgRuntimeManagerRollout open do (
+            if managerOwner != undefined do managerOwner.handleDialogOpened browser
+        )
+
+        on MaxPkgRuntimeManagerRollout resized dialogSize do (
+            if (managerOwner != undefined) then (
+                managerOwner.handleDialogResized dialogSize browser
+            ) else (
+                browser.width = dialogSize.x
+                browser.height = dialogSize.y
+            )
+        )
+
+        on MaxPkgRuntimeManagerRollout moved dialogPosition do (
+            if managerOwner != undefined do managerOwner.onMove dialogPosition
+        )
+
+        on MaxPkgRuntimeManagerRollout close do (
+            try (
+                enableAccelerators = true
+            ) catch (
+            )
+            if managerOwner != undefined do managerOwner.handleDialogClosed()
+        )
     )
 
     struct MaxPkgManagerModule (
         owner,
-        settingsModule,
+        utils,
         logger,
+        runtimeRoot,
         rolloutRef,
+        dialogOpen = false,
+        browserReady = false,
+        minimumDialogWidth = 720,
+        minimumDialogHeight = 520,
 
-        fn packageLabels = (
-            local packageNames = #()
-            for package in owner.packages do append packageNames (package.name + "  v" + package.version + "  -  " + package.developer)
-            return packageNames
+        fn setBrowserInputActive isActive = (
+            try (
+                enableAccelerators = not isActive
+                return true
+            ) catch (
+                logger.logWarning "manager" ("Could not change 3ds Max accelerator state: " + getCurrentException())
+                return false
+            )
         ),
 
-        fn selectedPackage = (
-            local index = rolloutRef.packageList.selection
-            if index < 1 or index > owner.packages.count do return undefined
-            return owner.packages[index]
+        fn boolJson isEnabled = (
+            return (if isEnabled then "true" else "false")
+        ),
+
+        fn packageIsHidden packageGuid = (
+            for hiddenGuid in owner.settings.hiddenPackages where (toLower hiddenGuid) == (toLower packageGuid) do return true
+            return false
+        ),
+
+        fn changelogJson changelogEntries = (
+            local changelogContent = #()
+            for changelogEntry in changelogEntries do (
+                local entryContent = "{"
+                entryContent += "\"changeType\":" + (utils.jsonString changelogEntry.changeType) + ","
+                entryContent += "\"messageContent\":" + (utils.jsonString changelogEntry.messageContent)
+                entryContent += "}"
+                append changelogContent entryContent
+            )
+            return "[" + (utils.join changelogContent separator: ",") + "]"
+        ),
+
+        fn packageJson packageInfo = (
+            local toolbarVisible = packageInfo.toolbarVisible and not (packageIsHidden packageInfo.guid)
+            local iconUrl = if packageInfo.icon != "" and doesFileExist packageInfo.icon then utils.fileUrl packageInfo.icon else ""
+            local packageContent = "{"
+            packageContent += "\"guid\":" + (utils.jsonString packageInfo.guid) + ","
+            packageContent += "\"slug\":" + (utils.jsonString packageInfo.slug) + ","
+            packageContent += "\"name\":" + (utils.jsonString packageInfo.name) + ","
+            packageContent += "\"buttonName\":" + (utils.jsonString packageInfo.buttonName) + ","
+            packageContent += "\"version\":" + (utils.jsonString packageInfo.version) + ","
+            packageContent += "\"developer\":" + (utils.jsonString packageInfo.developer) + ","
+            packageContent += "\"description\":" + (utils.jsonString packageInfo.description) + ","
+            packageContent += "\"helpUrl\":" + (utils.jsonString packageInfo.helpUrl) + ","
+            packageContent += "\"documentationUrl\":" + (utils.jsonString packageInfo.documentationUrl) + ","
+            packageContent += "\"homepageUrl\":" + (utils.jsonString packageInfo.homepageUrl) + ","
+            packageContent += "\"supportUrl\":" + (utils.jsonString packageInfo.supportUrl) + ","
+            packageContent += "\"licenseType\":" + (utils.jsonString packageInfo.licenseType) + ","
+            packageContent += "\"licenseUrl\":" + (utils.jsonString packageInfo.licenseUrl) + ","
+            packageContent += "\"releaseChannel\":" + (utils.jsonString packageInfo.releaseChannel) + ","
+            packageContent += "\"releaseDate\":" + (utils.jsonString packageInfo.releaseDate) + ","
+            packageContent += "\"minimumMaxVersion\":" + (utils.jsonString packageInfo.minimumMaxVersion) + ","
+            packageContent += "\"maximumMaxVersion\":" + (utils.jsonString packageInfo.maximumMaxVersion) + ","
+            packageContent += "\"manifestVersion\":" + (utils.jsonString packageInfo.manifestVersion) + ","
+            packageContent += "\"packagerName\":" + (utils.jsonString packageInfo.packagerName) + ","
+            packageContent += "\"packagerVersion\":" + (utils.jsonString packageInfo.packagerVersion) + ","
+            packageContent += "\"changelogEntries\":" + (changelogJson packageInfo.changelogEntries) + ","
+            packageContent += "\"runtime\":" + (utils.jsonString packageInfo.runtime) + ","
+            packageContent += "\"entry\":" + (utils.jsonString packageInfo.entry) + ","
+            packageContent += "\"iconUrl\":" + (utils.jsonString iconUrl) + ","
+            packageContent += "\"installPath\":" + (utils.jsonString packageInfo.installPath) + ","
+            packageContent += "\"toolbarVisible\":" + (boolJson toolbarVisible) + ","
+            packageContent += "\"updateAvailable\":" + (boolJson packageInfo.updateAvailable) + ","
+            packageContent += "\"latestVersion\":" + (utils.jsonString packageInfo.latestVersion)
+            packageContent += "}"
+            return packageContent
+        ),
+
+        fn packagesJson = (
+            local packageEntries = #()
+            for packageInfo in owner.packages do append packageEntries (packageJson packageInfo)
+            return "[" + (utils.join packageEntries separator:",") + "]"
+        ),
+
+        fn settingsJson = (
+            local settings = owner.settings
+            local settingsContent = "{"
+            settingsContent += "\"toolbarVisible\":" + (boolJson settings.toolbarVisible) + ","
+            settingsContent += "\"toolbarSubtitleMode\":" + (utils.jsonString settings.toolbarSubtitleMode) + ","
+            settingsContent += "\"toolbarButtonSize\":" + (utils.jsonString settings.toolbarButtonSize) + ","
+            settingsContent += "\"notifications\":" + (boolJson settings.notifications) + ","
+            settingsContent += "\"autoCheckPackages\":" + (boolJson settings.autoCheckPackages) + ","
+            settingsContent += "\"autoCheckRuntime\":" + (boolJson settings.autoCheckRuntime) + ","
+            settingsContent += "\"downloadUpdatesAutomatically\":" + (boolJson settings.downloadUpdatesAutomatically) + ","
+            settingsContent += "\"updateFrequencyHours\":" + (settings.updateFrequencyHours as string) + ","
+            settingsContent += "\"managerLastTab\":" + (utils.jsonString settings.managerLastTab) + ","
+            settingsContent += "\"managerSort\":" + (utils.jsonString settings.managerSort) + ","
+            settingsContent += "\"managerFilter\":" + (utils.jsonString settings.managerFilter) + ","
+            settingsContent += "\"language\":" + (utils.jsonString settings.language) + ","
+            settingsContent += "\"autoStart\":" + (boolJson settings.autoStart) + ","
+            settingsContent += "\"openManagerOnStartup\":" + (boolJson settings.openManagerOnStartup) + ","
+            settingsContent += "\"developerMode\":" + (boolJson settings.developerMode) + ","
+            settingsContent += "\"debugLogging\":" + (boolJson settings.debugLogging) + ","
+            settingsContent += "\"updateUrl\":" + (utils.jsonString settings.updateUrl) + ","
+            settingsContent += "\"runtimeUpdateUrl\":" + (utils.jsonString settings.runtimeUpdateUrl)
+            settingsContent += "}"
+            return settingsContent
+        ),
+
+        fn stateJson = (
+            local updateCount = 0
+            for packageInfo in owner.packages where packageInfo.updateAvailable do updateCount += 1
+            local isRepositoryConfigured = owner.settings.updateUrl != ""
+            local discoverMessage = if isRepositoryConfigured then "The configured endpoint supports installed-package update checks, but no Discover catalog contract is configured." else "No repository endpoint is configured. Installed packages remain fully available offline."
+            local stateContent = "{"
+            stateContent += "\"runtimeVersion\":" + (utils.jsonString owner.version) + ","
+            stateContent += "\"packages\":" + packagesJson() + ","
+            stateContent += "\"updateCount\":" + (updateCount as string) + ","
+            stateContent += "\"connection\":" + (utils.jsonString (if isRepositoryConfigured then "configured" else "offline")) + ","
+            stateContent += "\"settings\":" + settingsJson() + ","
+            stateContent += "\"discover\":{\"available\":false,\"message\":" + (utils.jsonString discoverMessage) + "}"
+            stateContent += "}"
+            return stateContent
+        ),
+
+        fn writeBrowserPayload elementId sourceContent scriptName = (
+            if not dialogOpen or not browserReady do return true
+            try (
+                local payloadElement = rolloutRef.browser.Document.GetElementById elementId
+                if payloadElement == undefined do return false
+                payloadElement.InnerText = sourceContent
+                rolloutRef.browser.Document.InvokeScript scriptName
+                return true
+            ) catch (
+                logger.logWarning "manager" ("Could not update browser payload " + elementId + ": " + getCurrentException())
+                return false
+            )
         ),
 
         fn refresh = (
             if owner.settings == undefined do return false
-            rolloutRef.packageList.items = packageLabels()
-            rolloutRef.toolbarButton.caption = if owner.settings.toolbarVisible then "Hide toolbar" else "Show toolbar"
+            return writeBrowserPayload "runtimePayload" (stateJson()) "setRuntimeState"
+        ),
+
+        fn notify messageText notificationType:"info" = (
+            if not owner.settings.notifications do return true
+            return writeBrowserPayload "notificationPayload" (notificationType + "|" + messageText) "showRuntimeNotification"
+        ),
+
+        fn decodeUrl sourceContent = (
+            try (
+                local uriClass = dotNetClass "System.Uri"
+                return uriClass.UnescapeDataString sourceContent
+            ) catch (
+                return sourceContent
+            )
+        ),
+
+        fn queryParameter queryString parameterName defaultContent:"" = (
+            if queryString == undefined or queryString == "" do return defaultContent
+            local parameterEntries = filterString queryString "&"
+            for parameterEntry in parameterEntries do (
+                local separatorIndex = findString parameterEntry "="
+                local currentName = if separatorIndex == undefined then parameterEntry else substring parameterEntry 1 (separatorIndex - 1)
+                if (toLower currentName) == (toLower parameterName) do (
+                    local parameterContent = if separatorIndex == undefined then "" else substring parameterEntry (separatorIndex + 1) (parameterEntry.count - separatorIndex)
+                    return decodeUrl parameterContent
+                )
+            )
+            return defaultContent
+        ),
+
+        fn boolParameter queryString parameterName defaultState:false = (
+            return utils.boolValue (queryParameter queryString parameterName defaultContent:(if defaultState then "true" else "false")) defaultValue:defaultState
+        ),
+
+        fn integerParameter queryString parameterName fallbackNumber = (
+            try (
+                return (queryParameter queryString parameterName defaultContent:(fallbackNumber as string)) as integer
+            ) catch (
+                return fallbackNumber
+            )
+        ),
+
+        fn saveView queryString = (
+            owner.settings.managerLastTab = queryParameter queryString "tab" defaultContent:owner.settings.managerLastTab
+            owner.settings.managerFilter = queryParameter queryString "filter" defaultContent:owner.settings.managerFilter
+            owner.settings.managerSort = queryParameter queryString "sort" defaultContent:owner.settings.managerSort
+            return owner.saveSettings()
+        ),
+
+        fn saveSettings queryString = (
+            local previousToolbarVisibility = owner.settings.toolbarVisible
+            local previousToolbarSubtitleMode = owner.settings.toolbarSubtitleMode
+            local previousToolbarButtonSize = owner.settings.toolbarButtonSize
+            owner.settings.language = queryParameter queryString "language" defaultContent:owner.settings.language
+            owner.settings.autoStart = boolParameter queryString "autoStart" defaultState:owner.settings.autoStart
+            owner.settings.openManagerOnStartup = boolParameter queryString "openManagerOnStartup" defaultState:owner.settings.openManagerOnStartup
+            owner.settings.notifications = boolParameter queryString "notifications" defaultState:owner.settings.notifications
+            owner.settings.autoCheckPackages = boolParameter queryString "autoCheckPackages" defaultState:owner.settings.autoCheckPackages
+            owner.settings.autoCheckRuntime = boolParameter queryString "autoCheckRuntime" defaultState:owner.settings.autoCheckRuntime
+            owner.settings.downloadUpdatesAutomatically = boolParameter queryString "downloadUpdatesAutomatically" defaultState:owner.settings.downloadUpdatesAutomatically
+            owner.settings.updateFrequencyHours = amax 1 (amin 720 (integerParameter queryString "updateFrequencyHours" owner.settings.updateFrequencyHours))
+            owner.settings.updateUrl = queryParameter queryString "updateUrl" defaultContent:owner.settings.updateUrl
+            owner.settings.runtimeUpdateUrl = queryParameter queryString "runtimeUpdateUrl" defaultContent:owner.settings.runtimeUpdateUrl
+            owner.settings.toolbarVisible = boolParameter queryString "toolbarVisible" defaultState:owner.settings.toolbarVisible
+            owner.settings.toolbarSubtitleMode = queryParameter queryString "toolbarSubtitleMode" defaultContent: owner.settings.toolbarSubtitleMode
+            owner.settings.toolbarButtonSize = queryParameter queryString "toolbarButtonSize" defaultContent: owner.settings.toolbarButtonSize
+            owner.settings.developerMode = boolParameter queryString "developerMode" defaultState:owner.settings.developerMode
+            owner.settings.debugLogging = boolParameter queryString "debugLogging" defaultState:owner.settings.debugLogging
+            if not (owner.saveSettings()) do return false
+            if (previousToolbarVisibility != owner.settings.toolbarVisible or previousToolbarSubtitleMode != owner.settings.toolbarSubtitleMode or previousToolbarButtonSize != owner.settings.toolbarButtonSize) do owner.rebuildToolbar()
             return true
         ),
 
-        fn hiddenIndex guid = (
-            for index in 1 to owner.settings.hiddenPackages.count where (toLower owner.settings.hiddenPackages[index]) == (toLower guid) do return index
-            return 0
+        fn commandArgument commandPath commandPrefix = (
+            if commandPath.count <= commandPrefix.count do return ""
+            return decodeUrl (substring commandPath (commandPrefix.count + 1) (commandPath.count - commandPrefix.count))
         ),
 
-        fn toggleSelected = (
-            local package = selectedPackage()
-            if package == undefined do return false
-            local index = hiddenIndex package.guid
-            if index > 0 then deleteItem owner.settings.hiddenPackages index else append owner.settings.hiddenPackages package.guid
-            if not (settingsModule.save()) do (
-                local rollbackIndex = hiddenIndex package.guid
-                if index > 0 then append owner.settings.hiddenPackages package.guid else if rollbackIndex > 0 do deleteItem owner.settings.hiddenPackages rollbackIndex
-                logger.logError "manager" ("Could not save toolbar visibility for " + package.guid)
+        fn handleCommand commandPath queryString = (
+            local isSuccess = true
+            if commandPath == "ready" do (
+                browserReady = true
+                return refresh()
+            )
+            if commandPath == "refresh" do (
+                owner.scan()
+                owner.rebuildToolbar()
+                notify "Package list refreshed." notificationType: "success"
+            )
+            if commandPath == "check-updates" do (
+                local availableUpdates = owner.checkUpdates()
+                notify ((availableUpdates.count as string) + " update(s) available.")
+            )
+            if commandPath == "update-all" do (
+                isSuccess = owner.updateAll()
+                notify (if isSuccess then "Packages updated." else "Package update failed. Check the Runtime log.") notificationType: (if isSuccess then "success" else "error")
+            )
+            if commandPath == "reset-toolbar-order" do (
+                isSuccess = owner.resetToolbarOrder()
+                notify (if isSuccess then "Toolbar order reset." else "Could not reset toolbar order.") notificationType: (if isSuccess then "success" else "error")
+            )
+            if commandPath == "save-settings" do (
+                isSuccess = saveSettings queryString
+                local isSilentSave = boolParameter queryString "silent" defaultState: false
+                if (not isSuccess or not isSilentSave) do notify (if isSuccess then "Settings saved." else "Could not save settings.") notificationType: (if isSuccess then "success" else "error")
+            )
+            if commandPath == "view" do isSuccess = saveView queryString
+            if matchPattern commandPath pattern:"run/*" ignoreCase:true do (
+                isSuccess = owner.run (commandArgument commandPath "run/")
+                if not isSuccess do notify "Package could not be started." notificationType:"error"
+            )
+            if matchPattern commandPath pattern:"update/*" ignoreCase:true do (
+                isSuccess = owner.updatePackage (commandArgument commandPath "update/")
+                notify (if isSuccess then "Package updated." else "Package update failed.") notificationType: (if isSuccess then "success" else "error")
+            )
+            if matchPattern commandPath pattern:"uninstall/*" ignoreCase:true do (
+                local packageGuid = commandArgument commandPath "uninstall/"
+                local packageInfo = owner.getPackage packageGuid
+                if packageInfo == undefined then (
+                    isSuccess = false
+                ) else if queryBox ("Uninstall " + packageInfo.name + "?") title:"MaxPkg" then (
+                    isSuccess = owner.uninstall packageGuid
+                    notify (if isSuccess then "Package uninstalled." else "Package could not be uninstalled.") notificationType: (if isSuccess then "success" else "error")
+                )
+            )
+            if matchPattern commandPath pattern:"toggle-package-toolbar/*" ignoreCase:true do (
+                local packageGuid = commandArgument commandPath "toggle-package-toolbar/"
+                local packageInfo = owner.getPackage packageGuid
+                if packageInfo == undefined then
+                    isSuccess = false
+                else
+                    isSuccess = owner.setToolbarVisible packageGuid (packageIsHidden packageGuid)
+            )
+            if matchPattern commandPath pattern:"open-folder/*" ignoreCase:true do isSuccess = owner.openPackageFolder (commandArgument commandPath "open-folder/")
+            if (matchPattern commandPath pattern:"package-link/*" ignoreCase: true) do (
+                local packageGuid = commandArgument commandPath "package-link/"
+                local packageLinkKind = queryParameter queryString "kind"
+                isSuccess = owner.openPackageLink packageGuid packageLinkKind
+                if (not isSuccess) do notify "Package link could not be opened." notificationType: "error"
+            )
+            if (matchPattern commandPath pattern:"help/*" ignoreCase: true) do (
+                isSuccess = owner.openPackageHelp (commandArgument commandPath "help/")
+                if (not isSuccess) do notify "Package Help link could not be opened." notificationType: "error"
+            )
+            refresh()
+            return isSuccess
+        ),
+
+        fn onNavigate navigationArgs = (
+            local navigationUrl = ""
+            try (
+                navigationUrl = navigationArgs.Url.AbsoluteUri as string
+            ) catch (
+                logger.logWarning "manager" ("Could not read navigation URL: " + getCurrentException())
                 return false
             )
-            return owner.rebuildToolbar()
-        ),
-
-        fn completeOrder = (
-            local order = copy owner.settings.toolbarOrder
-            for package in owner.packages do (
-                local exists = false
-                for guid in order where (toLower guid) == (toLower package.guid) do exists = true
-                if not exists do append order package.guid
-            )
-            return order
-        ),
-
-        fn moveSelected direction = (
-            local package = selectedPackage()
-            if package == undefined do return false
-            local order = completeOrder()
-            local currentIndex = 0
-            for index in 1 to order.count where (toLower order[index]) == (toLower package.guid) do currentIndex = index
-            local targetIndex = currentIndex + direction
-            if currentIndex < 1 or targetIndex < 1 or targetIndex > order.count do return false
-            local swapGuid = order[targetIndex]
-            order[targetIndex] = order[currentIndex]
-            order[currentIndex] = swapGuid
-            local previousOrder = owner.settings.toolbarOrder
-            owner.settings.toolbarOrder = order
-            if not (settingsModule.save()) do (
-                owner.settings.toolbarOrder = previousOrder
-                logger.logError "manager" ("Could not save toolbar order for " + package.guid)
+            if not (matchPattern navigationUrl pattern:"maxpkg://manager/*" ignoreCase:true) do return true
+            navigationArgs.Cancel = true
+            setBrowserInputActive true
+            local commandText = substring navigationUrl 18 (navigationUrl.count - 17)
+            local queryIndex = findString commandText "?"
+            local commandPath = if queryIndex == undefined then commandText else substring commandText 1 (queryIndex - 1)
+            local queryString = if queryIndex == undefined then "" else substring commandText (queryIndex + 1) (commandText.count - queryIndex)
+            try (
+                return handleCommand commandPath queryString
+            ) catch (
+                logger.logError "manager" ("Command failed (" + commandPath + "): " + getCurrentException())
+                notify ("Manager action failed: " + commandPath) notificationType:"error"
+                refresh()
                 return false
             )
-            return owner.rebuildToolbar()
         ),
 
-        fn toggleToolbar = (
-            local previousVisibility = owner.settings.toolbarVisible
-            owner.settings.toolbarVisible = not previousVisibility
-            if not (settingsModule.save()) do (
-                owner.settings.toolbarVisible = previousVisibility
-                logger.logError "manager" "Could not save toolbar visibility."
+        fn configureBrowser browserControl = (
+            local managerHtmlPath = runtimeRoot + "ui\\manager\\index.html"
+            if not (doesFileExist managerHtmlPath) do (
+                logger.logError "manager" ("HTML file not found: " + managerHtmlPath)
                 return false
             )
-            local isRebuilt = owner.rebuildToolbar()
-            refresh()
-            return isRebuilt
+            browserControl.ScriptErrorsSuppressed = true
+            browserControl.ScrollBarsEnabled = false
+            browserControl.IsWebBrowserContextMenuEnabled = false
+            browserControl.AllowWebBrowserDrop = false
+            browserControl.WebBrowserShortcutsEnabled = true
+            browserControl.Dock = (dotNetClass "System.Windows.Forms.DockStyle").Fill
+            browserReady = false
+            browserControl.Navigate (utils.fileUrl managerHtmlPath)
+            return true
         ),
 
-        fn refreshAll = (
-            owner.scan()
-            local isRebuilt = owner.rebuildToolbar()
-            refresh()
-            return isRebuilt
+        fn synchronizeBrowserSize browserControl = (
+            try (
+                local currentDialogSize = getDialogSize rolloutRef
+                browserControl.width = currentDialogSize.x
+                browserControl.height = currentDialogSize.y
+                return true
+            ) catch (
+                logger.logWarning "manager" ("Could not synchronize browser size: " + getCurrentException())
+                return false
+            )
         ),
 
-        fn runSelected = (
-            local package = selectedPackage()
-            if package == undefined do return false
-            return owner.run package.guid
+        fn onDocumentReady browserControl documentArgs = (
+            if browserControl.Document == undefined do return false
+            synchronizeBrowserSize browserControl
+            return true
         ),
 
-        fn uninstallSelected = (
-            local package = selectedPackage()
-            if package == undefined do return false
-            if not (queryBox ("Uninstall " + package.name + "?") title:"MaxPkg") do return false
-            local isUninstalled = owner.uninstall package.guid
-            refresh()
-            return isUninstalled
+        fn handleDialogOpened browserControl = (
+            dialogOpen = true
+            synchronizeBrowserSize browserControl
+            return configureBrowser browserControl
         ),
 
-        fn open = (
+        fn onResize dialogSize = (
+            if owner.settings == undefined do return false
+            owner.settings.managerWidth = amax minimumDialogWidth dialogSize.x
+            owner.settings.managerHeight = amax minimumDialogHeight dialogSize.y
+            return true
+        ),
+
+        fn handleDialogResized dialogSize browserControl = (
+            local constrainedDialogSize = [amax minimumDialogWidth dialogSize.x, amax minimumDialogHeight dialogSize.y]
+            if (constrainedDialogSize.x != dialogSize.x or constrainedDialogSize.y != dialogSize.y) do (
+                setDialogSize rolloutRef constrainedDialogSize
+                return true
+            )
+            browserControl.width = constrainedDialogSize.x
+            browserControl.height = constrainedDialogSize.y
+            onResize constrainedDialogSize
+            return true
+        ),
+
+        fn onMove dialogPosition = (
+            if owner.settings == undefined do return false
+            owner.settings.managerPositionX = dialogPosition.x
+            owner.settings.managerPositionY = dialogPosition.y
+            return true
+        ),
+
+        fn handleDialogClosed = (
+            setBrowserInputActive false
+            dialogOpen = false
+            browserReady = false
+            if owner.settings == undefined do return true
+            return owner.saveSettings()
+        ),
+
+        fn destroyManagerDialog = (
+            if not dialogOpen do return true
             try (
                 destroyDialog rolloutRef
             ) catch (
+                logger.logWarning "manager" ("Could not close Manager: " + getCurrentException())
+                return false
             )
+            dialogOpen = false
+            browserReady = false
+            return true
+        ),
+
+        fn showManager = (
+            destroyManagerDialog()
+            dialogOpen = true
             try (
-                createDialog rolloutRef width:520 height:410 style:#(#style_titlebar, #style_sysmenu, #style_toolwindow)
+                local screenClass = dotNetClass "System.Windows.Forms.Screen"
+                local hasSavedPosition = owner.settings.managerPositionX >= 0 and owner.settings.managerPositionY >= 0
+                local targetScreenInfo = screenClass.PrimaryScreen
+                if (hasSavedPosition) do (
+                    local screenPoint = dotNetObject "System.Drawing.Point" owner.settings.managerPositionX owner.settings.managerPositionY
+                    targetScreenInfo = screenClass.FromPoint screenPoint
+                )
+                local workingArea = targetScreenInfo.WorkingArea
+                local availableDialogWidth = amax 1 workingArea.Width
+                local availableDialogHeight = amax 1 workingArea.Height
+                local minimumAvailableWidth = amin minimumDialogWidth availableDialogWidth
+                local minimumAvailableHeight = amin minimumDialogHeight availableDialogHeight
+                local dialogWidth = amax minimumAvailableWidth (amin owner.settings.managerWidth availableDialogWidth)
+                local dialogHeight = amax minimumAvailableHeight (amin owner.settings.managerHeight availableDialogHeight)
+                local dialogStyle = #(#style_titlebar, #style_sysmenu, #style_resizing)
+                if (hasSavedPosition) then (
+                    local maximumPositionX = workingArea.Right - dialogWidth
+                    local maximumPositionY = workingArea.Bottom - dialogHeight
+                    local dialogPositionX = amax workingArea.Left (amin owner.settings.managerPositionX maximumPositionX)
+                    local dialogPositionY = amax workingArea.Top (amin owner.settings.managerPositionY maximumPositionY)
+                    createDialog rolloutRef width: dialogWidth height: dialogHeight pos: [dialogPositionX, dialogPositionY] style: dialogStyle
+                ) else (
+                    createDialog rolloutRef width: dialogWidth height: dialogHeight style: dialogStyle
+                )
                 return true
             ) catch (
+                dialogOpen = false
                 logger.logError "manager" ("Could not open Manager: " + getCurrentException())
                 return false
             )
         ),
 
-        fn close = (
-            try (
-                destroyDialog rolloutRef
-                return true
-            ) catch (
-                logger.logWarning "manager" ("Could not close Manager: " + getCurrentException())
-                return false
-            )
-        ),
-
         fn shutdownManager = (
-            local isClosed = close()
+            local isClosed = destroyManagerDialog()
             if isClosed do managerOwner = undefined
             return isClosed
         ),
 
-        fn initialize runtimeOwner moduleInstance = (
+        fn initialize runtimeOwner runtimePath utilsModule moduleInstance = (
             owner = runtimeOwner
+            runtimeRoot = runtimePath
+            utils = utilsModule
             rolloutRef = MaxPkgRuntimeManagerRollout
             managerOwner = moduleInstance
             return true

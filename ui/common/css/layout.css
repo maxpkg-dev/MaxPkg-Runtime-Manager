@@ -1,0 +1,45 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+img {
+    border: 0;
+}
+
+button,
+a,
+label,
+input[type="checkbox"],
+input[type="radio"],
+[role="button"],
+.html-select,
+.context-menu {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.clearfix:after {
+    display: block;
+    clear: both;
+    content: "";
+}
+
+.is-hidden {
+    display: none !important;
+}
+
+.scroll-region {
+    overflow-x: hidden;
+    overflow-y: auto;
+}

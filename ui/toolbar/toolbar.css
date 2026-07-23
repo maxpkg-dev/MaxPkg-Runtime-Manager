@@ -1,0 +1,177 @@
+html,
+body {
+    background: #3b3b3b;
+    color: #dddddd;
+    font-size: 12px;
+}
+
+.wrap {
+    position: relative;
+    height: 50px;
+    overflow: hidden;
+    border-top: 1px solid #4b4b4b;
+    border-bottom: 1px solid #222222;
+}
+
+.brand,
+.arrow,
+.toolBtn {
+    height: 38px;
+    border: 1px solid #666666;
+    border-radius: 4px;
+    background: #484848;
+    color: #eeeeee;
+    text-decoration: none;
+}
+
+.brand,
+.arrow {
+    position: absolute;
+    top: 5px;
+    display: block;
+}
+
+.brand {
+    width: 96px;
+    padding: 0 9px;
+    font-weight: bold;
+    line-height: 36px;
+    white-space: nowrap;
+}
+
+.brand-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 7px;
+    vertical-align: -5px;
+}
+
+.brand:hover,
+.arrow:hover,
+.toolBtn:hover {
+    border-color: #8aa7d8;
+    background: #566783;
+    color: #ffffff;
+}
+
+.arrow {
+    display: none;
+    width: 25px;
+    font-size: 18px;
+    line-height: 34px;
+    text-align: center;
+}
+
+.viewport {
+    position: absolute;
+    top: 5px;
+    height: 40px;
+    overflow: hidden;
+}
+
+.strip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 40px;
+    white-space: nowrap;
+}
+
+.toolBtn {
+    display: inline-block;
+    margin-right: 15px;
+    padding: 3px 6px;
+    overflow: hidden;
+    vertical-align: top;
+}
+
+.toolBtn.size-large {
+    width: 150px;
+}
+
+.toolBtn.size-medium {
+    width: 116px;
+}
+
+.toolBtn.size-small {
+    width: 88px;
+}
+
+.toolBtn.size-icon {
+    width: 42px;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+.ico,
+.fallback {
+    float: left;
+    width: 24px;
+    height: 24px;
+    margin: 3px 6px 0 0;
+    border-radius: 3px;
+}
+
+.fallback {
+    background: #607ec7;
+    color: #ffffff;
+    font-size: 18px;
+    line-height: 23px;
+    text-align: center;
+}
+
+.txt {
+    display: block;
+    overflow: hidden;
+}
+
+.name,
+.subtitle {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.size-large .name,
+.size-large .subtitle {
+    width: 109px;
+}
+
+.size-medium .name,
+.size-medium .subtitle {
+    width: 75px;
+}
+
+.size-small .name,
+.size-small .subtitle {
+    width: 47px;
+}
+
+.name {
+    color: #f0f0f0;
+    font-weight: bold;
+    line-height: 15px;
+}
+
+.subtitle {
+    color: #bbbbbb;
+    font-size: 10px;
+    line-height: 13px;
+}
+
+.single-line .name {
+    line-height: 29px;
+}
+
+.size-icon .ico,
+.size-icon .fallback {
+    float: none;
+    display: block;
+    margin: 3px auto 0;
+}
+
+.size-icon .txt {
+    display: none;
+}

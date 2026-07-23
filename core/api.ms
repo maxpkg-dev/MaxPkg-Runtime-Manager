@@ -1,3 +1,8 @@
+-- Resolves packages and provides package API helpers.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
     struct MaxPkgApiModule (
         fn resolve packages packageReference = (

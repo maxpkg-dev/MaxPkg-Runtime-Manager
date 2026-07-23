@@ -1,3 +1,8 @@
+-- Runs the MaxPkg Runtime smoke test suite.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
     global MaxPkg
     local testRoot = getFilenamePath (getSourceFileName())
@@ -5,9 +10,18 @@
     local startupFile = runtimeRoot + "startup.ms"
     if not (fileIn startupFile) do throw "Initial Runtime startup failed."
     if MaxPkg == undefined do throw "MaxPkg global was not created."
+    if (maxpkg != MaxPkg) do throw "Lowercase maxpkg did not resolve to the MaxPkg global."
+    if (not (isProperty maxpkg #install)) do throw "Lowercase maxpkg API is unavailable."
     if MaxPkg.version == undefined do throw "MaxPkg.version is unavailable."
     if not (MaxPkg.isStarted()) do throw "Initial Runtime is not marked as started."
     if MaxPkg.settings == undefined do throw "MaxPkg settings were not loaded."
+    if (not (isProperty MaxPkg.settings #toolbarSubtitleMode)) do throw "Toolbar subtitle mode is unavailable."
+    if (not (isProperty MaxPkg.settings #toolbarButtonSize)) do throw "Toolbar button size is unavailable."
+    if classOf (MaxPkg.getPackages()) != Array do throw "MaxPkg.getPackages() did not return an array."
+    if MaxPkg.getSettings() == undefined do throw "MaxPkg.getSettings() is unavailable."
+    if MaxPkg.getStatus() == undefined do throw "MaxPkg.getStatus() is unavailable."
+    if MaxPkg.getPackage "__maxpkg_missing_package__" != undefined do throw "MaxPkg.getPackage() resolved a missing package."
+    if not (doesFileExist (runtimeRoot + "ui\\manager\\index.html")) do throw "Manager HTML is missing."
 
     local firstRuntime = MaxPkg
     if not (firstRuntime.openManager()) do throw "Manager could not be opened before restart."
@@ -25,7 +39,12 @@
     local discoveredPackages = MaxPkg.scan()
     if classOf discoveredPackages != Array do throw "MaxPkg.scan() did not return an array."
     if MaxPkg.run "__maxpkg_missing_package__" != false do throw "Missing package resolution did not fail safely."
-    if MaxPkg.install undefined != false do throw "Empty package installation did not fail safely."
+    if (maxpkg.install undefined != false) do throw "Lowercase maxpkg installation call did not fail safely."
+    if MaxPkg.updatePackage "__maxpkg_missing_package__" != false do throw "Missing package update did not fail safely."
+    if MaxPkg.setToolbarVisible "__maxpkg_missing_package__" true != false do throw "Missing toolbar package did not fail safely."
+    if MaxPkg.openPackageFolder "__maxpkg_missing_package__" != false do throw "Missing package folder did not fail safely."
+    if (MaxPkg.openPackageLink "__maxpkg_missing_package__" "homepage" != false) do throw "Missing package link did not fail safely."
+    if (MaxPkg.openPackageHelp "__maxpkg_missing_package__" != false) do throw "Missing package Help did not fail safely."
     if MaxPkg.isBusy() do throw "Critical operation lock was not released."
     format "MAXPKG_RESTART_OK\n"
     format "MAXPKG_SMOKE_OK\n"

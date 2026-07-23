@@ -1,3 +1,8 @@
+-- Builds and controls the dockable MaxPkg toolbar.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
     local toolbarOwner = undefined
 
@@ -33,6 +38,7 @@
         owner,
         utils,
         logger,
+        runtimeRoot,
         rolloutRef,
 
         fn isHidden guid = (
@@ -68,50 +74,52 @@
             return visible
         ),
 
-        fn packageButtonHtml package = (
+        fn packageButtonHtml packageInfo = (
             local iconHtml = "<span class='fallback'>+</span>"
-            if package.icon != "" and doesFileExist package.icon do
-                iconHtml = "<img class='ico' src='" + (utils.htmlEscape (utils.fileUrl package.icon)) + "'>"
-            local title = utils.htmlEscape package.buttonName
-            local versionText = "v" + (utils.htmlEscape package.version)
-            return "<a class='toolBtn' href='maxpkg://run/" + package.guid + "' title='" + (utils.htmlEscape package.name) + "'>" + iconHtml + "<span class='txt'><span class='name'>" + title + "</span><span class='version'>" + versionText + "</span></span></a>"
+            if (packageInfo.icon != "" and doesFileExist packageInfo.icon) do (
+                iconHtml = "<img class='ico' src='" + (utils.htmlEscape (utils.fileUrl packageInfo.icon)) + "'>"
+            )
+            local buttonLabel = utils.htmlEscape packageInfo.buttonName
+            local subtitleLabel = case owner.settings.toolbarSubtitleMode of (
+                "none": ""
+                "developer": utils.htmlEscape packageInfo.developer
+                default: "v" + (utils.htmlEscape packageInfo.version)
+            )
+            local labelContainerClass = "txt single-line"
+            local subtitleHtml = ""
+            local buttonSizeClass = case owner.settings.toolbarButtonSize of (
+                "large": "size-large"
+                "small": "size-small"
+                "icon": "size-icon"
+                default: "size-medium"
+            )
+            if (subtitleLabel != "") do (
+                labelContainerClass = "txt"
+                subtitleHtml = "<span class='subtitle'>" + subtitleLabel + "</span>"
+            )
+            return "<a class='toolBtn " + buttonSizeClass + "' href='maxpkg://run/" + packageInfo.guid + "' title='" + (utils.htmlEscape packageInfo.name) + "'>" + iconHtml + "<span class='" + labelContainerClass + "'><span class='name'>" + buttonLabel + "</span>" + subtitleHtml + "</span></a>"
+        ),
+
+        fn assetContent relativePath = (
+            local assetPath = runtimeRoot + relativePath
+            local sourceContent = utils.readText assetPath
+            if sourceContent == "" do logger.logWarning "toolbar" ("UI asset is empty or unavailable: " + assetPath)
+            return sourceContent
         ),
 
         fn buildHtml = (
+            local brandIconFilePath = runtimeRoot + @"ui\common\icons\maxpkg-logo.svg"
+            local brandIconUrl = utils.htmlEscape (utils.fileUrl brandIconFilePath)
             local html = "<!doctype html><html><head><meta http-equiv='X-UA-Compatible' content='IE=edge'><meta charset='utf-8'>"
-            html += "<style>"
-            html += "html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#3b3b3b;font-family:Segoe UI,Arial,sans-serif;font-size:12px;color:#ddd}"
-            html += "*{box-sizing:border-box}"
-            html += ".wrap{position:relative;height:50px;overflow:hidden;border-top:1px solid #4b4b4b;border-bottom:1px solid #222}"
-            html += ".brand,.arrow,.toolBtn{height:38px;border:1px solid #666;border-radius:4px;background:#484848;color:#eee;text-decoration:none}"
-            html += ".brand,.arrow{position:absolute;top:5px;display:block}"
-            html += ".brand{line-height:36px;padding:0 10px;font-weight:bold}"
-            html += ".brand:hover,.arrow:hover,.toolBtn:hover{background:#566783;border-color:#8aa7d8;color:#fff}"
-            html += ".arrow{display:none;width:25px;line-height:34px;text-align:center;font-size:18px}"
-            html += ".viewport{position:absolute;top:5px;height:40px;overflow:hidden}"
-            html += ".strip{position:absolute;left:0;top:0;height:40px;white-space:nowrap}"
-            html += ".toolBtn{display:inline-block;vertical-align:top;width:116px;margin-right:5px;padding:3px 6px;overflow:hidden}"
-            html += ".ico,.fallback{float:left;width:24px;height:24px;margin:3px 6px 0 0;border-radius:3px}"
-            html += ".fallback{line-height:23px;text-align:center;background:#607ec7;color:white;font-size:18px}"
-            html += ".txt{display:block;overflow:hidden}"
-            html += ".name,.version{display:block;width:75px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}"
-            html += ".name{font-weight:bold;line-height:15px;color:#f0f0f0}"
-            html += ".version{font-size:10px;line-height:13px;color:#bbb}"
+            html += "<style>" + (assetContent @"ui\common\css\variables.css")
+            html += assetContent @"ui\common\css\layout.css"
+            html += assetContent @"ui\common\css\typography.css"
+            html += assetContent @"ui\toolbar\toolbar.css"
             html += "</style></head><body>"
-            html += "<div class='wrap' id='wrap'><a class='brand' id='brand' href='maxpkg://ui/openManager'>maxpkg</a><a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><div class='viewport' id='viewport'><div class='strip' id='strip'>"
+            html += "<div class='wrap' id='wrap'><a class='brand' id='brand' href='maxpkg://ui/openManager' title='Open MaxPkg Manager'><img class='brand-icon' src='" + brandIconUrl + "' alt=''><span>maxpkg</span></a><a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><div class='viewport' id='viewport'><div class='strip' id='strip'>"
             for package in orderedPackages() do html += packageButtonHtml package
             html += "</div></div><a class='arrow' id='rightArrow' href='maxpkg://ui/scrollRight'>&rsaquo;</a></div>"
-            html += "<script>"
-            html += "var scrollOffset=0;"
-            html += "var scrollStep=160;"
-            html += "function byId(elementId){return document.getElementById(elementId);}"
-            html += "function measureStrip(){var links=byId('strip').getElementsByTagName('a');var totalWidth=0;var index=0;for(index=0;index<links.length;index+=1){totalWidth+=links[index].offsetWidth+5;}return totalWidth;}"
-            html += "function layout(){var wrap=byId('wrap');var viewport=byId('viewport');var strip=byId('strip');var leftArrow=byId('leftArrow');var rightArrow=byId('rightArrow');var brand=byId('brand');var edge=7;var gap=5;var fullWidth=measureStrip();var cursor=edge;var rightEdge=wrap.clientWidth-edge;var availableWidth=0;var maxOffset=0;brand.style.left=cursor+'px';cursor+=brand.offsetWidth+gap;availableWidth=rightEdge-cursor;strip.style.width=(fullWidth>0?fullWidth:1)+'px';if(fullWidth>availableWidth){leftArrow.style.display='block';rightArrow.style.display='block';leftArrow.style.left=cursor+'px';cursor+=leftArrow.offsetWidth+gap;availableWidth=rightEdge-cursor-rightArrow.offsetWidth-gap;if(availableWidth<20){availableWidth=20;}viewport.style.left=cursor+'px';viewport.style.width=availableWidth+'px';rightArrow.style.left=(cursor+availableWidth+gap)+'px';}else{leftArrow.style.display='none';rightArrow.style.display='none';scrollOffset=0;viewport.style.left=cursor+'px';viewport.style.width=(availableWidth>0?availableWidth:1)+'px';}maxOffset=Math.max(0,fullWidth-availableWidth);if(scrollOffset>maxOffset){scrollOffset=maxOffset;}if(scrollOffset<0){scrollOffset=0;}strip.style.left=(-scrollOffset)+'px';}"
-            html += "function moveLeft(){scrollOffset-=scrollStep;layout();}"
-            html += "function moveRight(){scrollOffset+=scrollStep;layout();}"
-            html += "window.onload=layout;"
-            html += "window.onresize=layout;"
-            html += "</script></body></html>"
+            html += "<script>" + (assetContent @"ui\toolbar\toolbar.js") + "</script></body></html>"
             return html
         ),
 
@@ -227,8 +235,9 @@
             )
         ),
 
-        fn initialize runtimeOwner utilsModule loggerModule moduleInstance = (
+        fn initialize runtimeOwner runtimePath utilsModule loggerModule moduleInstance = (
             owner = runtimeOwner
+            runtimeRoot = runtimePath
             utils = utilsModule
             logger = loggerModule
             rolloutRef = MaxPkgRuntimeToolbarRollout

@@ -1,3 +1,8 @@
+-- Updates MaxPkg Runtime and restarts the updated code.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
     global MaxPkg
 

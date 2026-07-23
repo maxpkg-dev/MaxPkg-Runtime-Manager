@@ -1,3 +1,8 @@
+-- Provides shared string, path, encoding, and HTML helpers.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
     struct MaxPkgUtilsModule (
         fn ensureSlash folderPath = (
@@ -46,6 +51,21 @@
             return escapedContent
         ),
 
+        fn jsonEscape sourceContent = (
+            if sourceContent == undefined do return ""
+            local escapedContent = sourceContent as string
+            escapedContent = substituteString escapedContent "\\" "\\\\"
+            escapedContent = substituteString escapedContent "\"" "\\\""
+            escapedContent = substituteString escapedContent "\r" "\\r"
+            escapedContent = substituteString escapedContent "\n" "\\n"
+            escapedContent = substituteString escapedContent "\t" "\\t"
+            return escapedContent
+        ),
+
+        fn jsonString sourceContent = (
+            return "\"" + (jsonEscape sourceContent) + "\""
+        ),
+
         fn fileUrl filePath = (
             if filePath == undefined or filePath == "" do return ""
             local uri = dotNetObject "System.Uri" filePath
@@ -67,6 +87,16 @@
                 ) catch (
                 )
                 return false
+            )
+        ),
+
+        fn readText filePath = (
+            if filePath == undefined or filePath == "" or not (doesFileExist filePath) do return ""
+            try (
+                local fileClass = dotNetClass "System.IO.File"
+                return fileClass.ReadAllText filePath
+            ) catch (
+                return ""
             )
         ),
 

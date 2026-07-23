@@ -1,3 +1,8 @@
+-- Installs MaxPkg Runtime and creates its startup loader.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
     global MaxPkg
 

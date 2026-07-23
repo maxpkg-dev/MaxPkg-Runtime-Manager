@@ -1,0 +1,44 @@
+.card {
+    position: relative;
+    display: inline-block;
+    width: 31.8%;
+    min-width: 230px;
+    height: 212px;
+    margin: 0 1.5% 14px 0;
+    border: 1px solid #424751;
+    border-radius: 6px;
+    background: #30343a;
+    color: #d9dde5;
+    vertical-align: top;
+    font-size: 13px;
+}
+
+.card:hover {
+    border-color: #68778f;
+    background: #343941;
+}
+
+.card-content {
+    padding: 14px;
+}
+
+.card-actions {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    height: 33px;
+}
+
+@media screen and (max-width: 760px) {
+    .card {
+        width: 48%;
+    }
+}
+
+@media screen and (max-width: 540px) {
+    .card {
+        width: 100%;
+        margin-right: 0;
+    }
+}

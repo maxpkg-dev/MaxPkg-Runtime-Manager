@@ -1,3 +1,8 @@
+-- Composes Runtime modules and exposes the MaxPkg facade.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
     global MaxPkg
 
@@ -59,6 +64,15 @@
     local uninstallerModule = fileIn (coreRoot + "uninstaller.ms")
     local updaterModule = fileIn (coreRoot + "updater.ms")
     local selfUpdaterModule = fileIn (coreRoot + "self-updater.ms")
+
+    struct MaxPkgRuntimeStatusData (
+        isStarted = false,
+        isBusy = false,
+        packageCount = 0,
+        updateCount = 0,
+        connection = "offline",
+        runtimeVersion = ""
+    )
 
     struct MaxPkgRuntimeFacade (
         version = "1.0.0",
@@ -123,6 +137,7 @@
                 scan()
                 started = true
                 if settings.toolbarVisible and not (toolbarModule.build()) do loggerModule.logWarning "startup" "Toolbar could not be created."
+                if settings.openManagerOnStartup do managerModule.showManager()
                 loggerModule.logInfo "startup" ("MaxPkg Runtime " + version + " is ready")
                 return true
             ) catch (
@@ -132,7 +147,35 @@
         ),
 
         fn openManager = (
-            return managerModule.open()
+            return managerModule.showManager()
+        ),
+
+        fn getPackages = (
+            return packages
+        ),
+
+        fn getPackage packageReference = (
+            return apiModule.resolve packages packageReference
+        ),
+
+        fn getSettings = (
+            return settings
+        ),
+
+        fn saveSettings = (
+            if settings == undefined do return false
+            return settingsModule.save()
+        ),
+
+        fn getStatus = (
+            local statusInfo = MaxPkgRuntimeStatusData()
+            statusInfo.isStarted = started
+            statusInfo.isBusy = operationModule.isBusy()
+            statusInfo.packageCount = packages.count
+            for packageInfo in packages where packageInfo.updateAvailable do statusInfo.updateCount += 1
+            statusInfo.connection = if settings != undefined and settings.updateUrl != "" then "configured" else "offline"
+            statusInfo.runtimeVersion = version
+            return statusInfo
         ),
 
         fn run package = (
@@ -155,11 +198,20 @@
         ),
 
         fn checkUpdates = (
-            return updaterModule.checkUpdates()
+            local availableUpdates = updaterModule.checkUpdates()
+            refreshManager "check-updates"
+            return availableUpdates
         ),
 
         fn updateAll = (
             return updaterModule.updateAll()
+        ),
+
+        fn updatePackage packageReference = (
+            local resolvedPackage = apiModule.resolve packages packageReference
+            if resolvedPackage == undefined do return false
+            if not resolvedPackage.updateAvailable or resolvedPackage.downloadUrl == "" do return false
+            return installerModule.install resolvedPackage.downloadUrl
         ),
 
         fn selfUpdate = (
@@ -169,6 +221,87 @@
         fn rebuildToolbar = (
             if settings == undefined do return false
             return toolbarModule.build()
+        ),
+
+        fn setToolbarVisible packageReference isVisible = (
+            local resolvedPackage = apiModule.resolve packages packageReference
+            if resolvedPackage == undefined do return false
+            local previousHiddenPackages = copy settings.hiddenPackages
+            local hiddenPackageIndex = 0
+            for index in 1 to settings.hiddenPackages.count where (toLower settings.hiddenPackages[index]) == (toLower resolvedPackage.guid) do hiddenPackageIndex = index
+            if isVisible then (
+                if hiddenPackageIndex > 0 do deleteItem settings.hiddenPackages hiddenPackageIndex
+            ) else if hiddenPackageIndex == 0 do (
+                append settings.hiddenPackages resolvedPackage.guid
+            )
+            if not (settingsModule.save()) do (
+                settings.hiddenPackages = previousHiddenPackages
+                loggerModule.logError "runtime" ("Could not save toolbar visibility for " + resolvedPackage.guid)
+                return false
+            )
+            local isToolbarRebuilt = rebuildToolbar()
+            refreshManager "set-toolbar-visible"
+            return isToolbarRebuilt
+        ),
+
+        fn resetToolbarOrder = (
+            local previousToolbarOrder = copy settings.toolbarOrder
+            settings.toolbarOrder = #()
+            if not (settingsModule.save()) do (
+                settings.toolbarOrder = previousToolbarOrder
+                loggerModule.logError "runtime" "Could not reset toolbar order."
+                return false
+            )
+            local isToolbarRebuilt = rebuildToolbar()
+            refreshManager "reset-toolbar-order"
+            return isToolbarRebuilt
+        ),
+
+        fn openPackageFolder packageReference = (
+            local resolvedPackage = apiModule.resolve packages packageReference
+            if resolvedPackage == undefined or resolvedPackage.installPath == "" or not (doesDirectoryExist resolvedPackage.installPath) do return false
+            try (
+                shellLaunch resolvedPackage.installPath ""
+                return true
+            ) catch (
+                loggerModule.logError "runtime" ("Could not open package folder " + resolvedPackage.installPath + ": " + getCurrentException())
+                return false
+            )
+        ),
+
+        fn packageLinkUrl packageInfo packageLinkKind = (
+            local normalizedLinkKind = toLower (utilsModule.trim packageLinkKind)
+            return case normalizedLinkKind of (
+                "homepage": packageInfo.homepageUrl
+                "documentation": packageInfo.documentationUrl
+                "support": packageInfo.supportUrl
+                "license": packageInfo.licenseUrl
+                default: ""
+            )
+        ),
+
+        fn openPackageLink packageReference packageLinkKind = (
+            local resolvedPackage = apiModule.resolve packages packageReference
+            if (resolvedPackage == undefined) do return false
+            local packageUrl = packageLinkUrl resolvedPackage packageLinkKind
+            if (packageUrl == "") do return false
+            try (
+                local packageUri = dotNetObject "System.Uri" (utilsModule.trim packageUrl)
+                local packageScheme = toLower packageUri.Scheme
+                if (packageScheme != "http" and packageScheme != "https") do (
+                    loggerModule.logError "runtime" ("Refused unsupported package URL for " + resolvedPackage.guid + ": " + packageUrl)
+                    return false
+                )
+                shellLaunch packageUri.AbsoluteUri ""
+                return true
+            ) catch (
+                loggerModule.logError "runtime" ("Could not open package " + packageLinkKind + " link for " + resolvedPackage.guid + ": " + getCurrentException())
+                return false
+            )
+        ),
+
+        fn openPackageHelp packageReference = (
+            return openPackageLink packageReference "documentation"
         ),
 
         fn packageInstalled packageGuid = (
@@ -193,9 +326,8 @@
 
     MaxPkg = MaxPkgRuntimeFacade()
 
-    toolbarModule.initialize MaxPkg utilsModule loggerModule toolbarModule
-    managerModule.initialize MaxPkg managerModule
-    managerModule.settingsModule = settingsModule
+    toolbarModule.initialize MaxPkg runtimeRoot utilsModule loggerModule toolbarModule
+    managerModule.initialize MaxPkg runtimeRoot utilsModule managerModule
     managerModule.logger = loggerModule
     operationModule.owner = MaxPkg
     installerModule.owner = MaxPkg

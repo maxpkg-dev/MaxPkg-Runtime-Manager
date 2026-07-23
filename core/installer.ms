@@ -1,3 +1,8 @@
+-- Downloads, validates, and installs MaxPkg packages.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
     struct MaxPkgInstallerModule (
         owner,

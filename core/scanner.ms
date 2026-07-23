@@ -1,4 +1,14 @@
+-- Discovers packages and normalizes their manifests.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
+    struct MaxPkgChangelogEntryData (
+        changeType = "",
+        messageContent = ""
+    )
+
     struct MaxPkgPackageData (
         guid = "",
         slug = "",
@@ -7,6 +17,20 @@
         version = "",
         developer = "",
         description = "",
+        helpUrl = "",
+        documentationUrl = "",
+        homepageUrl = "",
+        supportUrl = "",
+        licenseType = "",
+        licenseUrl = "",
+        releaseChannel = "",
+        releaseDate = "",
+        minimumMaxVersion = "",
+        maximumMaxVersion = "",
+        manifestVersion = "",
+        packagerName = "",
+        packagerVersion = "",
+        changelogEntries = #(),
         runtime = "",
         entry = "",
         icon = "",
@@ -32,6 +56,18 @@
             return packageSlug
         ),
 
+        fn changelogFromManifest manifestPath = (
+            local changelogEntries = #()
+            for changelogIndex in 1 to 100 do (
+                local keyPrefix = changelogIndex as string
+                local messageContent = ini.read manifestPath "changelog" (keyPrefix + "_text")
+                if (messageContent == "") do exit
+                local changeType = ini.read manifestPath "changelog" (keyPrefix + "_type") defaultValue: "Changed"
+                append changelogEntries (MaxPkgChangelogEntryData changeType: changeType messageContent: messageContent)
+            )
+            return changelogEntries
+        ),
+
         fn packageFromManifest manifestPath = (
             local section = "package"
             local package = MaxPkgPackageData()
@@ -44,6 +80,20 @@
             package.version = ini.readAny manifestPath section #("version", "Version")
             package.developer = ini.readAny manifestPath section #("developerName", "Developer", "developer")
             package.description = ini.readAny manifestPath section #("description", "Description")
+            package.helpUrl = ini.readAny manifestPath section #("documentation", "Documentation", "documentationUrl", "help", "Help", "helpUrl") defaultValue: ""
+            package.documentationUrl = package.helpUrl
+            package.homepageUrl = ini.readAny manifestPath section #("homepage", "Homepage", "homepageUrl") defaultValue: ""
+            package.supportUrl = ini.readAny manifestPath section #("support", "Support", "supportUrl") defaultValue: ""
+            package.licenseType = ini.readAny manifestPath section #("license", "License") defaultValue: ""
+            package.licenseUrl = ini.readAny manifestPath section #("licenseUrl", "LicenseUrl") defaultValue: ""
+            package.releaseChannel = ini.readAny manifestPath section #("releaseChannel", "ReleaseChannel") defaultValue: "stable"
+            package.releaseDate = ini.readAny manifestPath section #("releaseDate", "ReleaseDate") defaultValue: ""
+            package.minimumMaxVersion = ini.readAny manifestPath section #("min3dsMax", "Min3dsMax", "minimum3dsMax") defaultValue: ""
+            package.maximumMaxVersion = ini.readAny manifestPath section #("max3dsMax", "Max3dsMax", "maximum3dsMax") defaultValue: ""
+            package.manifestVersion = ini.readAny manifestPath section #("manifestVersion", "ManifestVersion") defaultValue: ""
+            package.packagerName = ini.readAny manifestPath section #("packager", "Packager") defaultValue: ""
+            package.packagerVersion = ini.readAny manifestPath section #("packagerVersion", "PackagerVersion") defaultValue: ""
+            package.changelogEntries = changelogFromManifest manifestPath
             package.entry = ini.readAny manifestPath section #("entry", "Entry")
             package.runtime = ini.readAny manifestPath section #("runtime", "Runtime")
             if package.runtime == "" do (

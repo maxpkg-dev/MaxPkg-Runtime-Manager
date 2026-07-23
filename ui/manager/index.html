@@ -1,0 +1,239 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9">
+    <meta charset="utf-8">
+    <title>maxpkg Manager</title>
+    <link rel="stylesheet" href="../common/css/variables.css">
+    <link rel="stylesheet" href="../common/css/layout.css">
+    <link rel="stylesheet" href="../common/css/typography.css">
+    <link rel="stylesheet" href="../common/css/buttons.css">
+    <link rel="stylesheet" href="../common/css/cards.css">
+    <link rel="stylesheet" href="../common/css/forms.css">
+    <link rel="stylesheet" href="../common/css/badges.css">
+    <link rel="stylesheet" href="../common/css/dialogs.css">
+    <link rel="stylesheet" href="../common/css/notifications.css">
+    <link rel="stylesheet" href="../common/css/tables.css">
+    <link rel="stylesheet" href="manager.css">
+</head>
+<body>
+    <div id="runtimePayload" class="is-hidden"></div>
+    <div id="notificationPayload" class="is-hidden"></div>
+
+    <div id="appShell" class="app-shell">
+        <div class="app-header clearfix">
+            <div class="header-layout">
+                <div class="brand-block">
+                    <div class="brand-mark">
+                        <img src="../common/icons/maxpkg-logo.svg" alt="MaxPkg">
+                    </div>
+                    <div class="brand-copy">
+                        <strong>maxpkg</strong>
+                        <span id="runtimeVersion">Runtime</span>
+                    </div>
+                </div>
+                <div id="searchCell" class="search-cell">
+                    <div class="search-box">
+                        <img class="search-icon" src="../common/icons/search.svg" alt="">
+                        <input id="searchInput" type="text" autocomplete="off" placeholder="Search packages">
+                        <button id="clearSearchButton" class="search-clear is-hidden" type="button" title="Clear">&times;</button>
+                    </div>
+                </div>
+                <div id="headerActions" class="header-actions">
+                    <a id="checkUpdatesButton" class="button" href="maxpkg://manager/check-updates" data-busy="Checking updates...">
+                        <img class="icon" src="../common/icons/refresh-cw.svg" alt="">Check Updates
+                    </a>
+                    <a id="updateAllButton" class="button button-primary" href="maxpkg://manager/update-all" data-busy="Updating packages...">
+                        <img class="icon" src="../common/icons/download.svg" alt="">Update All
+                    </a>
+                    <button id="settingsButton" class="icon-button" type="button" title="Settings">
+                        <img class="icon" src="../common/icons/settings.svg" alt="Settings">
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-bar clearfix">
+            <button id="installedTab" class="tab-button is-active" type="button" data-tab="installed">Installed <span id="installedTabCount" class="tab-count">0</span></button>
+            <button id="discoverTab" class="tab-button" type="button" data-tab="discover">Discover</button>
+        </div>
+
+        <div id="pageToolbar" class="page-toolbar clearfix">
+            <div id="installedTools">
+                <button class="filter-button is-active" type="button" data-filter="all">All</button>
+                <button class="filter-button" type="button" data-filter="updates">Updates</button>
+                <button class="filter-button" type="button" data-filter="toolbar">In toolbar</button>
+                <div id="sortSelect" class="html-select sort-select" data-value="name">
+                    <button class="html-select-button" type="button" title="Sort installed packages" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger="true">
+                        <span data-select-label="sortSelect">Name</span>
+                        <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                    </button>
+                    <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                        <button type="button" data-dropdown-option="name">Name</button>
+                        <button type="button" data-dropdown-option="developer">Developer</button>
+                        <button type="button" data-dropdown-option="version">Version</button>
+                    </div>
+                </div>
+            </div>
+            <div id="discoverTools" class="is-hidden">
+                <span class="text-muted">Repository browsing is provided by the Runtime API.</span>
+            </div>
+        </div>
+
+        <div id="detailsNavigation" class="details-navigation is-hidden">
+            <a class="details-back-link" href="#" data-action="details-back"><img class="details-back-icon" src="../common/icons/arrow-left.svg" alt="">Back</a>
+            <span class="details-pathway">
+                <span>Installed</span>
+                <span class="details-pathway-separator">/</span>
+                <strong id="detailsPathName">Package</strong>
+            </span>
+        </div>
+
+        <div id="pageHost" class="page-host scroll-region">
+            <div id="installedPage" class="page"><div class="state-panel"><img class="state-icon" src="../common/icons/package.svg" alt=""><h2>Loading packages...</h2><p>Reading the current Runtime state.</p></div></div>
+            <div id="discoverPage" class="page is-hidden"></div>
+            <div id="detailsPage" class="page is-hidden"></div>
+        </div>
+
+        <div class="status-bar clearfix">
+            <span id="packageStatus">0 packages</span>
+            <span id="updateStatus">0 updates</span>
+            <span id="connectionStatus" class="connection-status">Offline</span>
+            <span id="footerVersion" class="footer-version">Runtime</span>
+        </div>
+    </div>
+
+    <div id="contextMenu" class="context-menu is-hidden"></div>
+    <div id="notificationHost" class="notification-host"></div>
+    <div id="busyShade" class="busy-shade is-hidden">
+        <div id="busyMessage" class="busy-message">Working...</div>
+    </div>
+
+    <div id="settingsShade" class="modal-shade is-hidden">
+        <div class="modal modal-no-footer" role="dialog" aria-labelledby="settingsTitle">
+            <div class="modal-header">
+                <h2 id="settingsTitle">Settings</h2>
+                <button id="closeSettingsButton" class="icon-button modal-close-button" type="button" title="Close Settings" aria-label="Close Settings">
+                    <img class="icon" src="../common/icons/x.svg" alt="">
+                </button>
+            </div>
+            <div class="modal-body clearfix">
+                <div id="settingsNavigation" class="settings-navigation">
+                    <button class="settings-nav-button is-active" type="button" data-settings-page="general">General</button>
+                    <button class="settings-nav-button" type="button" data-settings-page="updates">Updates</button>
+                    <button class="settings-nav-button" type="button" data-settings-page="toolbar">Toolbar</button>
+                    <button class="settings-nav-button" type="button" data-settings-page="developer">Developer</button>
+                    <button class="settings-nav-button" type="button" data-settings-page="about">About</button>
+                </div>
+                <div class="settings-content scroll-region">
+                    <div class="settings-page" data-settings-panel="general">
+                        <h3>General</h3>
+                        <div class="field">
+                            <span id="languageLabel" class="field-label">Language</span>
+                            <div id="languageSelect" class="html-select html-select-wide" data-value="English">
+                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="languageLabel" data-dropdown-trigger="true">
+                                    <span data-select-label="languageSelect">English</span>
+                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                </button>
+                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                    <button type="button" data-dropdown-option="English">English</button>
+                                </div>
+                            </div>
+                        </div>
+                        <label class="check-row"><input id="autoStartCheck" type="checkbox">Start Runtime with 3ds Max</label>
+                        <label class="check-row"><input id="openManagerCheck" type="checkbox">Open Manager on startup</label>
+                        <label class="check-row"><input id="notificationsCheck" type="checkbox">Show notifications</label>
+                    </div>
+                    <div class="settings-page is-hidden" data-settings-panel="updates">
+                        <h3>Updates</h3>
+                        <label class="check-row"><input id="autoCheckPackagesCheck" type="checkbox">Check package updates automatically</label>
+                        <label class="check-row"><input id="autoCheckRuntimeCheck" type="checkbox">Check Runtime updates automatically</label>
+                        <label class="check-row"><input id="autoDownloadCheck" type="checkbox">Download updates automatically</label>
+                        <div class="field">
+                            <span id="frequencyLabel" class="field-label">Check interval</span>
+                            <div id="frequencySelect" class="html-select html-select-wide" data-value="24">
+                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="frequencyLabel" data-dropdown-trigger="true">
+                                    <span data-select-label="frequencySelect">Every day</span>
+                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                </button>
+                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                    <button type="button" data-dropdown-option="1">Every hour</button>
+                                    <button type="button" data-dropdown-option="6">Every 6 hours</button>
+                                    <button type="button" data-dropdown-option="12">Every 12 hours</button>
+                                    <button type="button" data-dropdown-option="24">Every day</button>
+                                    <button type="button" data-dropdown-option="48">Every 2 days</button>
+                                    <button type="button" data-dropdown-option="168">Every week</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="batchUrlInput">Package update endpoint</label>
+                            <input id="batchUrlInput" class="field-control" type="text" placeholder="Optional batch URL">
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="runtimeUrlInput">Runtime update endpoint</label>
+                            <input id="runtimeUrlInput" class="field-control" type="text" placeholder="Optional Runtime URL">
+                        </div>
+                    </div>
+                    <div class="settings-page is-hidden" data-settings-panel="toolbar">
+                        <h3>Toolbar</h3>
+                        <label class="check-row"><input id="toolbarVisibleCheck" type="checkbox">Show MaxPkg toolbar</label>
+                        <div class="field">
+                            <span id="toolbarButtonSizeLabel" class="field-label">Button size</span>
+                            <div id="toolbarButtonSizeSelect" class="html-select html-select-wide" data-value="medium">
+                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarButtonSizeLabel" data-dropdown-trigger="true">
+                                    <span data-select-label="toolbarButtonSizeSelect">Medium</span>
+                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                </button>
+                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                    <button type="button" data-dropdown-option="large">Large</button>
+                                    <button type="button" data-dropdown-option="medium">Medium</button>
+                                    <button type="button" data-dropdown-option="small">Small</button>
+                                    <button type="button" data-dropdown-option="icon">Icon only</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <span id="toolbarSubtitleLabel" class="field-label">Button secondary text</span>
+                            <div id="toolbarSubtitleSelect" class="html-select html-select-wide" data-value="version">
+                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarSubtitleLabel" data-dropdown-trigger="true">
+                                    <span data-select-label="toolbarSubtitleSelect">Version</span>
+                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                </button>
+                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                    <button type="button" data-dropdown-option="none">Nothing</button>
+                                    <button type="button" data-dropdown-option="version">Version</button>
+                                    <button type="button" data-dropdown-option="developer">Developer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-muted">Package buttons can be shown or hidden from each Installed card.</p>
+                        <a class="button" href="maxpkg://manager/reset-toolbar-order">Reset package order</a>
+                    </div>
+                    <div class="settings-page is-hidden" data-settings-panel="developer">
+                        <h3>Developer</h3>
+                        <label class="check-row"><input id="developerModeCheck" type="checkbox">Enable developer mode</label>
+                        <label class="check-row"><input id="debugLoggingCheck" type="checkbox">Enable debug logging</label>
+                        <p class="text-muted">Developer settings affect Runtime diagnostics only. Package manifests remain read-only.</p>
+                    </div>
+                    <div class="settings-page is-hidden" data-settings-panel="about">
+                        <h3>About MaxPkg</h3>
+                        <p id="aboutVersion">Runtime</p>
+                        <div class="about-summary">
+                            <p>MaxPkg is a package ecosystem for Autodesk 3ds Max. It connects developers, the maxpkg.dev catalog, and the Runtime inside 3ds Max into one distribution workflow.</p>
+                            <p>Users can discover, install, run, update, and remove scripts in one place. Developers build and publish versioned tools with MaxPkg Packager&mdash;eliminating scattered installers, duplicate toolbar buttons, and inconsistent script versions across artists, workstations, and studios.</p>
+                        </div>
+                        <button id="copyRuntimeInfoButton" class="button" type="button">Copy Runtime info</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../common/js/common.js"></script>
+    <script src="../common/js/dialog.js"></script>
+    <script src="../common/js/dropdown.js"></script>
+    <script src="../common/js/search.js"></script>
+    <script src="manager.js"></script>
+</body>
+</html>

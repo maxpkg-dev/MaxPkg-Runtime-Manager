@@ -1,3 +1,8 @@
+-- Provides safe INI file reading and writing helpers.
+-- Copyright (c) 2026 Lukianenko Vasyl
+-- https://maxpkg.dev
+-- Developed by https://3dground.net (3DGROUND)
+
 (
     struct MaxPkgIniModule (
         logger,

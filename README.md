@@ -20,16 +20,26 @@ The scanner checks:
 
 - `getDir #temp` for packages extracted by current MaxPkg MZP installers;
 - `data/packages` for persistent packages;
-- extra roots configured in `data/settings.ini`.
+- extra roots configured in `settings.ini`.
 
 The packager's actual keys are supported: `packageGuid`, `name`, `version`,
-`entry`, `developerName`, `icon`, `showInToolbar`, and `uninstallScript`.
+`entry`, `developerName`, `icon`, `documentation`, `showInToolbar`, and
+`uninstallScript`.
 Aliases such as `Guid`, `Runtime`, `ToolbarVisible`, and `ToolbarOrder` are also
 accepted. Runtime type is inferred from `.ms`, `.mse`, or `.py` when omitted.
 
 ## Public API
 
-The only explicitly global value is `MaxPkg`:
+The Runtime exposes one global facade named `MaxPkg`. MaxScript identifiers are
+case-insensitive, so `MaxPkg` and `maxpkg` resolve to that same global object.
+Both spellings are supported in Listener and script code:
+
+```maxscript
+maxpkg.install "prune scene"
+MaxPkg.install "prune scene"
+```
+
+The facade provides:
 
 ```maxscript
 MaxPkg.start()
@@ -37,12 +47,23 @@ MaxPkg.shutdown()
 MaxPkg.isStarted()
 MaxPkg.scan()
 MaxPkg.openManager()
+MaxPkg.getPackages()
+MaxPkg.getPackage "package-guid-or-slug"
+MaxPkg.getSettings()
+MaxPkg.saveSettings()
+MaxPkg.getStatus()
 MaxPkg.run "package-guid-or-slug"
 MaxPkg.install "C:\\Downloads\\package.mzp"
 MaxPkg.uninstall "package-guid-or-slug"
 MaxPkg.checkUpdates()
 MaxPkg.updateAll()
+MaxPkg.updatePackage "package-guid-or-slug"
 MaxPkg.selfUpdate()
+MaxPkg.setToolbarVisible "package-guid-or-slug" true
+MaxPkg.resetToolbarOrder()
+MaxPkg.openPackageFolder "package-guid-or-slug"
+MaxPkg.openPackageLink "package-guid-or-slug" "homepage"
+MaxPkg.openPackageHelp "package-guid-or-slug"
 MaxPkg.packageInstalled "package-guid"
 MaxPkg.packageRemoved "package-guid"
 MaxPkg.rebuildToolbar()
@@ -55,19 +76,44 @@ State is exposed as `MaxPkg.version`, `MaxPkg.packages`, `MaxPkg.settings`, and
 ## Toolbar state
 
 The dockable WebBrowser toolbar is built only from `MaxPkg.packages`. User state
-is stored separately in `data/settings.ini`:
+is stored separately in `settings.ini`:
 
 ```ini
 [Toolbar]
 Visible=true
 Hidden=guid-one|guid-two
 Order=guid-two|guid-one
+SubtitleMode=version
+ButtonSize=medium
 
 [Packages]
 Roots=D:\\MaxPkg Packages|E:\\Studio Tools
 ```
 
 Package manifests are never modified for toolbar preferences.
+`Toolbar.SubtitleMode` accepts `none`, `version`, or `developer`.
+`Toolbar.ButtonSize` accepts `large`, `medium`, `small`, or `icon`.
+
+## Manager UI
+
+The Manager is an IE9-compatible HTML application hosted by the 3ds Max
+WebBrowser control. It opens at 900x650 by default, is resizable, and remembers
+its size and position. Its minimum size is 720x520, and restored bounds are
+kept inside the working area of the selected monitor. Installed packages,
+search, filtering, details, toolbar visibility, update actions, and Settings
+operate through the Runtime facade.
+
+Package Details expose normalized manifest metadata including release channel
+and date, license, supported 3ds Max versions, entry file, packager, changelog,
+homepage, documentation, support, and license links when provided.
+
+The Manager loads its design system from `ui/common` and uses local SVG icons.
+It intentionally uses ES5 JavaScript and float/inline-block/absolute CSS rather
+than Flexbox, Grid, CSS custom properties, or network-hosted assets.
+
+Discover shows an explicit offline/unconfigured state until a catalog endpoint
+and response contract are added to Runtime. `Updates.BatchUrl` is only the
+installed-package batch update endpoint and is not treated as a package store.
 
 ## Batch update contract
 
