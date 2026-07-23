@@ -451,6 +451,14 @@
         window.location.href = "maxpkg://manager/view?tab=" + Common.encode(activeTab) + "&filter=" + Common.encode(activeFilter) + "&sort=" + Common.encode(activeSort);
     }
 
+    function updateEndpointSettingsVisibility() {
+        var developerModeEnabled = Common.byId("developerModeCheck").checked;
+        Common.toggleClass(Common.byId("endpointSettingsNavigation"), "is-hidden", !developerModeEnabled);
+        if (!developerModeEnabled && !Common.hasClass(Common.byId("endpointSettingsPanel"), "is-hidden")) {
+            changeSettingsPage("developer");
+        }
+    }
+
     function populateSettings() {
         var settings = currentState.settings;
         window.MaxPkgDropdown.setSelectValue(Common.byId("languageSelect"), settings.language || "English");
@@ -461,17 +469,20 @@
         Common.byId("autoCheckPackagesCheck").checked = !!settings.autoCheckPackages;
         Common.byId("autoCheckRuntimeCheck").checked = !!settings.autoCheckRuntime;
         Common.byId("autoDownloadCheck").checked = !!settings.downloadUpdatesAutomatically;
-        Common.byId("batchUrlInput").value = settings.updateUrl || "";
-        Common.byId("runtimeUrlInput").value = settings.runtimeUpdateUrl || "";
+        Common.byId("apiEndpointInput").value = settings.apiEndpoint || settings.defaultApiEndpoint || "";
         Common.byId("toolbarVisibleCheck").checked = !!settings.toolbarVisible;
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarButtonSizeSelect"), settings.toolbarButtonSize || "medium");
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarSubtitleSelect"), settings.toolbarSubtitleMode || "version");
         Common.byId("developerModeCheck").checked = !!settings.developerMode;
         Common.byId("debugLoggingCheck").checked = !!settings.debugLogging;
+        updateEndpointSettingsVisibility();
     }
 
     function saveSettings() {
         var queryParts = [];
+        var endpointInput;
+        var endpointOverride;
+        var endpointFallback;
         if (settingsSaveTimer !== null) {
             window.clearTimeout(settingsSaveTimer);
             settingsSaveTimer = null;
@@ -484,8 +495,13 @@
         queryParts.push("autoCheckRuntime=" + boolText(Common.byId("autoCheckRuntimeCheck").checked));
         queryParts.push("downloadUpdatesAutomatically=" + boolText(Common.byId("autoDownloadCheck").checked));
         queryParts.push("updateFrequencyHours=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("frequencySelect"))));
-        queryParts.push("updateUrl=" + Common.encode(Common.byId("batchUrlInput").value));
-        queryParts.push("runtimeUpdateUrl=" + Common.encode(Common.byId("runtimeUrlInput").value));
+        endpointInput = Common.byId("apiEndpointInput").value;
+        endpointOverride = endpointInput;
+        endpointFallback = currentState.settings.defaultApiEndpoint || "";
+        if (!currentState.settings.apiEndpoint && endpointInput === endpointFallback) {
+            endpointOverride = "";
+        }
+        queryParts.push("apiEndpoint=" + Common.encode(endpointOverride));
         queryParts.push("toolbarVisible=" + boolText(Common.byId("toolbarVisibleCheck").checked));
         queryParts.push("toolbarButtonSize=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarButtonSizeSelect"))));
         queryParts.push("toolbarSubtitleMode=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarSubtitleSelect"))));
@@ -618,10 +634,12 @@
         bindImmediateSettingsSave("autoCheckRuntimeCheck");
         bindImmediateSettingsSave("autoDownloadCheck");
         bindImmediateSettingsSave("toolbarVisibleCheck");
-        bindImmediateSettingsSave("developerModeCheck");
         bindImmediateSettingsSave("debugLoggingCheck");
-        bindTextSettingsSave("batchUrlInput");
-        bindTextSettingsSave("runtimeUrlInput");
+        bindTextSettingsSave("apiEndpointInput");
+        Common.on(Common.byId("developerModeCheck"), "change", function () {
+            updateEndpointSettingsVisibility();
+            saveSettings();
+        });
         Common.on(Common.byId("settingsButton"), "click", function () {
             populateSettings();
             changeSettingsPage("general");

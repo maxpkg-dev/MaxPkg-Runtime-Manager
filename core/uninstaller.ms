@@ -49,14 +49,33 @@
         fn removeFolder package = (
             if (not (doesDirectoryExist package.installPath)) do return true
             if (not (isSafePackageFolder package)) do return false
-            try (
-                local directoryClass = dotNetClass "System.IO.Directory"
-                directoryClass.Delete package.installPath true
-                return not (doesDirectoryExist package.installPath)
-            ) catch (
-                logger.logError "uninstaller" ("Could not remove " + package.installPath + ": " + getCurrentException())
+            if (not (utils.forceDeleteFolder package.installPath)) do (
+                logger.logError "uninstaller" ("Could not remove package folder: " + package.installPath)
                 return false
             )
+            return true
+        ),
+
+        fn removePackageMacro package = (
+            local userMacrosRoot = utils.ensureSlash (getDir #userMacros)
+            local userIconsRoot = utils.ensureSlash (getDir #userIcons)
+            local macroName = "MaxPkg_" + (substituteString package.guid "-" "")
+            local macroFilePaths = #(
+                userMacrosRoot + "maxpkg-" + package.guid + ".mcr",
+                userMacrosRoot + "MaxPkg-" + macroName + ".mcr"
+            )
+            local iconFilePath = userIconsRoot + package.guid + ".svg"
+            local isRemoved = true
+            for macroFilePath in macroFilePaths do (
+                if (not (utils.forceDeleteFile macroFilePath)) do (
+                    logger.logError "uninstaller" ("Could not remove package MacroScript: " + macroFilePath)
+                    isRemoved = false
+                )
+            )
+            if (not (utils.forceDeleteFile iconFilePath)) do (
+                logger.logWarning "uninstaller" ("Could not remove package icon: " + iconFilePath)
+            )
+            return isRemoved
         ),
 
         fn uninstall package = (
@@ -66,7 +85,11 @@
             try (
                 isSuccess = isSafePackageFolder package
                 if (isSuccess) do isSuccess = runHook package
-                if (isSuccess) do isSuccess = removeFolder package
+                if (isSuccess) do (
+                    local isMacroRemoved = removePackageMacro package
+                    local isFolderRemoved = removeFolder package
+                    isSuccess = isMacroRemoved and isFolderRemoved
+                )
                 owner.scan()
                 if (api.contains owner.packages package.guid) do isSuccess = false
                 owner.rebuildToolbar()

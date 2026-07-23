@@ -45,11 +45,8 @@
         ),
 
         fn checkUpdates = (
-            if (owner.settings.updateUrl == "") do (
-                logger.logInfo "updater" "BatchUrl is not configured; staying offline"
-                return #()
-            )
-            local responseBody = http.post owner.settings.updateUrl (requestBody())
+            local updatesEndpoint = utils.apiEndpointUrl owner.settings.apiEndpoint "updates"
+            local responseBody = http.post updatesEndpoint (requestBody())
             if (responseBody == undefined) do return #()
             local responseFile = runtimeRoot + @"data\update-response.ini"
             if (not (utils.writeText responseFile responseBody)) do (

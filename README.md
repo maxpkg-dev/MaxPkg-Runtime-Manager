@@ -9,6 +9,15 @@ also accepts the field names from the Runtime technical specification.
 Run `install.ms` once from 3ds Max. It copies the Runtime to the current user
 scripts directory, creates a small startup shim in `#userStartupScripts`, loads
 the Runtime, scans installed packages, and opens the docked toolbar.
+Installation also registers a `MaxPkg Manager` action in the `MaxPkg` category.
+The user can place this action on any 3ds Max toolbar through Customize User
+Interface without enabling the docked Runtime toolbar.
+
+Run the installed `uninstall.ms` to remove Runtime, its startup shim, and its
+Manager MacroScript. Runtime and package uninstallers clear read-only file
+attributes before deletion. Package uninstall also removes the generated
+`maxpkg-<GUID>.mcr` file and copied package icon from the current 3ds Max
+profile.
 
 For development, run `startup.ms` directly from this folder. It can be run
 repeatedly: the previous Runtime closes Manager, unregisters and destroys its
@@ -111,26 +120,37 @@ The Manager loads its design system from `ui/common` and uses local SVG icons.
 It intentionally uses ES5 JavaScript and float/inline-block/absolute CSS rather
 than Flexbox, Grid, CSS custom properties, or network-hosted assets.
 
-Discover shows an explicit offline/unconfigured state until a catalog endpoint
-and response contract are added to Runtime. `Updates.BatchUrl` is only the
-installed-package batch update endpoint and is not treated as a package store.
+Discover shows an explicit offline/unconfigured state until a catalog response
+contract is added to Runtime. The configured API endpoint is used for Runtime
+and installed-package update requests; it is not treated as a package store.
 
-## Batch update contract
+## Runtime API endpoint
 
-Update networking is disabled until URLs are configured, so startup and all
-local features remain fully offline. Configure endpoints as follows:
+Runtime uses one base endpoint and appends the required API action. The
+production fallback is hardcoded as `https://maxpkg.dev/api/runtime/v1/`, so a
+new installation does not need to store an endpoint in `settings.ini`.
+
+`settings.ini` contains this section only when an installer or developer
+provides an override:
 
 ```ini
+[Endpoint]
+BaseUrl=http://192.168.1.4:3000/api/runtime/v1/
+
 [Updates]
-BatchUrl=https://example.test/api/runtime/updates
-RuntimeUrl=https://example.test/downloads/maxpkg-runtime.mzp
 FrequencyHours=24
 Notifications=true
 ```
 
-`BatchUrl` receives one form field named `packages`, containing comma-separated
-`guid@version` pairs. Its response is INI so it remains parseable on 3ds Max
-2012 without a JSON dependency:
+Without an override, the resulting update URLs are
+`https://maxpkg.dev/api/runtime/v1/updates` and
+`https://maxpkg.dev/api/runtime/v1/runtime`. The base endpoint is hidden from
+regular users. Enable Developer mode in Manager settings to expose the Endpoint
+section.
+
+The `updates` action receives one form field named `packages`, containing
+comma-separated `guid@version` pairs. Its response is INI so it remains
+parseable on 3ds Max 2012 without a JSON dependency:
 
 ```ini
 [package-guid]

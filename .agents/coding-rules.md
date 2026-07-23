@@ -357,8 +357,10 @@ local processingResult = processFile sourceFileName processOptions sourceContent
 ## Offline And Network Behavior
 
 - `MaxPkg.start()` and `MaxPkg.scan()` must not make network requests.
-- Network endpoints are optional settings. Missing endpoints mean offline mode,
-  not startup failure.
+- Use one optional base API endpoint override and derive action URLs from it.
+  Keep `https://maxpkg.dev/api/runtime/v1/` as a hardcoded fallback instead of
+  writing it into `settings.ini` by default. Expose the effective endpoint in
+  Manager only while Developer mode is enabled.
 - Update checks use one batch request for all installed packages. Do not add one
   request per package.
 - Keep request/response parsing isolated in `core/http.ms` and
@@ -405,6 +407,13 @@ catch (
   installation directory.
 - Before recursive deletion, verify that the target is the resolved package
   folder and does not contain or overlap the Runtime folder.
+- Clear the read-only attribute on every file before deleting package or
+  Runtime content.
+- Package uninstall must remove the generated `maxpkg-<GUID>.mcr` from
+  `#userMacros` and its copied icon from `#userIcons`.
+- Runtime installation must register a `MaxPkg Manager` MacroScript action in
+  `#userMacros`. Do not place the action on a toolbar automatically; let the
+  user choose its location through Customize User Interface.
 - Never delete a root, user scripts directory, temp root, or an unresolved path.
 - Clean up test downloads and generated logs after smoke tests.
 

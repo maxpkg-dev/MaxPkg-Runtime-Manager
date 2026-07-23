@@ -205,8 +205,8 @@
             settingsContent += "\"openManagerOnStartup\":" + (boolJson settings.openManagerOnStartup) + ","
             settingsContent += "\"developerMode\":" + (boolJson settings.developerMode) + ","
             settingsContent += "\"debugLogging\":" + (boolJson settings.debugLogging) + ","
-            settingsContent += "\"updateUrl\":" + (utils.jsonString settings.updateUrl) + ","
-            settingsContent += "\"runtimeUpdateUrl\":" + (utils.jsonString settings.runtimeUpdateUrl)
+            settingsContent += "\"apiEndpoint\":" + (utils.jsonString settings.apiEndpoint) + ","
+            settingsContent += "\"defaultApiEndpoint\":" + (utils.jsonString utils.defaultApiEndpoint)
             settingsContent += "}"
             return settingsContent
         ),
@@ -214,7 +214,7 @@
         fn stateJson = (
             local updateCount = 0
             for packageInfo in owner.packages where packageInfo.updateAvailable do updateCount += 1
-            local isRepositoryConfigured = owner.settings.updateUrl != ""
+            local isRepositoryConfigured = (utils.resolveApiEndpoint owner.settings.apiEndpoint) != ""
             local discoverMessage = if (isRepositoryConfigured) then "The configured endpoint supports installed-package update checks, but no Discover catalog contract is configured." else "No repository endpoint is configured. Installed packages remain fully available offline."
             local stateContent = "{"
             stateContent += "\"runtimeVersion\":" + (utils.jsonString owner.version) + ","
@@ -305,8 +305,7 @@
             owner.settings.autoCheckRuntime = boolParameter queryString "autoCheckRuntime" defaultState: owner.settings.autoCheckRuntime
             owner.settings.downloadUpdatesAutomatically = boolParameter queryString "downloadUpdatesAutomatically" defaultState: owner.settings.downloadUpdatesAutomatically
             owner.settings.updateFrequencyHours = amax 1 (amin 720 (integerParameter queryString "updateFrequencyHours" owner.settings.updateFrequencyHours))
-            owner.settings.updateUrl = queryParameter queryString "updateUrl" defaultContent: owner.settings.updateUrl
-            owner.settings.runtimeUpdateUrl = queryParameter queryString "runtimeUpdateUrl" defaultContent: owner.settings.runtimeUpdateUrl
+            owner.settings.apiEndpoint = queryParameter queryString "apiEndpoint" defaultContent: owner.settings.apiEndpoint
             owner.settings.toolbarVisible = boolParameter queryString "toolbarVisible" defaultState: owner.settings.toolbarVisible
             owner.settings.toolbarSubtitleMode = queryParameter queryString "toolbarSubtitleMode" defaultContent: owner.settings.toolbarSubtitleMode
             owner.settings.toolbarButtonSize = queryParameter queryString "toolbarButtonSize" defaultContent: owner.settings.toolbarButtonSize

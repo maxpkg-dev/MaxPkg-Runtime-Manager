@@ -5,6 +5,8 @@
 
 (
     struct MaxPkgUtilsModule (
+        defaultApiEndpoint = "https://maxpkg.dev/api/runtime/v1/",
+
         fn ensureSlash folderPath = (
             if (folderPath == undefined or folderPath == "") do return ""
             local normalizedPath = substituteString (folderPath as string) "/" @"\"
@@ -41,6 +43,57 @@
             return matchPattern normalizedChildPath pattern: (normalizedParentPath + "*") ignoreCase: true
         ),
 
+        fn makeFileWritable filePath = (
+            if (filePath == undefined or filePath == "" or not (doesFileExist filePath)) do return true
+            try (
+                setFileAttribute filePath #readOnly false
+                return true
+            ) catch (
+                return false
+            )
+        ),
+
+        fn forceDeleteFile filePath = (
+            if (filePath == undefined or filePath == "" or not (doesFileExist filePath)) do return true
+            makeFileWritable filePath
+            try (
+                deleteFile filePath
+                return not (doesFileExist filePath)
+            ) catch (
+                return false
+            )
+        ),
+
+        fn clearFolderReadOnly folderPath = (
+            local normalizedFolderPath = ensureSlash folderPath
+            if (normalizedFolderPath == "" or not (doesDirectoryExist normalizedFolderPath)) do return true
+            local isWritable = true
+            try (
+                local directoryClass = dotNetClass "System.IO.Directory"
+                local searchOption = dotNetClass "System.IO.SearchOption"
+                local filePaths = directoryClass.GetFiles normalizedFolderPath "*" searchOption.AllDirectories
+                for currentFilePath in filePaths do (
+                    if (not (makeFileWritable currentFilePath)) do isWritable = false
+                )
+            ) catch (
+                isWritable = false
+            )
+            return isWritable
+        ),
+
+        fn forceDeleteFolder folderPath = (
+            local normalizedFolderPath = ensureSlash folderPath
+            if (normalizedFolderPath == "" or not (doesDirectoryExist normalizedFolderPath)) do return true
+            clearFolderReadOnly normalizedFolderPath
+            try (
+                local directoryClass = dotNetClass "System.IO.Directory"
+                directoryClass.Delete normalizedFolderPath true
+                return not (doesDirectoryExist normalizedFolderPath)
+            ) catch (
+                return false
+            )
+        ),
+
         fn htmlEscape sourceContent = (
             local escapedContent = trim sourceContent
             escapedContent = substituteString escapedContent "&" "&amp;"
@@ -64,6 +117,40 @@
 
         fn jsonString sourceContent = (
             return "\"" + (jsonEscape sourceContent) + "\""
+        ),
+
+        fn normalizeApiEndpoint endpointContent = (
+            local normalizedEndpoint = trim endpointContent
+            if (normalizedEndpoint == "") do return ""
+            normalizedEndpoint = substituteString normalizedEndpoint @"\" "/"
+            local queryIndex = findString normalizedEndpoint "?"
+            if (queryIndex != undefined) do (
+                normalizedEndpoint = if (queryIndex > 1) then substring normalizedEndpoint 1 (queryIndex - 1) else ""
+            )
+            local fragmentIndex = findString normalizedEndpoint "#"
+            if (fragmentIndex != undefined) do (
+                normalizedEndpoint = if (fragmentIndex > 1) then substring normalizedEndpoint 1 (fragmentIndex - 1) else ""
+            )
+            while (normalizedEndpoint.count > 0 and (substring normalizedEndpoint normalizedEndpoint.count 1) == "/") do (
+                normalizedEndpoint = substring normalizedEndpoint 1 (normalizedEndpoint.count - 1)
+            )
+            if (normalizedEndpoint == "") do return ""
+            return normalizedEndpoint + "/"
+        ),
+
+        fn resolveApiEndpoint endpointContent = (
+            local normalizedEndpoint = normalizeApiEndpoint endpointContent
+            if (normalizedEndpoint == "") do return defaultApiEndpoint
+            return normalizedEndpoint
+        ),
+
+        fn apiEndpointUrl baseEndpoint actionName = (
+            local normalizedEndpoint = resolveApiEndpoint baseEndpoint
+            local normalizedActionName = trim actionName
+            while (normalizedActionName.count > 0 and (substring normalizedActionName 1 1) == "/") do (
+                normalizedActionName = substring normalizedActionName 2 (normalizedActionName.count - 1)
+            )
+            return normalizedEndpoint + normalizedActionName
         ),
 
         fn fileUrl filePath = (

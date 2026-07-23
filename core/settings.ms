@@ -30,8 +30,7 @@
         openManagerOnStartup = false,
         developerMode = false,
         debugLogging = false,
-        updateUrl = "",
-        runtimeUpdateUrl = ""
+        apiEndpoint = ""
     )
 
     struct MaxPkgSettingsModule (
@@ -75,6 +74,48 @@
             return "medium"
         ),
 
+        fn endpointFromLegacyUrl legacyEndpoint = (
+            local normalizedEndpoint = utils.normalizeApiEndpoint legacyEndpoint
+            if (normalizedEndpoint == "") do return ""
+            local endpointWithoutSlash = substring normalizedEndpoint 1 (normalizedEndpoint.count - 1)
+            local endpointSuffixes = #("/updates", "/runtime")
+            for endpointSuffix in endpointSuffixes do (
+                if (endpointWithoutSlash.count >= endpointSuffix.count) do (
+                    local currentSuffix = substring endpointWithoutSlash (endpointWithoutSlash.count - endpointSuffix.count + 1) endpointSuffix.count
+                    if ((toLower currentSuffix) == endpointSuffix) do (
+                        local endpointLength = endpointWithoutSlash.count - endpointSuffix.count
+                        if (endpointLength > 0) do (
+                            endpointWithoutSlash = substring endpointWithoutSlash 1 endpointLength
+                            return utils.normalizeApiEndpoint endpointWithoutSlash
+                        )
+                    )
+                )
+            )
+            return normalizedEndpoint
+        ),
+
+        fn removeLegacyEndpointSettings = (
+            try (
+                delIniSetting settingsData.filePath "Updates" "BatchUrl"
+                delIniSetting settingsData.filePath "Updates" "RuntimeUrl"
+                return true
+            ) catch (
+                logger.logWarning "settings" ("Could not remove legacy endpoint settings from " + settingsData.filePath + ": " + getCurrentException())
+                return false
+            )
+        ),
+
+        fn saveEndpointSetting = (
+            if (settingsData.apiEndpoint != "") do return ini.write settingsData.filePath "Endpoint" "BaseUrl" settingsData.apiEndpoint
+            try (
+                delIniSetting settingsData.filePath "Endpoint" "BaseUrl"
+                return true
+            ) catch (
+                logger.logWarning "settings" ("Could not remove the endpoint override from " + settingsData.filePath + ": " + getCurrentException())
+                return false
+            )
+        ),
+
         fn load runtimeRoot = (
             settingsData = MaxPkgSettingsData()
             settingsData.filePath = runtimeRoot + "settings.ini"
@@ -114,8 +155,17 @@
             settingsData.openManagerOnStartup = utils.boolValue (ini.read settingsData.filePath "General" "OpenManagerOnStartup" defaultValue: "false") defaultValue: false
             settingsData.developerMode = utils.boolValue (ini.read settingsData.filePath "Developer" "Enabled" defaultValue: "false") defaultValue: false
             settingsData.debugLogging = utils.boolValue (ini.read settingsData.filePath "Developer" "DebugLogging" defaultValue: "false") defaultValue: false
-            settingsData.updateUrl = ini.read settingsData.filePath "Updates" "BatchUrl"
-            settingsData.runtimeUpdateUrl = ini.read settingsData.filePath "Updates" "RuntimeUrl"
+            local configuredApiEndpoint = ini.read settingsData.filePath "Endpoint" "BaseUrl"
+            if (configuredApiEndpoint == "") do (
+                local legacyUpdateUrl = ini.read settingsData.filePath "Updates" "BatchUrl"
+                local legacyRuntimeUrl = ini.read settingsData.filePath "Updates" "RuntimeUrl"
+                if (legacyUpdateUrl != "") then (
+                    configuredApiEndpoint = endpointFromLegacyUrl legacyUpdateUrl
+                ) else if (legacyRuntimeUrl != "") then (
+                    configuredApiEndpoint = endpointFromLegacyUrl legacyRuntimeUrl
+                )
+            )
+            settingsData.apiEndpoint = utils.normalizeApiEndpoint configuredApiEndpoint
             logger.logInfo "settings" ("Loaded " + settingsData.filePath)
             return settingsData
         ),
@@ -125,6 +175,7 @@
             settingsData.updateFrequencyHours = normalizeUpdateFrequency settingsData.updateFrequencyHours
             settingsData.toolbarSubtitleMode = normalizeToolbarSubtitleMode settingsData.toolbarSubtitleMode
             settingsData.toolbarButtonSize = normalizeToolbarButtonSize settingsData.toolbarButtonSize
+            settingsData.apiEndpoint = utils.normalizeApiEndpoint settingsData.apiEndpoint
             local isSaved = true
             if (not (ini.write settingsData.filePath "Packages" "Roots" (utils.join settingsData.packageRoots separator: "|"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "Hidden" (utils.join settingsData.hiddenPackages separator: "|"))) do isSaved = false
@@ -137,8 +188,8 @@
             if (not (ini.write settingsData.filePath "Updates" "AutoCheckPackages" (if (settingsData.autoCheckPackages) then "true" else "false"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "AutoCheckRuntime" (if (settingsData.autoCheckRuntime) then "true" else "false"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "DownloadAutomatically" (if (settingsData.downloadUpdatesAutomatically) then "true" else "false"))) do isSaved = false
-            if (not (ini.write settingsData.filePath "Updates" "BatchUrl" settingsData.updateUrl)) do isSaved = false
-            if (not (ini.write settingsData.filePath "Updates" "RuntimeUrl" settingsData.runtimeUpdateUrl)) do isSaved = false
+            if (not (saveEndpointSetting())) do isSaved = false
+            if (not (removeLegacyEndpointSettings())) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "LastSelection" settingsData.managerLastSelection)) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "LastTab" settingsData.managerLastTab)) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "Sort" settingsData.managerSort)) do isSaved = false

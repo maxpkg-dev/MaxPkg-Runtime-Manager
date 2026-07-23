@@ -8,6 +8,25 @@
     local testRoot = getFilenamePath (getSourceFileName())
     local runtimeRoot = getFilenamePath (substring testRoot 1 (testRoot.count - 1))
     local startupFile = runtimeRoot + "startup.ms"
+    local utilsModule = fileIn (runtimeRoot + @"core\utils.ms")
+    local guidClass = dotNetClass "System.Guid"
+    local deleteTestId = guidClass.NewGuid().ToString()
+    local deleteTestRoot = (utilsModule.ensureSlash (getDir #temp)) + "maxpkg-delete-test-" + deleteTestId + @"\"
+    local deleteTestFilePath = deleteTestRoot + "read-only.tmp"
+    local deleteTestStream = undefined
+    makeDir deleteTestRoot all: true
+    deleteTestStream = createFile deleteTestFilePath
+    if (deleteTestStream == undefined) do throw "Could not create the read-only deletion test file."
+    format "MaxPkg" to: deleteTestStream
+    close deleteTestStream
+    setFileAttribute deleteTestFilePath #readOnly true
+    if (not (utilsModule.forceDeleteFile deleteTestFilePath)) do throw "Read-only file deletion failed."
+    deleteTestStream = createFile deleteTestFilePath
+    if (deleteTestStream == undefined) do throw "Could not recreate the read-only deletion test file."
+    format "MaxPkg" to: deleteTestStream
+    close deleteTestStream
+    setFileAttribute deleteTestFilePath #readOnly true
+    if (not (utilsModule.forceDeleteFolder deleteTestRoot)) do throw "Read-only folder deletion failed."
     if (not (fileIn startupFile)) do throw "Initial Runtime startup failed."
     if (MaxPkg == undefined) do throw "MaxPkg global was not created."
     if (maxpkg != MaxPkg) do throw "Lowercase maxpkg did not resolve to the MaxPkg global."
@@ -17,11 +36,14 @@
     if (MaxPkg.settings == undefined) do throw "MaxPkg settings were not loaded."
     if (not (isProperty MaxPkg.settings #toolbarSubtitleMode)) do throw "Toolbar subtitle mode is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarButtonSize)) do throw "Toolbar button size is unavailable."
+    if (not (isProperty MaxPkg.settings #apiEndpoint)) do throw "API endpoint setting is unavailable."
+    if (MaxPkg.getStatus().connection != "configured") do throw "Default API endpoint fallback is unavailable."
     if ((classOf (MaxPkg.getPackages())) != Array) do throw "MaxPkg.getPackages() did not return an array."
     if (MaxPkg.getSettings() == undefined) do throw "MaxPkg.getSettings() is unavailable."
     if (MaxPkg.getStatus() == undefined) do throw "MaxPkg.getStatus() is unavailable."
     if ((MaxPkg.getPackage "__maxpkg_missing_package__") != undefined) do throw "MaxPkg.getPackage() resolved a missing package."
     if (not (doesFileExist (runtimeRoot + @"ui\manager\index.html"))) do throw "Manager HTML is missing."
+    if (not (doesFileExist (runtimeRoot + "uninstall.ms"))) do throw "Runtime uninstaller is missing."
 
     local firstRuntime = MaxPkg
     if (not (firstRuntime.openManager())) do throw "Manager could not be opened before restart."

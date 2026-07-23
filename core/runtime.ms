@@ -173,7 +173,7 @@
             statusInfo.isBusy = operationModule.isBusy()
             statusInfo.packageCount = packages.count
             for packageInfo in packages where packageInfo.updateAvailable do statusInfo.updateCount += 1
-            statusInfo.connection = if (settings != undefined and settings.updateUrl != "") then "configured" else "offline"
+            statusInfo.connection = if (settings != undefined and (utilsModule.resolveApiEndpoint settings.apiEndpoint) != "") then "configured" else "offline"
             statusInfo.runtimeVersion = version
             return statusInfo
         ),
@@ -359,6 +359,7 @@
     selfUpdaterModule.installer = installerModule
     selfUpdaterModule.runtimeRoot = runtimeRoot
     selfUpdaterModule.logger = loggerModule
+    selfUpdaterModule.utils = utilsModule
 
     MaxPkg
 )

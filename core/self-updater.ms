@@ -12,6 +12,7 @@
         installer,
         runtimeRoot,
         logger,
+        utils,
 
         fn reloadRuntime = (
             local startupFile = runtimeRoot + "startup.ms"
@@ -26,14 +27,11 @@
         ),
 
         fn update = (
-            if (owner.settings.runtimeUpdateUrl == "") do (
-                logger.logInfo "self-updater" "RuntimeUrl is not configured; staying offline"
-                return false
-            )
             if (not (operations.begin "selfUpdate")) do return false
             local isSuccess = false
             try (
-                isSuccess = installer.installSource owner.settings.runtimeUpdateUrl
+                local runtimeEndpoint = utils.apiEndpointUrl owner.settings.apiEndpoint "runtime"
+                isSuccess = installer.installSource runtimeEndpoint
             ) catch (
                 logger.logError "self-updater" ("Self-update operation failed: " + getCurrentException())
                 isSuccess = false

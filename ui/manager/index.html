@@ -123,6 +123,7 @@
                     <button class="settings-nav-button" type="button" data-settings-page="updates">Updates</button>
                     <button class="settings-nav-button" type="button" data-settings-page="toolbar">Toolbar</button>
                     <button class="settings-nav-button" type="button" data-settings-page="developer">Developer</button>
+                    <button id="endpointSettingsNavigation" class="settings-nav-button is-hidden" type="button" data-settings-page="endpoint">Endpoint</button>
                     <button class="settings-nav-button" type="button" data-settings-page="about">About</button>
                 </div>
                 <div class="settings-content scroll-region">
@@ -166,14 +167,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="field">
-                            <label class="field-label" for="batchUrlInput">Package update endpoint</label>
-                            <input id="batchUrlInput" class="field-control" type="text" placeholder="Optional batch URL">
-                        </div>
-                        <div class="field">
-                            <label class="field-label" for="runtimeUrlInput">Runtime update endpoint</label>
-                            <input id="runtimeUrlInput" class="field-control" type="text" placeholder="Optional Runtime URL">
-                        </div>
                     </div>
                     <div class="settings-page is-hidden" data-settings-panel="toolbar">
                         <h3>Toolbar</h3>
@@ -215,6 +208,14 @@
                         <label class="check-row"><input id="developerModeCheck" type="checkbox">Enable developer mode</label>
                         <label class="check-row"><input id="debugLoggingCheck" type="checkbox">Enable debug logging</label>
                         <p class="text-muted">Developer settings affect Runtime diagnostics only. Package manifests remain read-only.</p>
+                    </div>
+                    <div id="endpointSettingsPanel" class="settings-page is-hidden" data-settings-panel="endpoint">
+                        <h3>Endpoint</h3>
+                        <div class="field">
+                            <label class="field-label" for="apiEndpointInput">Base endpoint</label>
+                            <input id="apiEndpointInput" class="field-control" type="text">
+                        </div>
+                        <p class="text-muted">The configured override is shown here. Without one, Runtime uses its built-in production endpoint. API action names such as updates and runtime are appended automatically.</p>
                     </div>
                     <div class="settings-page is-hidden" data-settings-panel="about">
                         <h3>About MaxPkg</h3>
