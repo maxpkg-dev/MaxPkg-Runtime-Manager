@@ -101,8 +101,8 @@ maxpkg.install "prune scene"
 maxpkg.install "scene prune"
 ```
 
-MaxPkg tells you whether the installation succeeded. Scripts with their own
-interface can keep this message hidden:
+MaxPkg shows a small Windows notification when the installation finishes.
+Scripts with their own interface can keep this message hidden:
 
 ```maxscript
 local installStatus = maxpkg.install "prune scene" showNotification: false
@@ -112,6 +112,10 @@ local installStatus = maxpkg.install "prune scene" showNotification: false
 
 Remove any installed script from its menu in the Manager. MaxPkg cleans up the
 package and its 3ds Max buttons for you.
+
+When you install or remove a script from MAXScript Listener, MaxPkg shows a
+small Windows notification instead of interrupting your work with another
+dialog.
 
 To remove MaxPkg Runtime itself, run `uninstall.ms` from the installed
 `MaxPkg Runtime` folder.

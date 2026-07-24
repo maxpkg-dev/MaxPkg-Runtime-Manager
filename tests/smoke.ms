@@ -71,6 +71,7 @@
     if ((MaxPkg.getPackage "__maxpkg_missing_package__") != undefined) do throw "MaxPkg.getPackage() resolved a missing package."
     if (not (doesFileExist (runtimeRoot + @"ui\manager\index.html"))) do throw "Manager HTML is missing."
     if (not (doesFileExist (runtimeRoot + "uninstall.ms"))) do throw "Runtime uninstaller is missing."
+    if (not (doesFileExist (runtimeRoot + @"core\notifier.ms"))) do throw "Reusable Runtime notifier module is missing."
 
     local firstRuntime = MaxPkg
     if (not (firstRuntime.openManager())) do throw "Manager could not be opened before restart."
@@ -90,6 +91,7 @@
     if ((MaxPkg.run "__maxpkg_missing_package__") != false) do throw "Missing package resolution did not fail safely."
     local invalidInstallStatus = maxpkg.install undefined showNotification: false
     if (invalidInstallStatus.success or invalidInstallStatus.errorMessage == "") do throw "Lowercase maxpkg installation call did not return a useful failure status."
+    if ((MaxPkg.uninstall "__maxpkg_missing_package__" showNotification: false) != false) do throw "Missing package uninstall did not fail safely."
     local missingUpdateStatus = MaxPkg.updatePackage "__maxpkg_missing_package__"
     if (missingUpdateStatus.success or missingUpdateStatus.errorMessage == "") do throw "Missing package update did not return a useful failure status."
     if ((MaxPkg.setToolbarVisible "__maxpkg_missing_package__" true) != false) do throw "Missing toolbar package did not fail safely."

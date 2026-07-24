@@ -42,6 +42,8 @@
     local iniModule = fileIn (coreRoot + @"ini.ms")
     local loggerModule = fileIn (coreRoot + @"logger.ms")
     loggerModule.initialize runtimeRoot
+    local notifierModule = fileIn (coreRoot + @"notifier.ms")
+    notifierModule.logger = loggerModule
     iniModule.logger = loggerModule
     local settingsModule = fileIn (coreRoot + @"settings.ms")
     settingsModule.utils = utilsModule
@@ -101,11 +103,30 @@
             )
         ),
 
+        fn showPackageNotification notificationContent notificationTitle: "MaxPkg" isError: false = (
+            return notifierModule.showNotification notificationContent notificationTitle: notificationTitle isError: isError
+        ),
+
+        fn showInstallNotification installStatus packageReference = (
+            local packageLabel = if (packageReference != undefined and packageReference != "") then (packageReference as string) else "Package"
+            if (installStatus.success and installStatus.packageGuid != "") do (
+                local installedPackage = apiModule.resolve packages installStatus.packageGuid
+                if (installedPackage != undefined and installedPackage.packageName != "") do packageLabel = installedPackage.packageName
+            )
+            if (installStatus.success) then (
+                return showPackageNotification "Script was installed." notificationTitle: packageLabel
+            ) else (
+                local errorMessage = if (installStatus.errorMessage != "") then installStatus.errorMessage else "The package could not be installed."
+                return showPackageNotification ("Script could not be installed.\n" + errorMessage) notificationTitle: packageLabel isError: true
+            )
+        ),
+
         public
 
         fn shutdown = (
             local isManagerClosed = managerModule.shutdownManager()
             local isToolbarClosed = toolbarModule.shutdownToolbar()
+            notifierModule.shutdown()
             started = false
             packages = #()
             catalogState = undefined
@@ -215,27 +236,28 @@
             return launcherModule.run resolved
         ),
 
-        fn showInstallNotification installStatus packageReference = (
-            local packageLabel = if (packageReference != undefined and packageReference != "") then (packageReference as string) else "Unknown package"
-            if (installStatus.success) then (
-                messageBox ("Package installed successfully.\n\n" + packageLabel) title: "MaxPkg"
-            ) else (
-                local errorMessage = if (installStatus.errorMessage != "") then installStatus.errorMessage else "The package could not be installed."
-                messageBox ("Package installation failed.\n\n" + errorMessage) title: "MaxPkg"
-            )
-            return true
-        ),
-
         fn install packageReference showNotification: true = (
             local installStatus = installerModule.install packageReference
             if (showNotification) do showInstallNotification installStatus packageReference
             return installStatus
         ),
 
-        fn uninstall package = (
-            local resolved = apiModule.resolve packages package
-            if (resolved == undefined) do return false
-            return uninstallerModule.uninstall resolved
+        fn uninstall packageReference showNotification: true = (
+            local resolvedPackage = apiModule.resolve packages packageReference
+            if (resolvedPackage == undefined) do (
+                if (showNotification) do showPackageNotification "The script could not be found." isError: true
+                return false
+            )
+            local packageName = resolvedPackage.packageName
+            local isUninstalled = uninstallerModule.uninstall resolvedPackage
+            if (showNotification) do (
+                if (isUninstalled) then (
+                    showPackageNotification "Script was removed." notificationTitle: packageName
+                ) else (
+                    showPackageNotification "Script could not be removed." notificationTitle: packageName isError: true
+                )
+            )
+            return isUninstalled
         ),
 
         fn checkUpdates = (

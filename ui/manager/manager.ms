@@ -442,7 +442,7 @@
                 notify (if (isSuccess) then "Package updated." else installStatus.errorMessage) notificationType: (if (isSuccess) then "success" else "error")
             )
             if (matchPattern commandPath pattern: "install/*" ignoreCase: true) do (
-                local installStatus = owner.install (commandArgument commandPath "install/") showNotification: false
+                local installStatus = owner.install (commandArgument commandPath "install/") showNotification: true
                 isSuccess = installStatus.success
                 if (isSuccess) do owner.remotePackageDetails = undefined
                 notify (if (isSuccess) then "Package installed." else installStatus.errorMessage) notificationType: (if (isSuccess) then "success" else "error")
@@ -458,7 +458,7 @@
                 if (packageInfo == undefined) then (
                     isSuccess = false
                 ) else if (queryBox ("Uninstall " + packageInfo.packageName + "?") title: "MaxPkg") then (
-                    isSuccess = owner.uninstall packageGuid
+                    isSuccess = owner.uninstall packageGuid showNotification: true
                     notify (if (isSuccess) then "Package uninstalled." else "Package could not be uninstalled.") notificationType: (if (isSuccess) then "success" else "error")
                 )
             )
