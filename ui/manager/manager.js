@@ -53,6 +53,14 @@
         return "";
     }
 
+    function safeThumbnailImageUrl(sourceUrl, fallbackUrl) {
+        var normalizedUrl = safeHttpImageUrl(sourceUrl);
+        if (!normalizedUrl || /\.(webp|avif)(?:[?#]|$)/i.test(normalizedUrl)) {
+            return fallbackUrl;
+        }
+        return normalizedUrl;
+    }
+
     function discoverPackageForGuid(packageGuid) {
         var packageIndex;
         var remotePackages = currentState.discover && currentState.discover.packages ? currentState.discover.packages : [];
@@ -66,6 +74,55 @@
             }
         }
         return null;
+    }
+
+    function installedPackageForGuid(packageGuid) {
+        var packageIndex;
+        var normalizedGuid = String(packageGuid || "").toLowerCase();
+        if (!normalizedGuid) {
+            return null;
+        }
+        for (packageIndex = 0; packageIndex < currentState.packages.length; packageIndex += 1) {
+            if (String(currentState.packages[packageIndex].guid || "").toLowerCase() === normalizedGuid) {
+                return currentState.packages[packageIndex];
+            }
+        }
+        return null;
+    }
+
+    function copyPackageFields(targetPackage, sourcePackage, keepEmptyValues) {
+        var fieldName;
+        var fieldValue;
+        if (!sourcePackage) {
+            return targetPackage;
+        }
+        for (fieldName in sourcePackage) {
+            if (sourcePackage.hasOwnProperty(fieldName)) {
+                fieldValue = sourcePackage[fieldName];
+                if (keepEmptyValues || (fieldValue !== undefined && fieldValue !== null && fieldValue !== "")) {
+                    targetPackage[fieldName] = fieldValue;
+                }
+            }
+        }
+        return targetPackage;
+    }
+
+    function discoverDetailsPackage(remotePackage) {
+        var installedPackage = installedPackageForGuid(remotePackage.guid);
+        var mergedPackage;
+        if (!installedPackage) {
+            return remotePackage;
+        }
+        mergedPackage = copyPackageFields({}, installedPackage, true);
+        copyPackageFields(mergedPackage, remotePackage, false);
+        mergedPackage.isRemote = false;
+        mergedPackage.iconFile = installedPackage.iconFile;
+        mergedPackage.installPath = installedPackage.installPath;
+        mergedPackage.toolbarVisible = installedPackage.toolbarVisible;
+        mergedPackage.toolbarOrder = installedPackage.toolbarOrder;
+        mergedPackage.updateAvailable = installedPackage.updateAvailable;
+        mergedPackage.latestVersion = installedPackage.latestVersion;
+        return mergedPackage;
     }
 
     function safePackageImageUrl(packageInfo, includeCover) {
@@ -123,13 +180,16 @@
 
     function findPackage(packageGuid) {
         var packageIndex;
+        if (activeTab === "discover" && currentState.remoteDetails && currentState.remoteDetails.guid.toLowerCase() === packageGuid.toLowerCase()) {
+            return discoverDetailsPackage(currentState.remoteDetails);
+        }
         for (packageIndex = 0; packageIndex < currentState.packages.length; packageIndex += 1) {
             if (currentState.packages[packageIndex].guid.toLowerCase() === packageGuid.toLowerCase()) {
                 return currentState.packages[packageIndex];
             }
         }
         if (currentState.remoteDetails && currentState.remoteDetails.guid.toLowerCase() === packageGuid.toLowerCase()) {
-            return currentState.remoteDetails;
+            return discoverDetailsPackage(currentState.remoteDetails);
         }
         if (currentState.discover && currentState.discover.packages) {
             for (packageIndex = 0; packageIndex < currentState.discover.packages.length; packageIndex += 1) {
@@ -302,6 +362,15 @@
             return "";
         }
         return "<tr><th>" + Common.escapeHtml(rowLabel) + "</th><td" + (cssClass ? " class='" + cssClass + "'" : "") + ">" + Common.escapeHtml(fieldContent) + "</td></tr>";
+    }
+
+    function detailPackageLinkRow(packageInfo) {
+        if (!packageInfo.packagePageUrl) {
+            return "";
+        }
+        return "<tr><th>MaxPkg page</th><td class='path-value'><a class='icon-button details-copy-link-button' href='maxpkg://manager/copy-package-link/" +
+            Common.encode(packageInfo.slug) + "' title='Copy link'>" + icon("copy") + "</a><a class='details-table-link' href='maxpkg://manager/package-link/" +
+            Common.encode(packageInfo.guid) + "?kind=maxpkg'>" + Common.escapeHtml(packageInfo.packagePageUrl) + "</a></td></tr>";
     }
 
     function compatibilityLabel(packageInfo) {
@@ -514,7 +583,7 @@
         for (screenshotIndex = 0; screenshotIndex < screenshots.length; screenshotIndex += 1) {
             screenshotInfo = screenshots[screenshotIndex] || {};
             fullImageUrl = safeHttpImageUrl(screenshotInfo.url);
-            thumbnailUrl = safeHttpImageUrl(screenshotInfo.thumbnailUrl) || fullImageUrl;
+            thumbnailUrl = safeThumbnailImageUrl(screenshotInfo.thumbnailUrl, fullImageUrl);
             if (fullImageUrl && thumbnailUrl) {
                 validItems.push({
                     url: fullImageUrl,
@@ -632,6 +701,7 @@
         var releaseBadges;
         var updateButton;
         var actionMarkup;
+        var bottomActionButton;
         var changelogCount;
         var screenshotCount;
         var hasFullDescription;
@@ -640,8 +710,7 @@
             return;
         }
         compatibilityText = compatibilityLabel(packageInfo);
-        packageRows = detailRow("GUID", packageInfo.guid, "path-value") +
-            detailRow("Version", packageInfo.version) +
+        packageRows = detailRow("Version", packageInfo.version) +
             detailRow("Release channel", packageInfo.releaseChannel) +
             detailRow("Release date", packageInfo.releaseDate) +
             detailRow("Developer", packageInfo.developer) +
@@ -651,7 +720,9 @@
             detailRow("Entry file", packageInfo.entry, "path-value") +
             detailRow("Install path", packageInfo.installPath, "path-value") +
             detailRow("Manifest version", packageInfo.manifestVersion) +
-            detailRow("Packager", packageInfo.packagerName ? packageInfo.packagerName + (packageInfo.packagerVersion ? " " + packageInfo.packagerVersion : "") : "");
+            detailRow("Packager", packageInfo.packagerName ? packageInfo.packagerName + (packageInfo.packagerVersion ? " " + packageInfo.packagerVersion : "") : "") +
+            detailPackageLinkRow(packageInfo) +
+            detailRow("GUID", packageInfo.guid, "path-value");
         linkButtons = packageLinkButton(packageInfo, "homepage", "Homepage") +
             packageLinkButton(packageInfo, "documentation", "Documentation") +
             packageLinkButton(packageInfo, "support", "Support") +
@@ -670,11 +741,16 @@
         actionMarkup = packageInfo.isRemote ?
             "<a class='button button-primary details-action-button' href='maxpkg://manager/install/" + Common.encode(packageInfo.guid) + "' data-busy='Installing package...'>" + icon("download") + "Install</a>" :
             "<a class='button button-primary details-action-button' href='maxpkg://manager/run/" + Common.encode(packageInfo.guid) + "' data-busy='Starting package...'>" + icon("play") + "Run</a>" +
-            updateButton + "<a class='button details-action-button' href='maxpkg://manager/open-folder/" + Common.encode(packageInfo.guid) + "'>" + icon("folder-open") + "Open Folder</a>";
+            updateButton + "<a class='button button-danger details-action-button details-uninstall-button' href='maxpkg://manager/uninstall/" + Common.encode(packageInfo.guid) + "' data-busy='Uninstalling package...'>" + icon("trash-2") + "Uninstall</a>";
+        bottomActionButton = packageInfo.isRemote ? "" :
+            "<div class='details-bottom-actions'><a class='button details-bottom-button' href='maxpkg://manager/open-folder/" + Common.encode(packageInfo.guid) + "'>" + icon("folder-open") + "Open Folder</a></div>";
         changelogCount = (packageInfo.changelogEntries || []).length;
         screenshotCount = validScreenshots(packageInfo).length;
         hasFullDescription = fullDescriptionContentHtml(packageInfo.fullDescription || "") !== "";
         if (!hasFullDescription && detailsTab === "description") {
+            detailsTab = "information";
+        }
+        if (screenshotCount < 1 && detailsTab === "screenshots") {
             detailsTab = "information";
         }
         Common.byId("detailsPathName").innerHTML = Common.escapeHtml(packageInfo.name);
@@ -685,12 +761,12 @@
             "<div class='details-section'><h3>Description</h3><p>" + Common.escapeHtml(packageInfo.description || "No description provided.") + "</p></div>" +
             "<div class='details-tabs' role='tablist'><button class='details-tab' type='button' data-action='details-tab' data-details-tab='information'>Information</button>" +
             (hasFullDescription ? "<button class='details-tab' type='button' data-action='details-tab' data-details-tab='description'>Description</button>" : "") +
-            "<button class='details-tab' type='button' data-action='details-tab' data-details-tab='screenshots'>Screenshots<span class='details-tab-count'>" + screenshotCount + "</span></button>" +
+            (screenshotCount > 0 ? "<button class='details-tab' type='button' data-action='details-tab' data-details-tab='screenshots'>Screenshots<span class='details-tab-count'>" + screenshotCount + "</span></button>" : "") +
             "<button class='details-tab' type='button' data-action='details-tab' data-details-tab='changelog'>Changelog<span class='details-tab-count'>" + changelogCount + "</span></button></div>" +
             "<div class='details-tab-panel' data-details-panel='information'><div class='details-section'><h3>Package information</h3><table class='table details-table'>" + packageRows + "</table></div>" +
-            (linkButtons ? "<div class='details-section'><h3>Links</h3><div class='details-link-actions'>" + linkButtons + "</div></div>" : "") + "</div>" +
+            (linkButtons ? "<div class='details-section'><h3>Links</h3><div class='details-link-actions'>" + linkButtons + "</div></div>" : "") + bottomActionButton + "</div>" +
             (hasFullDescription ? "<div class='details-tab-panel is-hidden' data-details-panel='description'>" + fullDescriptionHtml(packageInfo) + "</div>" : "") +
-            "<div class='details-tab-panel is-hidden' data-details-panel='screenshots'>" + screenshotGalleryHtml(packageInfo) + "</div>" +
+            (screenshotCount > 0 ? "<div class='details-tab-panel is-hidden' data-details-panel='screenshots'>" + screenshotGalleryHtml(packageInfo) + "</div>" : "") +
             "<div class='details-tab-panel is-hidden' data-details-panel='changelog'>" + changelogHtml(packageInfo) + "</div>";
         showDetailsTab(detailsTab);
     }
@@ -724,7 +800,6 @@
     }
 
     function showDetails(packageGuid) {
-        var packageInfo = findPackage(packageGuid);
         if (!detailsGuid) {
             detailsListScrollTop = Common.byId("pageHost").scrollTop;
         }
@@ -733,7 +808,7 @@
             activeScreenshotIndex = 0;
         }
         detailsGuid = packageGuid;
-        if (packageInfo && packageInfo.isRemote && !packageInfo.detailsLoaded) {
+        if (activeTab === "discover") {
             Common.byId("busyMessage").innerHTML = "Loading package details...";
             Common.removeClass(Common.byId("busyShade"), "is-hidden");
             window.location.href = "maxpkg://manager/remote-details/" + Common.encode(packageGuid);

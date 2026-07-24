@@ -45,6 +45,8 @@
                 client.Headers.Add "User-Agent" "MaxPkg-Runtime/1.0"
                 client.Headers.Add "Content-Type" "application/x-www-form-urlencoded"
                 client.Headers.Add "Accept" "text/plain"
+                client.Headers.Add "Cache-Control" "no-cache, no-store, max-age=0"
+                client.Headers.Add "Pragma" "no-cache"
                 local responseBody = client.UploadString url body
                 client.Dispose()
                 return responseBody

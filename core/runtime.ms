@@ -114,10 +114,10 @@
                 if (installedPackage != undefined and installedPackage.packageName != "") do packageLabel = installedPackage.packageName
             )
             if (installStatus.success) then (
-                return showPackageNotification "Script was installed." notificationTitle: packageLabel
+                return showPackageNotification "Package was installed." notificationTitle: packageLabel
             ) else (
                 local errorMessage = if (installStatus.errorMessage != "") then installStatus.errorMessage else "The package could not be installed."
-                return showPackageNotification ("Script could not be installed.\n" + errorMessage) notificationTitle: packageLabel isError: true
+                return showPackageNotification ("Package could not be installed.\n" + errorMessage) notificationTitle: packageLabel isError: true
             )
         ),
 
@@ -245,16 +245,16 @@
         fn uninstall packageReference showNotification: true = (
             local resolvedPackage = apiModule.resolve packages packageReference
             if (resolvedPackage == undefined) do (
-                if (showNotification) do showPackageNotification "The script could not be found." isError: true
+                if (showNotification) do showPackageNotification "The package could not be found." isError: true
                 return false
             )
             local packageName = resolvedPackage.packageName
             local isUninstalled = uninstallerModule.uninstall resolvedPackage
             if (showNotification) do (
                 if (isUninstalled) then (
-                    showPackageNotification "Script was removed." notificationTitle: packageName
+                    showPackageNotification "Package was removed." notificationTitle: packageName
                 ) else (
-                    showPackageNotification "Script could not be removed." notificationTitle: packageName isError: true
+                    showPackageNotification "Package could not be removed." notificationTitle: packageName isError: true
                 )
             )
             return isUninstalled
@@ -339,6 +339,7 @@
                 "documentation": packageInfo.documentationUrl
                 "support": packageInfo.supportUrl
                 "license": packageInfo.licenseUrl
+                "maxpkg": utilsModule.packagePageUrl settings.apiEndpoint packageInfo.slug
                 default: ""
             )
         ),

@@ -70,16 +70,14 @@
         ),
 
         fn managerContainsKeyboardFocus = (
-            if (not dialogOpen or rolloutRef == undefined or rolloutRef.hwnd == 0) do return false
-            local focusedWindowHandle = windows.getFocus()
-            if (focusedWindowHandle == undefined or focusedWindowHandle == 0) do return false
-            local managerWindowHandle = rolloutRef.hwnd
-            local currentWindowHandle = focusedWindowHandle
-            while (currentWindowHandle != undefined and currentWindowHandle != 0) do (
-                if (currentWindowHandle == managerWindowHandle) do return true
-                currentWindowHandle = UIAccessor.GetParentWindow currentWindowHandle
+            if (not dialogOpen or rolloutRef == undefined) do return false
+            try (
+                local browserControl = rolloutRef.browser
+                if (browserControl == undefined) do return false
+                return browserControl.ContainsFocus
+            ) catch (
+                return false
             )
-            return false
         ),
 
         fn synchronizeManagerFocus = (
@@ -178,10 +176,12 @@
             local packageIconUrl = optionalString packageInfo #packageIconUrl
             local coverImageUrl = optionalString packageInfo #coverImageUrl
             local screenshotEntries = if (isProperty packageInfo #screenshotEntries) then packageInfo.screenshotEntries else #()
+            local packagePageUrl = utils.packagePageUrl owner.settings.apiEndpoint packageInfo.slug
             if (iconUrl == "" and packageInfo.iconFile != "" and doesFileExist packageInfo.iconFile) do iconUrl = utils.fileUrl packageInfo.iconFile
             local packageContent = "{"
             packageContent += "\"guid\":" + (utils.jsonString packageInfo.guid) + ","
             packageContent += "\"slug\":" + (utils.jsonString packageInfo.slug) + ","
+            packageContent += "\"packagePageUrl\":" + (utils.jsonString packagePageUrl) + ","
             packageContent += "\"name\":" + (utils.jsonString packageInfo.packageName) + ","
             packageContent += "\"buttonName\":" + (utils.jsonString packageInfo.buttonName) + ","
             packageContent += "\"version\":" + (utils.jsonString packageInfo.version) + ","
@@ -444,7 +444,6 @@
             if (matchPattern commandPath pattern: "install/*" ignoreCase: true) do (
                 local installStatus = owner.install (commandArgument commandPath "install/") showNotification: true
                 isSuccess = installStatus.success
-                if (isSuccess) do owner.remotePackageDetails = undefined
                 notify (if (isSuccess) then "Package installed." else installStatus.errorMessage) notificationType: (if (isSuccess) then "success" else "error")
             )
             if (matchPattern commandPath pattern: "remote-details/*" ignoreCase: true) do (
@@ -471,6 +470,22 @@
                     isSuccess = owner.setToolbarVisible packageGuid (packageIsHidden packageGuid)
             )
             if (matchPattern commandPath pattern: "open-folder/*" ignoreCase: true) do isSuccess = owner.openPackageFolder (commandArgument commandPath "open-folder/")
+            if (matchPattern commandPath pattern: "copy-package-link/*" ignoreCase: true) do (
+                local packageSlug = commandArgument commandPath "copy-package-link/"
+                local packagePageUrl = utils.packagePageUrl owner.settings.apiEndpoint packageSlug
+                if (packagePageUrl == "") then (
+                    isSuccess = false
+                ) else (
+                    try (
+                        setClipboardText packagePageUrl
+                        isSuccess = true
+                    ) catch (
+                        logger.logError "manager" ("Could not copy package link: " + getCurrentException())
+                        isSuccess = false
+                    )
+                )
+                notify (if (isSuccess) then "Package link copied to clipboard." else "Package link could not be copied.") notificationType: (if (isSuccess) then "success" else "error")
+            )
             if (matchPattern commandPath pattern: "package-link/*" ignoreCase: true) do (
                 local packageGuid = commandArgument commandPath "package-link/"
                 local packageLinkKind = queryParameter queryString "kind"

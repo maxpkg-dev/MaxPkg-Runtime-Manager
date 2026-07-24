@@ -159,6 +159,24 @@
             return normalizedEndpoint
         ),
 
+        fn apiEndpointOrigin endpointContent = (
+            local resolvedEndpoint = resolveApiEndpoint endpointContent
+            try (
+                local endpointUri = dotNetObject "System.Uri" resolvedEndpoint
+                return endpointUri.Scheme + "://" + endpointUri.Authority
+            ) catch (
+                return ""
+            )
+        ),
+
+        fn packagePageUrl endpointContent packageSlug = (
+            local normalizedSlug = trim packageSlug
+            if (normalizedSlug == "") do return ""
+            local endpointOrigin = apiEndpointOrigin endpointContent
+            if (endpointOrigin == "") do return ""
+            return endpointOrigin + "/scripts/" + (formEncode normalizedSlug)
+        ),
+
         fn apiEndpointUrl baseEndpoint actionName = (
             local normalizedEndpoint = resolveApiEndpoint baseEndpoint
             local normalizedActionName = trim actionName
