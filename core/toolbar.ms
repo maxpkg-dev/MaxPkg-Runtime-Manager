@@ -13,6 +13,13 @@
             if (toolbarOwner != undefined) do toolbarOwner.onNavigate navigationArgs
         )
 
+        on browser DocumentCompleted eventSender eventArgs do (
+            try (
+                browser.Document.InvokeScript "layout"
+            ) catch (
+            )
+        )
+
         on MaxPkgRuntimeToolbarRollout resized size do (
             browser.width = size.x
             browser.height = size.y
@@ -129,6 +136,8 @@
         ),
 
         fn configureBrowser browserControl = (
+            local dockStyle = dotNetClass "System.Windows.Forms.DockStyle"
+            browserControl.Dock = dockStyle.Fill
             browserControl.ScriptErrorsSuppressed = true
             browserControl.ScrollBarsEnabled = false
             browserControl.IsWebBrowserContextMenuEnabled = false
@@ -146,6 +155,12 @@
                 logger.logWarning "toolbar" ("Could not unregister toolbar: " + getCurrentException())
                 return false
             )
+        ),
+
+        fn dockToolbar = (
+            local dockLocation = if (owner.settings.toolbarDockPosition == "bottom") then #cui_dock_bottom else #cui_dock_top
+            cui.DockDialogBar rolloutRef dockLocation
+            return true
         ),
 
         fn onNavigate navigationArgs = (
@@ -194,7 +209,7 @@
             )
             try (
                 cui.RegisterDialogBar rolloutRef style: #(#cui_floatable, #cui_dock_horz, #cui_handles, #cui_max_sized, #style_toolwindow, #style_sysmenu)
-                cui.DockDialogBar rolloutRef #cui_dock_top
+                dockToolbar()
                 return configureBrowser browserControl
             ) catch (
                 logger.logError "toolbar" ("Could not register toolbar: " + getCurrentException())
@@ -227,6 +242,7 @@
             if (not owner.settings.toolbarVisible) do return hideToolbar()
             try (
                 rolloutRef.browser.DocumentText = buildHtml()
+                dockToolbar()
                 return true
             ) catch (
                 hideToolbar()

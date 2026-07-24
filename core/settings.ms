@@ -13,6 +13,7 @@
         toolbarTitleMode = "packageName",
         toolbarSubtitleMode = "version",
         toolbarButtonSize = "medium",
+        toolbarDockPosition = "top",
         updateFrequencyHours = 24,
         notifications = true,
         autoCheckPackages = true,
@@ -81,6 +82,13 @@
             if (normalizedSize == "large" or normalizedSize == "medium" or normalizedSize == "small" or normalizedSize == "icon") do return normalizedSize
             logger.logWarning "settings" ("Unsupported toolbar button size: " + (requestedSize as string) + "; using medium")
             return "medium"
+        ),
+
+        fn normalizeToolbarDockPosition requestedPosition = (
+            local normalizedPosition = toLower (utils.trim requestedPosition)
+            if (normalizedPosition == "top" or normalizedPosition == "bottom") do return normalizedPosition
+            logger.logWarning "settings" ("Unsupported toolbar dock position: " + (requestedPosition as string) + "; using top")
+            return "top"
         ),
 
         fn endpointFromLegacyUrl legacyEndpoint = (
@@ -155,6 +163,7 @@
             settingsData.toolbarTitleMode = normalizeToolbarTitleMode (ini.read settingsData.filePath "Toolbar" "TitleMode" defaultValue: "packageName")
             settingsData.toolbarSubtitleMode = normalizeToolbarSubtitleMode (ini.read settingsData.filePath "Toolbar" "SubtitleMode" defaultValue: "version")
             settingsData.toolbarButtonSize = normalizeToolbarButtonSize (ini.read settingsData.filePath "Toolbar" "ButtonSize" defaultValue: "medium")
+            settingsData.toolbarDockPosition = normalizeToolbarDockPosition (ini.read settingsData.filePath "Toolbar" "DockPosition" defaultValue: "top")
             settingsData.updateFrequencyHours = normalizeUpdateFrequency (integerValue (ini.read settingsData.filePath "Updates" "FrequencyHours" defaultValue: "24") 24 "Updates.FrequencyHours")
             settingsData.notifications = utils.boolValue (ini.read settingsData.filePath "Updates" "Notifications" defaultValue: "true") defaultValue: true
             settingsData.autoCheckPackages = utils.boolValue (ini.read settingsData.filePath "Updates" "AutoCheckPackages" defaultValue: "true") defaultValue: true
@@ -202,6 +211,7 @@
             settingsData.toolbarTitleMode = normalizeToolbarTitleMode settingsData.toolbarTitleMode
             settingsData.toolbarSubtitleMode = normalizeToolbarSubtitleMode settingsData.toolbarSubtitleMode
             settingsData.toolbarButtonSize = normalizeToolbarButtonSize settingsData.toolbarButtonSize
+            settingsData.toolbarDockPosition = normalizeToolbarDockPosition settingsData.toolbarDockPosition
             settingsData.apiEndpoint = utils.normalizeApiEndpoint settingsData.apiEndpoint
             local isSaved = true
             if (not (ini.write settingsData.filePath "Packages" "Roots" (utils.join settingsData.packageRoots separator: "|"))) do isSaved = false
@@ -211,6 +221,7 @@
             if (not (ini.write settingsData.filePath "Toolbar" "TitleMode" settingsData.toolbarTitleMode)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "SubtitleMode" settingsData.toolbarSubtitleMode)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "ButtonSize" settingsData.toolbarButtonSize)) do isSaved = false
+            if (not (ini.write settingsData.filePath "Toolbar" "DockPosition" settingsData.toolbarDockPosition)) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "FrequencyHours" (settingsData.updateFrequencyHours as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "Notifications" (if (settingsData.notifications) then "true" else "false"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "AutoCheckPackages" (if (settingsData.autoCheckPackages) then "true" else "false"))) do isSaved = false

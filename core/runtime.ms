@@ -128,7 +128,9 @@
 
         fn toolbarOrdersMatch firstOrder secondOrder = (
             if (firstOrder.count != secondOrder.count) do return false
-            for orderIndex in 1 to firstOrder.count where (toLower firstOrder[orderIndex]) != (toLower secondOrder[orderIndex]) do return false
+            for orderIndex in 1 to firstOrder.count do (
+                if ((toLower firstOrder[orderIndex]) != (toLower secondOrder[orderIndex])) do return false
+            )
             return true
         ),
 
@@ -326,7 +328,9 @@
             if (resolvedPackage == undefined) do return false
             local previousHiddenPackages = copy settings.hiddenPackages
             local hiddenPackageIndex = 0
-            for hiddenIndex in 1 to settings.hiddenPackages.count where (toLower settings.hiddenPackages[hiddenIndex]) == (toLower resolvedPackage.guid) do hiddenPackageIndex = hiddenIndex
+            for hiddenIndex in 1 to settings.hiddenPackages.count do (
+                if ((toLower settings.hiddenPackages[hiddenIndex]) == (toLower resolvedPackage.guid)) do hiddenPackageIndex = hiddenIndex
+            )
             if (isVisible) then (
                 if (hiddenPackageIndex > 0) do deleteItem settings.hiddenPackages hiddenPackageIndex
             ) else if (hiddenPackageIndex == 0) then (
@@ -345,7 +349,8 @@
         fn resetToolbarOrder = (
             local previousToolbarOrder = copy settings.toolbarOrder
             settings.toolbarOrder = #()
-            if (not (synchronizeToolbarOrder())) do (
+            for packageInfo in packages do append settings.toolbarOrder packageInfo.guid
+            if (not (settingsModule.save())) do (
                 settings.toolbarOrder = previousToolbarOrder
                 loggerModule.logError "runtime" "Could not reset toolbar order."
                 return false

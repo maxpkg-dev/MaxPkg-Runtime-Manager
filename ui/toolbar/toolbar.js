@@ -8,6 +8,8 @@
 var scrollOffset = 0;
 var scrollStep = 160;
 var controlGap = 4;
+var lastLayoutWidth = -1;
+var layoutMonitor = null;
 
 function byId(elementId) {
     return document.getElementById(elementId);
@@ -28,6 +30,9 @@ function measureStrip() {
 
 function layout() {
     var wrap = byId("wrap");
+    if (!wrap) {
+        return;
+    }
     var viewport = byId("viewport");
     var strip = byId("strip");
     var leftArrow = byId("leftArrow");
@@ -40,6 +45,7 @@ function layout() {
     var availableWidth;
     var maximumOffset;
 
+    lastLayoutWidth = wrap.clientWidth;
     brand.style.left = cursor + "px";
     cursor += brand.offsetWidth + controlGap;
     availableWidth = rightEdge - cursor;
@@ -73,6 +79,22 @@ function layout() {
     strip.style.left = (-scrollOffset) + "px";
 }
 
+function monitorLayout() {
+    var wrap = byId("wrap");
+    if (wrap && wrap.clientWidth !== lastLayoutWidth) {
+        layout();
+    }
+}
+
+function initializeLayout() {
+    layout();
+    window.setTimeout(layout, 50);
+    window.setTimeout(layout, 250);
+    if (layoutMonitor === null) {
+        layoutMonitor = window.setInterval(monitorLayout, 250);
+    }
+}
+
 function moveLeft() {
     scrollOffset -= scrollStep;
     layout();
@@ -83,5 +105,5 @@ function moveRight() {
     layout();
 }
 
-window.onload = layout;
+window.onload = initializeLayout;
 window.onresize = layout;

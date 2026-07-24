@@ -171,6 +171,19 @@
                         <h3>Toolbar</h3>
                         <label class="check-row"><input id="toolbarVisibleCheck" type="checkbox">Show MaxPkg toolbar</label>
                         <div class="field">
+                            <span id="toolbarDockPositionLabel" class="field-label">Toolbar position</span>
+                            <div id="toolbarDockPositionSelect" class="html-select html-select-wide" data-value="top">
+                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarDockPositionLabel" data-dropdown-trigger="true">
+                                    <span data-select-label="toolbarDockPositionSelect">Top</span>
+                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                </button>
+                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                    <button type="button" data-dropdown-option="top">Top</button>
+                                    <button type="button" data-dropdown-option="bottom">Bottom</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
                             <span id="toolbarTitleLabel" class="field-label">Button primary text</span>
                             <div id="toolbarTitleSelect" class="html-select html-select-wide" data-value="packageName">
                                 <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarTitleLabel" data-dropdown-trigger="true">

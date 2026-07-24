@@ -897,6 +897,7 @@
         compatibilityText = compatibilityLabel(packageInfo);
         packageRows = detailRow("Version", packageInfo.version) +
             detailRow("Release channel", packageInfo.releaseChannel) +
+            detailPackageLinkRow(packageInfo) +
             detailRow("Release date", packageInfo.releaseDate) +
             detailRow("Developer", packageInfo.developer) +
             detailRow("Runtime", packageInfo.runtime) +
@@ -905,8 +906,7 @@
             detailRow("Entry file", packageInfo.entry, "path-value") +
             detailRow("Install path", packageInfo.installPath, "path-value") +
             detailRow("Manifest version", packageInfo.manifestVersion) +
-            detailRow("Packager", packageInfo.packagerName ? packageInfo.packagerName + (packageInfo.packagerVersion ? " " + packageInfo.packagerVersion : "") : "") +
-            detailPackageLinkRow(packageInfo) +
+            detailRow("Packager", packageInfo.packagerName ? packageInfo.packagerName + (packageInfo.packagerVersion ? " " + packageInfo.packagerVersion : "") : "") +           
             detailRow("GUID", packageInfo.guid, "path-value");
         linkButtons = packageLinkButton(packageInfo, "homepage", "Homepage") +
             packageLinkButton(packageInfo, "documentation", "Documentation") +
@@ -1138,6 +1138,7 @@
         Common.byId("autoDownloadCheck").checked = !!settings.downloadUpdatesAutomatically;
         Common.byId("apiEndpointInput").value = settings.apiEndpoint || settings.defaultApiEndpoint || "";
         Common.byId("toolbarVisibleCheck").checked = !!settings.toolbarVisible;
+        window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarDockPositionSelect"), settings.toolbarDockPosition || "top");
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarTitleSelect"), settings.toolbarTitleMode || "packageName");
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarButtonSizeSelect"), settings.toolbarButtonSize || "medium");
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarSubtitleSelect"), settings.toolbarSubtitleMode || "version");
@@ -1171,6 +1172,7 @@
         }
         queryParts.push("apiEndpoint=" + Common.encode(endpointOverride));
         queryParts.push("toolbarVisible=" + boolText(Common.byId("toolbarVisibleCheck").checked));
+        queryParts.push("toolbarDockPosition=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarDockPositionSelect"))));
         queryParts.push("toolbarTitleMode=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarTitleSelect"))));
         queryParts.push("toolbarButtonSize=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarButtonSizeSelect"))));
         queryParts.push("toolbarSubtitleMode=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarSubtitleSelect"))));
@@ -1335,6 +1337,7 @@
         });
         window.MaxPkgDropdown.bindSelect(Common.byId("languageSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("frequencySelect"), saveSettings);
+        window.MaxPkgDropdown.bindSelect(Common.byId("toolbarDockPositionSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarTitleSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarButtonSizeSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarSubtitleSelect"), saveSettings);

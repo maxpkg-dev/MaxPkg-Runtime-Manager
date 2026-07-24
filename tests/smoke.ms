@@ -62,6 +62,8 @@
     if (MaxPkg.settings == undefined) do throw "MaxPkg settings were not loaded."
     if (not (isProperty MaxPkg.settings #toolbarSubtitleMode)) do throw "Toolbar subtitle mode is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarButtonSize)) do throw "Toolbar button size is unavailable."
+    if (not (isProperty MaxPkg.settings #toolbarDockPosition)) do throw "Toolbar dock position is unavailable."
+    if (MaxPkg.settings.toolbarDockPosition != "top" and MaxPkg.settings.toolbarDockPosition != "bottom") do throw "Toolbar dock position is invalid."
     if (not (isProperty MaxPkg.settings #apiEndpoint)) do throw "API endpoint setting is unavailable."
     local runtimeStatus = MaxPkg.getStatus()
     if (runtimeStatus.connection != "configured") do throw "Default API endpoint fallback is unavailable."

@@ -270,6 +270,7 @@
             settingsContent += "\"toolbarTitleMode\":" + (utils.jsonString settings.toolbarTitleMode) + ","
             settingsContent += "\"toolbarSubtitleMode\":" + (utils.jsonString settings.toolbarSubtitleMode) + ","
             settingsContent += "\"toolbarButtonSize\":" + (utils.jsonString settings.toolbarButtonSize) + ","
+            settingsContent += "\"toolbarDockPosition\":" + (utils.jsonString settings.toolbarDockPosition) + ","
             settingsContent += "\"toolbarOrder\":" + (stringArrayJson settings.toolbarOrder) + ","
             settingsContent += "\"notifications\":" + (boolJson settings.notifications) + ","
             settingsContent += "\"autoCheckPackages\":" + (boolJson settings.autoCheckPackages) + ","
@@ -390,6 +391,7 @@
             local previousToolbarTitleMode = owner.settings.toolbarTitleMode
             local previousToolbarSubtitleMode = owner.settings.toolbarSubtitleMode
             local previousToolbarButtonSize = owner.settings.toolbarButtonSize
+            local previousToolbarDockPosition = owner.settings.toolbarDockPosition
             owner.settings.language = queryParameter queryString "language" defaultContent: owner.settings.language
             owner.settings.autoStart = boolParameter queryString "autoStart" defaultState: owner.settings.autoStart
             owner.settings.openManagerOnStartup = boolParameter queryString "openManagerOnStartup" defaultState: owner.settings.openManagerOnStartup
@@ -403,10 +405,11 @@
             owner.settings.toolbarTitleMode = queryParameter queryString "toolbarTitleMode" defaultContent: owner.settings.toolbarTitleMode
             owner.settings.toolbarSubtitleMode = queryParameter queryString "toolbarSubtitleMode" defaultContent: owner.settings.toolbarSubtitleMode
             owner.settings.toolbarButtonSize = queryParameter queryString "toolbarButtonSize" defaultContent: owner.settings.toolbarButtonSize
+            owner.settings.toolbarDockPosition = queryParameter queryString "toolbarDockPosition" defaultContent: owner.settings.toolbarDockPosition
             owner.settings.developerMode = boolParameter queryString "developerMode" defaultState: owner.settings.developerMode
             owner.settings.debugLogging = boolParameter queryString "debugLogging" defaultState: owner.settings.debugLogging
             if (not (owner.saveSettings())) do return false
-            if (previousToolbarVisibility != owner.settings.toolbarVisible or previousToolbarTitleMode != owner.settings.toolbarTitleMode or previousToolbarSubtitleMode != owner.settings.toolbarSubtitleMode or previousToolbarButtonSize != owner.settings.toolbarButtonSize) do owner.rebuildToolbar()
+            if (previousToolbarVisibility != owner.settings.toolbarVisible or previousToolbarTitleMode != owner.settings.toolbarTitleMode or previousToolbarSubtitleMode != owner.settings.toolbarSubtitleMode or previousToolbarButtonSize != owner.settings.toolbarButtonSize or previousToolbarDockPosition != owner.settings.toolbarDockPosition) do owner.rebuildToolbar()
             return true
         ),
 
