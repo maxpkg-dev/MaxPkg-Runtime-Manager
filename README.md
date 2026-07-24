@@ -1,152 +1,136 @@
 # MaxPkg Runtime
 
-MaxPkg is a package manager for Autodesk 3ds Max. It provides one place to
-discover, install, launch, update, and remove scripts without managing separate
-installers and script folders manually.
+## Your 3ds Max scripts, all in one place
 
-MaxPkg Runtime connects 3ds Max to the package catalog on
-[maxpkg.dev](https://maxpkg.dev) and keeps installed tools available from the
-Manager and the optional MaxPkg toolbar.
+MaxPkg makes working with scripts feel simple. Find the tool you need, install
+it, and start using it without copying files by hand or figuring out where
+each script belongs.
 
-## Requirements
+Everything is available inside 3ds Max:
 
-- Autodesk 3ds Max 2027
-- Internet access for discovering, installing, and updating packages
+- Find scripts in the MaxPkg catalog
+- See what is already installed
+- Install, update, or remove a script in a few clicks
+- Read descriptions, view screenshots, and check changelogs
+- Keep your favorite tools close on the MaxPkg toolbar
 
-Already installed packages remain available when the service is offline.
+MaxPkg stays out of your way. Most actions happen quietly, with a small
+notification when they are done.
 
-## Features
+## The easiest way to install
 
-- Browse and search the MaxPkg package catalog
-- Install compatible packages directly from 3ds Max
-- Launch installed scripts from one Manager
-- Check for package updates
-- View package descriptions, versions, changelogs, licenses, and Help links
-- Add package buttons to the dockable MaxPkg toolbar
-- Configure toolbar button size and secondary text
-- Hide individual packages from the toolbar
-- Open an installed package folder
-- Remove packages and their generated MacroScript actions
-- Use a MaxPkg Manager action on any standard 3ds Max toolbar
+1. Visit [maxpkg.dev](https://maxpkg.dev) and find a script you like.
+2. Click `Install`.
+3. Drag the installer block from the website into a 3ds Max viewport.
 
-## Installation
+That is all. MaxPkg installs the selected script for you. If MaxPkg Runtime is
+not installed yet, it is installed automatically at the same time.
 
-1. Download and extract the MaxPkg Runtime archive.
-2. In 3ds Max, open `Scripting > Run Script`.
-3. Select `install.ms`.
-4. Wait for the installation confirmation.
+## Install MaxPkg Runtime manually
 
-Runtime is installed into the current 3ds Max user scripts directory and starts
-automatically with 3ds Max.
+If you prefer to install MaxPkg before choosing a script:
 
-The installer also registers a `MaxPkg Manager` action in the `MaxPkg`
-category. You can place this action on any toolbar through
-`Customize > Customize User Interface`.
+1. Download the archive from the
+   [MaxPkg Runtime repository](https://github.com/maxpkg-dev/runtime).
+2. Extract all files from the archive.
+3. In 3ds Max, choose `Scripting > Run Script`.
+4. Select `install.ms`.
 
-## Opening MaxPkg Manager
+MaxPkg will start automatically the next time you open 3ds Max.
 
-Open the Manager using one of these methods:
+## Meet the Manager
 
-- Click the MaxPkg button on the dockable MaxPkg toolbar.
-- Use the `MaxPkg Manager` action added through Customize User Interface.
-- Run this command in MAXScript Listener:
+The Manager shows all your scripts in one clean window.
+
+Use `Discover` to search the catalog and add new tools. Use `Installed` to see
+everything you already have, run a script, open its information, update it, or
+remove it.
+
+Each package can include:
+
+- A clear description
+- Version and developer information
+- Screenshots
+- A full changelog
+- License, Help, homepage, and support links
+
+## Open the Manager
+
+Choose whichever way feels most comfortable:
+
+- Click the MaxPkg button on the MaxPkg toolbar
+- Press `X` in 3ds Max and search for `MaxPkg Manager`
+- Add the `MaxPkg Manager` action to any 3ds Max toolbar from the `MaxPkg`
+  category
+
+Advanced users can also open it from MAXScript Listener:
 
 ```maxscript
 maxpkg.openManager()
 ```
 
-## Discovering and installing packages
+## Make the toolbar yours
 
-1. Open MaxPkg Manager.
-2. Select the `Discover` tab.
-3. Enter a package name in the search field.
-4. Open package Details to review its description, version, compatibility,
-   changelog, license, and available links.
-5. Click `Install`.
+MaxPkg can create a toolbar with buttons for your installed scripts. You can:
 
-The package becomes available in the `Installed` tab after installation.
+- Choose large, medium, small, or icon-only buttons
+- Show a version, developer name, or no extra text
+- Hide buttons you do not need
+- Change the button order
+- Turn the MaxPkg toolbar off completely
 
-Packages can also provide a small `maxpkg-install` script on the MaxPkg website.
-Drag that script into a 3ds Max viewport to install the required package.
+Prefer regular 3ds Max toolbars? Script actions are available in the `MaxPkg`
+category, so you can place them where you already keep your favorite tools.
 
-## Working with installed packages
+## Updates without the busywork
 
-The `Installed` tab lets you:
+Use `Check Updates` whenever you want to look for new versions. MaxPkg shows
+which tools can be updated and keeps the process in one place.
 
-- Run a package
-- Open its Details
-- Check its version and developer
-- Open its installation folder
-- Show or hide it on the MaxPkg toolbar
-- Open its Help, homepage, support, or license link when provided
-- Update it when a newer compatible version is available
-- Uninstall it
+Automatic update checks can be adjusted in `Settings > Updates`.
 
-Click a package icon, name, version, or developer to open its Details.
+Already installed scripts remain available when you are offline.
 
-## Toolbar settings
+## Install from MAXScript Listener
 
-Open `Settings > Toolbar` to:
-
-- Enable or disable the dockable MaxPkg toolbar
-- Select what appears below a package name: nothing, version, or developer
-- Select a button size: large, medium, small, or icon only
-- Reset the package button order
-
-Disabling the dockable toolbar does not remove the `MaxPkg Manager` action from
-3ds Max. You can keep that action on any toolbar of your choice.
-
-## Updates
-
-Use `Check Updates` in the Manager header to check installed packages.
-
-Automatic package and Runtime update checks can be configured in
-`Settings > Updates`.
-
-## Advanced installation command
-
-A package can be installed by GUID, slug, or supported package reference from
-MAXScript Listener:
+You can type a package name naturally. Capitalization and word order do not
+matter:
 
 ```maxscript
-maxpkg.install "prune-scene"
+maxpkg.install "prune scene"
+maxpkg.install "scene prune"
 ```
 
-The command returns a status object containing `success`, `errorCode`, and
-`errorMessage`.
+MaxPkg tells you whether the installation succeeded. Scripts with their own
+interface can keep this message hidden:
 
-## Uninstalling MaxPkg Runtime
+```maxscript
+local installStatus = maxpkg.install "prune scene" showNotification: false
+```
 
-Run `uninstall.ms` from the installed `MaxPkg Runtime` directory inside the
-current 3ds Max user scripts folder.
+## Remove scripts
 
-The uninstaller removes:
+Remove any installed script from its menu in the Manager. MaxPkg cleans up the
+package and its 3ds Max buttons for you.
 
-- Runtime files
-- The automatic startup script
-- The MaxPkg Manager MacroScript action
-- The dockable MaxPkg toolbar and open Manager window
+To remove MaxPkg Runtime itself, run `uninstall.ms` from the installed
+`MaxPkg Runtime` folder.
 
-Installed package data is handled separately by each package uninstaller.
+## Requirements
 
-## Troubleshooting
+- Autodesk 3ds Max 2012 or newer
+- Internet access when discovering, installing, or updating scripts
 
-If the Manager or toolbar does not open:
+## Need help?
 
-1. Close and restart 3ds Max.
-2. Run `install.ms` again to repair the Runtime installation.
-3. Check `logs/maxpkg.log` inside the installed MaxPkg Runtime directory.
+If the Manager does not open, restart 3ds Max and run `install.ms` again.
 
-When reporting a problem, include:
-
-- Your 3ds Max version
-- The Runtime version shown in Manager
-- The steps that reproduce the problem
-- The relevant lines from `maxpkg.log`
+When asking for help, include your 3ds Max version, the Runtime version shown in
+the Manager, and a short description of what happened.
 
 ## Links
 
-- Website and package catalog: [maxpkg.dev](https://maxpkg.dev)
+- Browse scripts: [maxpkg.dev](https://maxpkg.dev)
 - Developed by [3DGROUND](https://3dground.net)
 
 Copyright (c) 2026 Lukianenko Vasyl.

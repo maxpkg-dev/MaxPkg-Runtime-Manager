@@ -442,7 +442,7 @@
                 notify (if (isSuccess) then "Package updated." else installStatus.errorMessage) notificationType: (if (isSuccess) then "success" else "error")
             )
             if (matchPattern commandPath pattern: "install/*" ignoreCase: true) do (
-                local installStatus = owner.install (commandArgument commandPath "install/")
+                local installStatus = owner.install (commandArgument commandPath "install/") showNotification: false
                 isSuccess = installStatus.success
                 if (isSuccess) do owner.remotePackageDetails = undefined
                 notify (if (isSuccess) then "Package installed." else installStatus.errorMessage) notificationType: (if (isSuccess) then "success" else "error")

@@ -11,6 +11,11 @@
     local utilsModule = fileIn (runtimeRoot + @"core\utils.ms")
     local iniModule = fileIn (runtimeRoot + @"core\ini.ms")
     local repositoryModule = fileIn (runtimeRoot + @"core\repository.ms")
+    local installerModule = fileIn (runtimeRoot + @"core\installer.ms")
+    installerModule.utils = utilsModule
+    if ((installerModule.normalizePackageReference "  Prune   Scene  ") != "prune-scene") do throw "Human-readable package reference normalization failed."
+    if ((installerModule.normalizePackageReference "3dground/prune-scene") != "3dground/prune-scene") do throw "Canonical package reference normalization changed an existing slug."
+    if ((installerModule.packageSearchSignature "scene prune") != (installerModule.packageSearchSignature "Prune Scene")) do throw "Package search terms depend on word order."
     local guidClass = dotNetClass "System.Guid"
     local deleteTestGuid = guidClass.NewGuid()
     local deleteTestId = deleteTestGuid.ToString()
@@ -83,7 +88,7 @@
     local discoveredPackages = MaxPkg.scan()
     if ((classOf discoveredPackages) != Array) do throw "MaxPkg.scan() did not return an array."
     if ((MaxPkg.run "__maxpkg_missing_package__") != false) do throw "Missing package resolution did not fail safely."
-    local invalidInstallStatus = maxpkg.install undefined
+    local invalidInstallStatus = maxpkg.install undefined showNotification: false
     if (invalidInstallStatus.success or invalidInstallStatus.errorMessage == "") do throw "Lowercase maxpkg installation call did not return a useful failure status."
     local missingUpdateStatus = MaxPkg.updatePackage "__maxpkg_missing_package__"
     if (missingUpdateStatus.success or missingUpdateStatus.errorMessage == "") do throw "Missing package update did not return a useful failure status."

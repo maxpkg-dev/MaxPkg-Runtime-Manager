@@ -215,8 +215,21 @@
             return launcherModule.run resolved
         ),
 
-        fn install package = (
-            return installerModule.install package
+        fn showInstallNotification installStatus packageReference = (
+            local packageLabel = if (packageReference != undefined and packageReference != "") then (packageReference as string) else "Unknown package"
+            if (installStatus.success) then (
+                messageBox ("Package installed successfully.\n\n" + packageLabel) title: "MaxPkg"
+            ) else (
+                local errorMessage = if (installStatus.errorMessage != "") then installStatus.errorMessage else "The package could not be installed."
+                messageBox ("Package installation failed.\n\n" + errorMessage) title: "MaxPkg"
+            )
+            return true
+        ),
+
+        fn install packageReference showNotification: true = (
+            local installStatus = installerModule.install packageReference
+            if (showNotification) do showInstallNotification installStatus packageReference
+            return installStatus
         ),
 
         fn uninstall package = (

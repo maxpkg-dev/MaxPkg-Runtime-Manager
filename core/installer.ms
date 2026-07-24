@@ -26,6 +26,55 @@
             return ((matchPattern sourceContent pattern: "http://*" ignoreCase: true) or (matchPattern sourceContent pattern: "https://*" ignoreCase: true))
         ),
 
+        fn normalizePackageReference packageReference = (
+            if (packageReference == undefined) do return ""
+            local normalizedReference = utils.trim (packageReference as string)
+            if (normalizedReference == "") do return ""
+            local referenceParts = filterString normalizedReference " \t\r\n"
+            if (referenceParts.count < 2) do return normalizedReference
+            normalizedReference = toLower (utils.join referenceParts separator: "-")
+            while ((findString normalizedReference "--") != undefined) do (
+                normalizedReference = substituteString normalizedReference "--" "-"
+            )
+            return normalizedReference
+        ),
+
+        fn packageSearchSignature packageReference = (
+            if (packageReference == undefined) do return ""
+            local normalizedReference = toLower (utils.trim (packageReference as string))
+            normalizedReference = substituteString normalizedReference "-" " "
+            normalizedReference = substituteString normalizedReference "_" " "
+            local referenceParts = filterString normalizedReference " \t\r\n"
+            sort referenceParts
+            return utils.join referenceParts separator: " "
+        ),
+
+        fn findCatalogPackage packageReference = (
+            local catalogResponse = repository.catalog queryText: packageReference pageNumber: 1 pageSize: 24 channelName: owner.runtimeChannel
+            if (not catalogResponse.success) do return undefined
+            local referenceSignature = packageSearchSignature packageReference
+            local matchingPackages = #()
+            for packageInfo in catalogResponse.packages do (
+                local nameSignature = packageSearchSignature packageInfo.packageName
+                local slugSignature = packageSearchSignature packageInfo.slug
+                if (referenceSignature != "" and (nameSignature == referenceSignature or slugSignature == referenceSignature)) do (
+                    append matchingPackages packageInfo
+                )
+            )
+            if (matchingPackages.count == 1) do return matchingPackages[1]
+            if (catalogResponse.packages.count == 1) do return catalogResponse.packages[1]
+            return undefined
+        ),
+
+        fn resolvePackageReference packageReference = (
+            local normalizedReference = normalizePackageReference packageReference
+            local resolveResponse = repository.resolvePackage normalizedReference channelName: owner.runtimeChannel
+            if (resolveResponse.success and resolveResponse.packageInfo != undefined) do return resolveResponse
+            local catalogPackage = findCatalogPackage packageReference
+            if (catalogPackage == undefined or catalogPackage.guid == "") do return resolveResponse
+            return repository.resolvePackage catalogPackage.guid channelName: owner.runtimeChannel
+        ),
+
         fn expectedGuid packageSource = (
             if (packageSource == undefined or packageSource == "") do return ""
             local sourcePath = packageSource as string
@@ -97,7 +146,7 @@
             local resolvedSource = packageSource as string
             local expectedPackageGuid = ""
             if (not (isUrl resolvedSource) and not (doesFileExist resolvedSource)) do (
-                local resolveResponse = repository.resolvePackage resolvedSource channelName: owner.runtimeChannel
+                local resolveResponse = resolvePackageReference resolvedSource
                 if (not resolveResponse.success or resolveResponse.packageInfo == undefined) do (
                     installStatus.errorCode = if (resolveResponse.errorCode != "") then resolveResponse.errorCode else "PACKAGE_NOT_FOUND"
                     installStatus.errorMessage = if (resolveResponse.errorMessage != "") then resolveResponse.errorMessage else "The requested package could not be resolved."
