@@ -132,6 +132,13 @@ If the Manager does not open, restart 3ds Max and run `install.ms` again.
 When asking for help, include your 3ds Max version, the Runtime version shown in
 the Manager, and a short description of what happened.
 
+## License
+
+MaxPkg Runtime and its installer bridge are provided only for use with the
+official [MaxPkg service](https://maxpkg.dev). Unauthorized copying,
+modification, redistribution, reverse engineering, or use with third-party
+installer endpoints is prohibited.
+
 ## Links
 
 - Browse scripts: [maxpkg.dev](https://maxpkg.dev)
