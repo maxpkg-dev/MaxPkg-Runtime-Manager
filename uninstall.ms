@@ -25,7 +25,7 @@
 
     fn forceDeleteFile filePath = (
         if (filePath == undefined or filePath == "" or not (doesFileExist filePath)) do return true
-        makeFileWritable filePath
+        if (not (makeFileWritable filePath)) do return false
         try (
             deleteFile filePath
             return not (doesFileExist filePath)

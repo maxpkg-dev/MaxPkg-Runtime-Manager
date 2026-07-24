@@ -55,7 +55,7 @@
 
         fn forceDeleteFile filePath = (
             if (filePath == undefined or filePath == "" or not (doesFileExist filePath)) do return true
-            makeFileWritable filePath
+            if (not (makeFileWritable filePath)) do return false
             try (
                 deleteFile filePath
                 return not (doesFileExist filePath)
@@ -178,6 +178,7 @@
             local stream = undefined
             try (
                 makeDir (getFilenamePath filePath) all: true
+                if (not (makeFileWritable filePath)) do return false
                 stream = createFile filePath
                 if (stream == undefined) do return false
                 format "%" sourceContent to: stream

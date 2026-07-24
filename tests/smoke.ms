@@ -24,6 +24,10 @@
     close deleteTestStream
     setFileAttribute deleteTestFilePath #readOnly true
     if (not (utilsModule.forceDeleteFile deleteTestFilePath)) do throw "Read-only file deletion failed."
+    if (not (utilsModule.writeText deleteTestFilePath "Before")) do throw "Could not create the read-only overwrite test file."
+    setFileAttribute deleteTestFilePath #readOnly true
+    if (not (utilsModule.writeText deleteTestFilePath "After")) do throw "Read-only file overwrite failed."
+    if ((utilsModule.readText deleteTestFilePath) != "After") do throw "Read-only file overwrite produced unexpected content."
     deleteTestStream = createFile deleteTestFilePath
     if (deleteTestStream == undefined) do throw "Could not recreate the read-only deletion test file."
     format "MaxPkg" to: deleteTestStream

@@ -25,7 +25,7 @@
 
     fn forceDeleteFile filePath = (
         if (filePath == undefined or filePath == "" or not (doesFileExist filePath)) do return true
-        makeFileWritable filePath
+        if (not (makeFileWritable filePath)) do return false
         try (
             deleteFile filePath
             return not (doesFileExist filePath)
@@ -58,6 +58,8 @@
     fn writeStartupShim shimPath runtimeStartupPath = (
         local stream = undefined
         try (
+            makeDir (getFilenamePath shimPath) all: true
+            if (not (forceDeleteFile shimPath)) do return false
             stream = createFile shimPath
             if (stream == undefined) do return false
             local safePath = substituteString runtimeStartupPath @"\" "/"

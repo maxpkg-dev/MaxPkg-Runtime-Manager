@@ -17,6 +17,7 @@
             local hookPath = package.installPath + package.uninstall
             if (package.uninstall == "" or not (doesFileExist hookPath)) do return true
             try (
+                if (not (utils.clearFolderReadOnly (getDir #userStartupScripts))) do throw "Could not remove read-only protection from the 3ds Max startup scripts."
                 fileIn hookPath
                 return true
             ) catch (

@@ -77,6 +77,7 @@
             )
             local isInstalled = false
             try (
+                if (not (utils.clearFolderReadOnly (getDir #userStartupScripts))) do throw "Could not remove read-only protection from the 3ds Max startup scripts."
                 fileIn sourcePath
                 logger.logInfo "installer" ("Executed " + sourcePath)
                 isInstalled = true
