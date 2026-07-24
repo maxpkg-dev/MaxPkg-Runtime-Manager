@@ -7,6 +7,7 @@
 
 var scrollOffset = 0;
 var scrollStep = 160;
+var controlGap = 4;
 
 function byId(elementId) {
     return document.getElementById(elementId);
@@ -17,7 +18,10 @@ function measureStrip() {
     var totalWidth = 0;
     var linkIndex;
     for (linkIndex = 0; linkIndex < links.length; linkIndex += 1) {
-        totalWidth += links[linkIndex].offsetWidth + 15;
+        if (linkIndex > 0) {
+            totalWidth += controlGap;
+        }
+        totalWidth += links[linkIndex].offsetWidth;
     }
     return totalWidth;
 }
@@ -30,7 +34,6 @@ function layout() {
     var rightArrow = byId("rightArrow");
     var brand = byId("brand");
     var edge = 7;
-    var gap = 5;
     var fullWidth = measureStrip();
     var cursor = edge;
     var rightEdge = wrap.clientWidth - edge;
@@ -38,21 +41,21 @@ function layout() {
     var maximumOffset;
 
     brand.style.left = cursor + "px";
-    cursor += brand.offsetWidth + gap;
+    cursor += brand.offsetWidth + controlGap;
     availableWidth = rightEdge - cursor;
     strip.style.width = (fullWidth > 0 ? fullWidth : 1) + "px";
     if (fullWidth > availableWidth) {
         leftArrow.style.display = "block";
         rightArrow.style.display = "block";
         leftArrow.style.left = cursor + "px";
-        cursor += leftArrow.offsetWidth + gap;
-        availableWidth = rightEdge - cursor - rightArrow.offsetWidth - gap;
+        cursor += leftArrow.offsetWidth + controlGap;
+        availableWidth = rightEdge - cursor - rightArrow.offsetWidth - controlGap;
         if (availableWidth < 20) {
             availableWidth = 20;
         }
         viewport.style.left = cursor + "px";
         viewport.style.width = availableWidth + "px";
-        rightArrow.style.left = (cursor + availableWidth + gap) + "px";
+        rightArrow.style.left = (cursor + availableWidth + controlGap) + "px";
     } else {
         leftArrow.style.display = "none";
         rightArrow.style.display = "none";

@@ -320,6 +320,39 @@
             return isToolbarRebuilt
         ),
 
+        fn moveToolbarPackage packageReference movementDirection = (
+            local resolvedPackage = apiModule.resolve packages packageReference
+            if (resolvedPackage == undefined or not resolvedPackage.toolbarVisible) do return false
+            local normalizedMovement = toLower (utilsModule.trim movementDirection)
+            if (normalizedMovement != "left" and normalizedMovement != "right") do return false
+            local toolbarPackages = toolbarModule.orderedPackages()
+            local packageIndex = 0
+            for toolbarIndex in 1 to toolbarPackages.count where (toLower toolbarPackages[toolbarIndex].guid) == (toLower resolvedPackage.guid) do packageIndex = toolbarIndex
+            if (packageIndex == 0) do return false
+            local targetIndex = if (normalizedMovement == "left") then packageIndex - 1 else packageIndex + 1
+            if (targetIndex < 1 or targetIndex > toolbarPackages.count) do return true
+            local previousToolbarOrder = copy settings.toolbarOrder
+            local reorderedGuids = #()
+            for toolbarPackage in toolbarPackages do append reorderedGuids toolbarPackage.guid
+            local displacedGuid = reorderedGuids[targetIndex]
+            reorderedGuids[targetIndex] = reorderedGuids[packageIndex]
+            reorderedGuids[packageIndex] = displacedGuid
+            for savedGuid in previousToolbarOrder do (
+                local guidExists = false
+                for reorderedGuid in reorderedGuids while not guidExists where (toLower reorderedGuid) == (toLower savedGuid) do guidExists = true
+                if (not guidExists) do append reorderedGuids savedGuid
+            )
+            settings.toolbarOrder = reorderedGuids
+            if (not (settingsModule.save())) do (
+                settings.toolbarOrder = previousToolbarOrder
+                loggerModule.logError "runtime" ("Could not save toolbar order for " + resolvedPackage.guid)
+                return false
+            )
+            local isToolbarRebuilt = rebuildToolbar()
+            refreshManager "move-toolbar-package"
+            return isToolbarRebuilt
+        ),
+
         fn openPackageFolder packageReference = (
             local resolvedPackage = apiModule.resolve packages packageReference
             if (resolvedPackage == undefined or resolvedPackage.installPath == "" or not (doesDirectoryExist resolvedPackage.installPath)) do return false

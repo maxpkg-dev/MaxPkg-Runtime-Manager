@@ -80,10 +80,13 @@ body {
 
 .toolBtn {
     display: inline-block;
-    margin-right: 15px;
     padding: 3px 6px;
     overflow: hidden;
     vertical-align: top;
+}
+
+.toolBtn + .toolBtn {
+    margin-left: 4px;
 }
 
 .toolBtn.size-large {

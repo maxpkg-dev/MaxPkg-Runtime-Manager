@@ -469,6 +469,12 @@
                 else
                     isSuccess = owner.setToolbarVisible packageGuid (packageIsHidden packageGuid)
             )
+            if (matchPattern commandPath pattern: "move-package-toolbar/*" ignoreCase: true) do (
+                local packageGuid = commandArgument commandPath "move-package-toolbar/"
+                local movementDirection = queryParameter queryString "direction"
+                isSuccess = owner.moveToolbarPackage packageGuid movementDirection
+                if (not isSuccess) do notify "Toolbar button could not be moved." notificationType: "error"
+            )
             if (matchPattern commandPath pattern: "open-folder/*" ignoreCase: true) do isSuccess = owner.openPackageFolder (commandArgument commandPath "open-folder/")
             if (matchPattern commandPath pattern: "copy-package-link/*" ignoreCase: true) do (
                 local packageSlug = commandArgument commandPath "copy-package-link/"

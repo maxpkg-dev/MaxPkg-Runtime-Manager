@@ -896,9 +896,16 @@
     function openPackageMenu(sourceButton, packageGuid) {
         var packageInfo = findPackage(packageGuid);
         var toolbarLabel;
+        var toolbarPackageCount = 0;
+        var packageIndex;
         var menuHtml;
         if (!packageInfo) {
             return;
+        }
+        for (packageIndex = 0; packageIndex < currentState.packages.length; packageIndex += 1) {
+            if (currentState.packages[packageIndex].toolbarVisible) {
+                toolbarPackageCount += 1;
+            }
         }
         toolbarLabel = packageInfo.toolbarVisible ? "Hide from Toolbar" : "Show in Toolbar";
         menuHtml = "<a href='maxpkg://manager/run/" + Common.encode(packageInfo.guid) + "' data-busy='Starting package...'>Run</a>";
@@ -910,8 +917,12 @@
         if (packageInfo.helpUrl) {
             menuHtml += "<a href='maxpkg://manager/help/" + Common.encode(packageInfo.guid) + "'>Help</a>";
         }
-        menuHtml += "<a href='maxpkg://manager/toggle-package-toolbar/" + Common.encode(packageInfo.guid) + "'>" + toolbarLabel + "</a>" +
-            "<div class='context-separator'></div>" +
+        menuHtml += "<a href='maxpkg://manager/toggle-package-toolbar/" + Common.encode(packageInfo.guid) + "'>" + toolbarLabel + "</a>";
+        if (packageInfo.toolbarVisible && toolbarPackageCount > 1) {
+            menuHtml += "<a href='maxpkg://manager/move-package-toolbar/" + Common.encode(packageInfo.guid) + "?direction=left'>Move left in Toolbar</a>" +
+                "<a href='maxpkg://manager/move-package-toolbar/" + Common.encode(packageInfo.guid) + "?direction=right'>Move right in Toolbar</a>";
+        }
+        menuHtml += "<div class='context-separator'></div>" +
             "<button type='button' data-action='copy' data-copy='" + Common.escapeHtml(packageInfo.guid) + "'>Copy GUID</button>" +
             "<button type='button' data-action='copy' data-copy='" + Common.escapeHtml(packageInfo.installPath) + "'>Copy Path</button>" +
             "<div class='context-separator'></div>" +
