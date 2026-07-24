@@ -125,6 +125,12 @@
             return (if (isEnabled) then "true" else "false")
         ),
 
+        fn stringArrayJson sourceStrings = (
+            local stringEntries = #()
+            for sourceString in sourceStrings do append stringEntries (utils.jsonString sourceString)
+            return "[" + (utils.join stringEntries separator: ",") + "]"
+        ),
+
         fn packageIsHidden packageGuid = (
             for hiddenGuid in owner.settings.hiddenPackages where (toLower hiddenGuid) == (toLower packageGuid) do return true
             return false
@@ -264,6 +270,7 @@
             settingsContent += "\"toolbarTitleMode\":" + (utils.jsonString settings.toolbarTitleMode) + ","
             settingsContent += "\"toolbarSubtitleMode\":" + (utils.jsonString settings.toolbarSubtitleMode) + ","
             settingsContent += "\"toolbarButtonSize\":" + (utils.jsonString settings.toolbarButtonSize) + ","
+            settingsContent += "\"toolbarOrder\":" + (stringArrayJson settings.toolbarOrder) + ","
             settingsContent += "\"notifications\":" + (boolJson settings.notifications) + ","
             settingsContent += "\"autoCheckPackages\":" + (boolJson settings.autoCheckPackages) + ","
             settingsContent += "\"autoCheckRuntime\":" + (boolJson settings.autoCheckRuntime) + ","
@@ -311,6 +318,18 @@
             ) catch (
                 logger.logWarning "manager" ("Could not update browser payload " + elementId + ": " + getCurrentException())
                 return false
+            )
+        ),
+
+        fn readBrowserPayload elementId = (
+            if (not dialogOpen or not browserReady) do return ""
+            try (
+                local payloadElement = rolloutRef.browser.Document.GetElementById elementId
+                if (payloadElement == undefined or payloadElement.InnerHtml == undefined) do return ""
+                return payloadElement.InnerHtml as string
+            ) catch (
+                logger.logWarning "manager" ("Could not read browser payload " + elementId + ": " + getCurrentException())
+                return ""
             )
         ),
 
@@ -469,11 +488,11 @@
                 else
                     isSuccess = owner.setToolbarVisible packageGuid (packageIsHidden packageGuid)
             )
-            if (matchPattern commandPath pattern: "move-package-toolbar/*" ignoreCase: true) do (
-                local packageGuid = commandArgument commandPath "move-package-toolbar/"
-                local movementDirection = queryParameter queryString "direction"
-                isSuccess = owner.moveToolbarPackage packageGuid movementDirection
-                if (not isSuccess) do notify "Toolbar button could not be moved." notificationType: "error"
+            if (commandPath == "set-toolbar-order") do (
+                local toolbarOrderContent = readBrowserPayload "toolbarOrderPayload"
+                local orderedPackageGuids = if (toolbarOrderContent == "") then #() else filterString toolbarOrderContent "|"
+                isSuccess = owner.setToolbarOrder orderedPackageGuids
+                if (not isSuccess) do notify "Toolbar order could not be saved." notificationType: "error"
             )
             if (matchPattern commandPath pattern: "open-folder/*" ignoreCase: true) do isSuccess = owner.openPackageFolder (commandArgument commandPath "open-folder/")
             if (matchPattern commandPath pattern: "copy-package-link/*" ignoreCase: true) do (

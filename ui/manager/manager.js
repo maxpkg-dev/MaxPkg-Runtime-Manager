@@ -20,13 +20,17 @@
     };
     var activeTab = "installed";
     var activeFilter = "all";
-    var activeSort = "name";
+    var activeSort = "toolbar";
     var searchText = "";
     var detailsGuid = "";
     var detailsTab = "information";
     var activeScreenshotIndex = 0;
     var detailsListScrollTop = 0;
     var settingsSaveTimer = null;
+    var draggedToolbarCard = null;
+    var draggedToolbarGrid = null;
+    var toolbarDropPlaceholder = null;
+    var draggedToolbarOriginalNextSibling = null;
 
     function icon(iconName) {
         return "<img class='icon' src='../common/icons/" + iconName + ".svg' alt=''>";
@@ -219,8 +223,22 @@
     }
 
     function comparePackages(leftPackage, rightPackage) {
-        var leftText = leftPackage[activeSort] || "";
-        var rightText = rightPackage[activeSort] || "";
+        var leftText;
+        var rightText;
+        var leftToolbarIndex;
+        var rightToolbarIndex;
+        if (activeSort === "toolbar") {
+            leftToolbarIndex = toolbarOrderIndex(leftPackage.guid);
+            rightToolbarIndex = toolbarOrderIndex(rightPackage.guid);
+            if (leftToolbarIndex < rightToolbarIndex) {
+                return -1;
+            }
+            if (leftToolbarIndex > rightToolbarIndex) {
+                return 1;
+            }
+        }
+        leftText = leftPackage[activeSort] || leftPackage.name || "";
+        rightText = rightPackage[activeSort] || rightPackage.name || "";
         leftText = String(leftText).toLowerCase();
         rightText = String(rightText).toLowerCase();
         if (leftText < rightText) {
@@ -230,6 +248,22 @@
             return 1;
         }
         return 0;
+    }
+
+    function toolbarOrderIndex(packageGuid) {
+        var toolbarOrder = currentState.settings.toolbarOrder || [];
+        var normalizedGuid = String(packageGuid || "").toLowerCase();
+        var orderIndex;
+        for (orderIndex = 0; orderIndex < toolbarOrder.length; orderIndex += 1) {
+            if (String(toolbarOrder[orderIndex] || "").toLowerCase() === normalizedGuid) {
+                return orderIndex;
+            }
+        }
+        return toolbarOrder.length;
+    }
+
+    function toolbarSortingEnabled() {
+        return activeSort === "toolbar" && activeFilter === "all" && !searchText;
     }
 
     function visiblePackages() {
@@ -258,6 +292,13 @@
     function packageCard(packageInfo) {
         var badges = "<span class='badge'>" + Common.escapeHtml(packageInfo.runtime) + "</span>";
         var updateAction = "";
+        var dragHandle = "";
+        var cardClass = "card";
+        if (toolbarSortingEnabled()) {
+            cardClass += " toolbar-sort-card";
+            dragHandle = "<span class='toolbar-drag-handle' role='button' draggable='true' data-toolbar-drag='true' title='Drag to change Toolbar order'>" +
+                "<img src='../common/icons/grip-vertical.svg' draggable='false' alt=''></span>";
+        }
         if (packageInfo.toolbarVisible) {
             badges += "<span class='badge badge-success'>Toolbar</span>";
         }
@@ -265,7 +306,8 @@
             badges += "<span class='badge badge-warning'>v" + Common.escapeHtml(packageInfo.latestVersion) + " available</span>";
             updateAction = "<a class='button' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update</a> ";
         }
-        return "<div class='card' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
+        return "<div class='" + cardClass + "' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
+            dragHandle +
             "<div class='card-content clearfix'>" +
                 "<button class='package-summary clearfix' type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "' title='Open package details'>" +
                     packageIcon(packageInfo, "package-icon", true) +
@@ -297,6 +339,149 @@
             packageCards.push(packageCard(packages[packageIndex]));
         }
         Common.byId("installedPage").innerHTML = packageCards.length ? "<div class='card-grid'>" + packageCards.join("") + "</div>" : emptyInstalledState();
+    }
+
+    function ancestorWithClass(sourceElement, className) {
+        var currentElement = sourceElement;
+        while (currentElement && currentElement !== document.body) {
+            if (Common.hasClass(currentElement, className)) {
+                return currentElement;
+            }
+            currentElement = currentElement.parentNode;
+        }
+        return null;
+    }
+
+    function toolbarOrderFromGrid(cardGrid) {
+        var orderedGuids = [];
+        var childElement = cardGrid.firstChild;
+        var packageGuid;
+        while (childElement) {
+            if (childElement.nodeType === 1 && childElement.getAttribute) {
+                packageGuid = childElement.getAttribute("data-package-guid");
+                if (packageGuid) {
+                    orderedGuids.push(packageGuid);
+                }
+            }
+            childElement = childElement.nextSibling;
+        }
+        return orderedGuids;
+    }
+
+    function finishToolbarDrag(shouldSave) {
+        var cardGrid = draggedToolbarGrid;
+        var orderedGuids;
+        var orderPayload;
+        if (!draggedToolbarCard || !cardGrid) {
+            return;
+        }
+        Common.removeClass(draggedToolbarCard, "is-toolbar-dragging");
+        if (shouldSave && toolbarDropPlaceholder && toolbarDropPlaceholder.parentNode === cardGrid) {
+            cardGrid.insertBefore(draggedToolbarCard, toolbarDropPlaceholder);
+        } else if (draggedToolbarOriginalNextSibling && draggedToolbarOriginalNextSibling.parentNode === cardGrid) {
+            cardGrid.insertBefore(draggedToolbarCard, draggedToolbarOriginalNextSibling);
+        } else {
+            cardGrid.appendChild(draggedToolbarCard);
+        }
+        if (toolbarDropPlaceholder && toolbarDropPlaceholder.parentNode) {
+            toolbarDropPlaceholder.parentNode.removeChild(toolbarDropPlaceholder);
+        }
+        orderedGuids = shouldSave ? toolbarOrderFromGrid(cardGrid) : [];
+        draggedToolbarCard = null;
+        draggedToolbarGrid = null;
+        toolbarDropPlaceholder = null;
+        draggedToolbarOriginalNextSibling = null;
+        if (shouldSave) {
+            orderPayload = Common.byId("toolbarOrderPayload");
+            orderPayload.innerHTML = orderedGuids.join("|");
+            window.location.href = "maxpkg://manager/set-toolbar-order";
+        }
+    }
+
+    function handleToolbarDragStart(eventObject) {
+        var sourceElement = Common.eventTarget(eventObject);
+        var dragHandle = Common.closestWithAttribute(sourceElement, "data-toolbar-drag");
+        var packageCardElement;
+        if (!dragHandle || !toolbarSortingEnabled()) {
+            return;
+        }
+        packageCardElement = Common.closestWithAttribute(dragHandle, "data-package-guid");
+        if (!packageCardElement) {
+            return;
+        }
+        draggedToolbarCard = packageCardElement;
+        draggedToolbarGrid = packageCardElement.parentNode;
+        draggedToolbarOriginalNextSibling = packageCardElement.nextSibling;
+        toolbarDropPlaceholder = document.createElement("div");
+        toolbarDropPlaceholder.className = "card toolbar-drop-placeholder";
+        toolbarDropPlaceholder.innerHTML = "<span>Drop here</span>";
+        draggedToolbarGrid.insertBefore(toolbarDropPlaceholder, packageCardElement);
+        if (eventObject.dataTransfer) {
+            try {
+                eventObject.dataTransfer.effectAllowed = "move";
+                eventObject.dataTransfer.setData("Text", packageCardElement.getAttribute("data-package-guid"));
+            } catch (dragError) {
+            }
+        }
+        window.setTimeout(function () {
+            if (draggedToolbarCard) {
+                Common.addClass(draggedToolbarCard, "is-toolbar-dragging");
+            }
+        }, 0);
+    }
+
+    function handleToolbarDragOver(eventObject) {
+        var sourceElement;
+        var targetCard;
+        var targetGrid;
+        var targetBounds;
+        var insertAfter;
+        if (!draggedToolbarCard || !toolbarDropPlaceholder) {
+            return;
+        }
+        sourceElement = Common.eventTarget(eventObject);
+        targetGrid = ancestorWithClass(sourceElement, "card-grid");
+        if (targetGrid !== draggedToolbarGrid) {
+            return;
+        }
+        Common.preventDefault(eventObject);
+        if (eventObject.dataTransfer) {
+            try {
+                eventObject.dataTransfer.dropEffect = "move";
+            } catch (dragError) {
+            }
+        }
+        targetCard = Common.closestWithAttribute(sourceElement, "data-package-guid");
+        if (!targetCard || targetCard === draggedToolbarCard) {
+            return;
+        }
+        targetBounds = targetCard.getBoundingClientRect();
+        insertAfter = eventObject.clientX > targetBounds.left + ((targetBounds.right - targetBounds.left) / 2);
+        if (insertAfter) {
+            targetGrid.insertBefore(toolbarDropPlaceholder, targetCard.nextSibling);
+        } else {
+            targetGrid.insertBefore(toolbarDropPlaceholder, targetCard);
+        }
+    }
+
+    function handleToolbarDrop(eventObject) {
+        var targetGrid;
+        if (!draggedToolbarCard) {
+            return;
+        }
+        targetGrid = ancestorWithClass(Common.eventTarget(eventObject), "card-grid");
+        if (targetGrid === draggedToolbarGrid) {
+            Common.preventDefault(eventObject);
+            finishToolbarDrag(true);
+        } else {
+            finishToolbarDrag(false);
+        }
+    }
+
+    function handleToolbarDragEnd() {
+        if (draggedToolbarCard) {
+            finishToolbarDrag(false);
+        }
     }
 
     function renderDiscover() {
@@ -896,16 +1081,9 @@
     function openPackageMenu(sourceButton, packageGuid) {
         var packageInfo = findPackage(packageGuid);
         var toolbarLabel;
-        var toolbarPackageCount = 0;
-        var packageIndex;
         var menuHtml;
         if (!packageInfo) {
             return;
-        }
-        for (packageIndex = 0; packageIndex < currentState.packages.length; packageIndex += 1) {
-            if (currentState.packages[packageIndex].toolbarVisible) {
-                toolbarPackageCount += 1;
-            }
         }
         toolbarLabel = packageInfo.toolbarVisible ? "Hide from Toolbar" : "Show in Toolbar";
         menuHtml = "<a href='maxpkg://manager/run/" + Common.encode(packageInfo.guid) + "' data-busy='Starting package...'>Run</a>";
@@ -917,12 +1095,8 @@
         if (packageInfo.helpUrl) {
             menuHtml += "<a href='maxpkg://manager/help/" + Common.encode(packageInfo.guid) + "'>Help</a>";
         }
-        menuHtml += "<a href='maxpkg://manager/toggle-package-toolbar/" + Common.encode(packageInfo.guid) + "'>" + toolbarLabel + "</a>";
-        if (packageInfo.toolbarVisible && toolbarPackageCount > 1) {
-            menuHtml += "<a href='maxpkg://manager/move-package-toolbar/" + Common.encode(packageInfo.guid) + "?direction=left'>Move left in Toolbar</a>" +
-                "<a href='maxpkg://manager/move-package-toolbar/" + Common.encode(packageInfo.guid) + "?direction=right'>Move right in Toolbar</a>";
-        }
-        menuHtml += "<div class='context-separator'></div>" +
+        menuHtml += "<a href='maxpkg://manager/toggle-package-toolbar/" + Common.encode(packageInfo.guid) + "'>" + toolbarLabel + "</a>" +
+            "<div class='context-separator'></div>" +
             "<button type='button' data-action='copy' data-copy='" + Common.escapeHtml(packageInfo.guid) + "'>Copy GUID</button>" +
             "<button type='button' data-action='copy' data-copy='" + Common.escapeHtml(packageInfo.installPath) + "'>Copy Path</button>" +
             "<div class='context-separator'></div>" +
@@ -1142,6 +1316,11 @@
             debouncedSearch();
         };
         Common.on(document, "click", handleDocumentClick);
+        Common.on(document, "dragstart", handleToolbarDragStart);
+        Common.on(document, "dragenter", handleToolbarDragOver);
+        Common.on(document, "dragover", handleToolbarDragOver);
+        Common.on(document, "drop", handleToolbarDrop);
+        Common.on(document, "dragend", handleToolbarDragEnd);
         Common.on(window, "resize", layoutHeader);
         Common.on(searchInput, "keyup", queueSearch);
         Common.on(searchInput, "input", queueSearch);

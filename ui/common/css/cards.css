@@ -11,6 +11,10 @@
     color: #d9dde5;
     vertical-align: top;
     font-size: 13px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .card:hover {
@@ -20,6 +24,7 @@
 
 .card-content {
     padding: 14px;
+    user-select: none;
 }
 
 .card-actions {

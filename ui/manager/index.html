@@ -19,6 +19,7 @@
 <body>
     <div id="runtimePayload" class="is-hidden"></div>
     <div id="notificationPayload" class="is-hidden"></div>
+    <div id="toolbarOrderPayload" class="is-hidden"></div>
 
     <div id="appShell" class="app-shell">
         <div class="app-header clearfix">
@@ -62,12 +63,13 @@
                 <button class="filter-button is-active" type="button" data-filter="all">All</button>
                 <button class="filter-button" type="button" data-filter="updates">Updates</button>
                 <button class="filter-button" type="button" data-filter="toolbar">In toolbar</button>
-                <div id="sortSelect" class="html-select sort-select" data-value="name">
+                <div id="sortSelect" class="html-select sort-select" data-value="toolbar">
                     <button class="html-select-button" type="button" title="Sort installed packages" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger="true">
-                        <span data-select-label="sortSelect">Name</span>
+                        <span data-select-label="sortSelect">Toolbar order</span>
                         <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
                     </button>
                     <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                        <button type="button" data-dropdown-option="toolbar">Toolbar order</button>
                         <button type="button" data-dropdown-option="name">Name</button>
                         <button type="button" data-dropdown-option="developer">Developer</button>
                         <button type="button" data-dropdown-option="version">Version</button>

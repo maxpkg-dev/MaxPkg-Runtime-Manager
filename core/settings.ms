@@ -20,7 +20,7 @@
         downloadUpdatesAutomatically = false,
         managerLastSelection = "",
         managerLastTab = "installed",
-        managerSort = "name",
+        managerSort = "toolbar",
         managerFilter = "all",
         managerPositionX = -1,
         managerPositionY = -1,
@@ -162,7 +162,14 @@
             settingsData.downloadUpdatesAutomatically = utils.boolValue (ini.read settingsData.filePath "Updates" "DownloadAutomatically" defaultValue: "false") defaultValue: false
             settingsData.managerLastSelection = ini.read settingsData.filePath "Manager" "LastSelection"
             settingsData.managerLastTab = ini.read settingsData.filePath "Manager" "LastTab" defaultValue: "installed"
-            settingsData.managerSort = ini.read settingsData.filePath "Manager" "Sort" defaultValue: "name"
+            local managerSortVersion = integerValue (ini.read settingsData.filePath "Manager" "SortVersion" defaultValue: "1") 1 "Manager.SortVersion"
+            if (managerSortVersion < 2) then (
+                settingsData.managerSort = "toolbar"
+                if (not (ini.write settingsData.filePath "Manager" "Sort" settingsData.managerSort)) do logger.logWarning "settings" "Could not migrate the Manager sorting mode."
+                if (not (ini.write settingsData.filePath "Manager" "SortVersion" "2")) do logger.logWarning "settings" "Could not save the Manager sorting version."
+            ) else (
+                settingsData.managerSort = ini.read settingsData.filePath "Manager" "Sort" defaultValue: "toolbar"
+            )
             settingsData.managerFilter = ini.read settingsData.filePath "Manager" "Filter" defaultValue: "all"
             settingsData.managerPositionX = integerValue (ini.read settingsData.filePath "Manager" "PositionX" defaultValue: "-1") -1 "Manager.PositionX"
             settingsData.managerPositionY = integerValue (ini.read settingsData.filePath "Manager" "PositionY" defaultValue: "-1") -1 "Manager.PositionY"
@@ -214,6 +221,7 @@
             if (not (ini.write settingsData.filePath "Manager" "LastSelection" settingsData.managerLastSelection)) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "LastTab" settingsData.managerLastTab)) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "Sort" settingsData.managerSort)) do isSaved = false
+            if (not (ini.write settingsData.filePath "Manager" "SortVersion" "2")) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "Filter" settingsData.managerFilter)) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "PositionX" (settingsData.managerPositionX as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "PositionY" (settingsData.managerPositionY as string))) do isSaved = false

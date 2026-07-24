@@ -361,6 +361,60 @@
     float: right;
 }
 
+.toolbar-sort-card .package-summary {
+    padding-right: 28px;
+}
+
+.toolbar-drag-handle {
+    position: absolute;
+    z-index: 4;
+    top: 8px;
+    right: 8px;
+    display: block;
+    width: 24px;
+    height: 28px;
+    padding: 4px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    cursor: move;
+    opacity: .65;
+}
+
+.toolbar-drag-handle:hover {
+    background: #414852;
+    opacity: 1;
+}
+
+.toolbar-drag-handle img {
+    display: block;
+    width: 16px;
+    height: 20px;
+    border: 0;
+}
+
+.toolbar-drop-placeholder,
+.toolbar-drop-placeholder:hover {
+    border: 2px dashed #7896c9;
+    background: #292e35;
+    color: #9eb4d9;
+}
+
+.toolbar-drop-placeholder span {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    margin-top: -9px;
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+}
+
+.is-toolbar-dragging {
+    display: none;
+}
+
 .state-panel {
     width: 430px;
     margin: 70px auto 0;

@@ -121,6 +121,36 @@
             )
         ),
 
+        fn packageGuidExists packageGuids packageGuid = (
+            for existingGuid in packageGuids where (toLower existingGuid) == (toLower packageGuid) do return true
+            return false
+        ),
+
+        fn toolbarOrdersMatch firstOrder secondOrder = (
+            if (firstOrder.count != secondOrder.count) do return false
+            for orderIndex in 1 to firstOrder.count where (toLower firstOrder[orderIndex]) != (toLower secondOrder[orderIndex]) do return false
+            return true
+        ),
+
+        fn synchronizeToolbarOrder = (
+            if (settings == undefined) do return false
+            local previousToolbarOrder = copy settings.toolbarOrder
+            local normalizedToolbarOrder = #()
+            for savedGuid in previousToolbarOrder do (
+                local savedPackage = apiModule.resolve packages savedGuid
+                if (savedPackage != undefined and not (packageGuidExists normalizedToolbarOrder savedPackage.guid)) do append normalizedToolbarOrder savedPackage.guid
+            )
+            for packageInfo in packages do (
+                if (not (packageGuidExists normalizedToolbarOrder packageInfo.guid)) do append normalizedToolbarOrder packageInfo.guid
+            )
+            if (toolbarOrdersMatch previousToolbarOrder normalizedToolbarOrder) do return true
+            settings.toolbarOrder = normalizedToolbarOrder
+            if (settingsModule.save()) do return true
+            settings.toolbarOrder = previousToolbarOrder
+            loggerModule.logError "runtime" "Could not synchronize the toolbar package order."
+            return false
+        ),
+
         public
 
         fn shutdown = (
@@ -148,12 +178,17 @@
         fn scan = (
             try (
                 packages = scannerModule.scan (packageRoots())
-                return packages
             ) catch (
                 loggerModule.logError "runtime" ("Scan failed: " + getCurrentException())
                 packages = #()
                 return packages
             )
+            try (
+                synchronizeToolbarOrder()
+            ) catch (
+                loggerModule.logError "runtime" ("Toolbar order synchronization failed: " + getCurrentException())
+            )
+            return packages
         ),
 
         fn start = (
@@ -310,7 +345,7 @@
         fn resetToolbarOrder = (
             local previousToolbarOrder = copy settings.toolbarOrder
             settings.toolbarOrder = #()
-            if (not (settingsModule.save())) do (
+            if (not (synchronizeToolbarOrder())) do (
                 settings.toolbarOrder = previousToolbarOrder
                 loggerModule.logError "runtime" "Could not reset toolbar order."
                 return false
@@ -320,36 +355,25 @@
             return isToolbarRebuilt
         ),
 
-        fn moveToolbarPackage packageReference movementDirection = (
-            local resolvedPackage = apiModule.resolve packages packageReference
-            if (resolvedPackage == undefined or not resolvedPackage.toolbarVisible) do return false
-            local normalizedMovement = toLower (utilsModule.trim movementDirection)
-            if (normalizedMovement != "left" and normalizedMovement != "right") do return false
-            local toolbarPackages = toolbarModule.orderedPackages()
-            local packageIndex = 0
-            for toolbarIndex in 1 to toolbarPackages.count where (toLower toolbarPackages[toolbarIndex].guid) == (toLower resolvedPackage.guid) do packageIndex = toolbarIndex
-            if (packageIndex == 0) do return false
-            local targetIndex = if (normalizedMovement == "left") then packageIndex - 1 else packageIndex + 1
-            if (targetIndex < 1 or targetIndex > toolbarPackages.count) do return true
+        fn setToolbarOrder requestedPackageGuids = (
+            if ((classOf requestedPackageGuids) != Array) do return false
             local previousToolbarOrder = copy settings.toolbarOrder
             local reorderedGuids = #()
-            for toolbarPackage in toolbarPackages do append reorderedGuids toolbarPackage.guid
-            local displacedGuid = reorderedGuids[targetIndex]
-            reorderedGuids[targetIndex] = reorderedGuids[packageIndex]
-            reorderedGuids[packageIndex] = displacedGuid
-            for savedGuid in previousToolbarOrder do (
-                local guidExists = false
-                for reorderedGuid in reorderedGuids while not guidExists where (toLower reorderedGuid) == (toLower savedGuid) do guidExists = true
-                if (not guidExists) do append reorderedGuids savedGuid
+            for requestedGuid in requestedPackageGuids do (
+                local resolvedPackage = apiModule.resolve packages requestedGuid
+                if (resolvedPackage != undefined and not (packageGuidExists reorderedGuids resolvedPackage.guid)) do append reorderedGuids resolvedPackage.guid
+            )
+            for packageInfo in packages do (
+                if (not (packageGuidExists reorderedGuids packageInfo.guid)) do append reorderedGuids packageInfo.guid
             )
             settings.toolbarOrder = reorderedGuids
             if (not (settingsModule.save())) do (
                 settings.toolbarOrder = previousToolbarOrder
-                loggerModule.logError "runtime" ("Could not save toolbar order for " + resolvedPackage.guid)
+                loggerModule.logError "runtime" "Could not save the toolbar package order."
                 return false
             )
             local isToolbarRebuilt = rebuildToolbar()
-            refreshManager "move-toolbar-package"
+            refreshManager "set-toolbar-order"
             return isToolbarRebuilt
         ),
 

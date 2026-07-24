@@ -95,7 +95,7 @@
     local missingUpdateStatus = MaxPkg.updatePackage "__maxpkg_missing_package__"
     if (missingUpdateStatus.success or missingUpdateStatus.errorMessage == "") do throw "Missing package update did not return a useful failure status."
     if ((MaxPkg.setToolbarVisible "__maxpkg_missing_package__" true) != false) do throw "Missing toolbar package did not fail safely."
-    if ((MaxPkg.moveToolbarPackage "__maxpkg_missing_package__" "left") != false) do throw "Missing toolbar package move did not fail safely."
+    if ((MaxPkg.setToolbarOrder undefined) != false) do throw "Invalid toolbar package order did not fail safely."
     if ((MaxPkg.openPackageFolder "__maxpkg_missing_package__") != false) do throw "Missing package folder did not fail safely."
     if (MaxPkg.openPackageLink "__maxpkg_missing_package__" "homepage" != false) do throw "Missing package link did not fail safely."
     if (MaxPkg.openPackageHelp "__maxpkg_missing_package__" != false) do throw "Missing package Help did not fail safely."
