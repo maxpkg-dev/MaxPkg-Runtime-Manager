@@ -326,8 +326,8 @@ local processingResult = processFile sourceFileName processOptions sourceContent
 - Read manifests only in `core/scanner.ms`. Toolbar, Manager, launcher, updater,
   and uninstaller consume normalized objects from `MaxPkg.packages`.
 - Maintain compatibility with the actual `max-dev-tool` keys, including
-  `packageGuid`, `developerName`, `documentation`, `showInToolbar`, and
-  `uninstallScript`.
+  `packageGuid`, `developerName`, `documentation`, `purchase`,
+  `showInToolbar`, and `uninstallScript`.
 - Normalize the release channel and date, license and license URL, supported
   3ds Max range, homepage, documentation, support, packager metadata, and
   changelog entries for Manager Details. Manager UI must consume these

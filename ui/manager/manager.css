@@ -342,14 +342,78 @@
 
 .package-description {
     display: -webkit-box;
-    height: 54px;
+    height: 90px;
     margin: 10px 0 8px;
     overflow: hidden;
     color: #b4bac4;
     font-size: 12px;
     line-height: 18px;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 5;
+}
+
+.badge-purchase {
+    min-width: 21px;
+    padding: 2px 4px;
+    border-color: #3d8f67;
+    background: #284337;
+}
+
+.badge-purchase .icon {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+    vertical-align: -2px;
+}
+
+.purchase-details-notice {
+    display: table;
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 18px;
+    min-height: 70px;
+    padding: 14px 16px;
+    border: 1px solid #4b6258;
+    border-radius: 5px;
+    background: #293a34;
+}
+
+.purchase-notice-copy {
+    display: table-cell;
+    margin: 0;
+    color: #c5d4ce;
+    font-size: 12px;
+    line-height: 18px;
+    vertical-align: middle;
+}
+
+.purchase-notice-action {
+    display: table-cell;
+    width: 1%;
+    padding-left: 24px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.purchase-notice-button {
+    min-width: 100px;
+    margin: 0;
+    padding: 9px 18px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.button-purchase {
+    border-color: #41a875;
+    background: #28895c;
+    color: #ffffff;
+}
+
+.button-purchase:hover,
+.button-purchase:focus {
+    border-color: #61c990;
+    background: #35a870;
+    color: #ffffff;
 }
 
 .card-actions .button {

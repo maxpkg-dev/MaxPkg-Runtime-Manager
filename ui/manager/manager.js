@@ -41,7 +41,7 @@
     }
 
     function packageDescriptionPreview(descriptionText) {
-        var maxLength = 118;
+        var maxLength = 315;
         var normalizedText = (descriptionText || "No description provided.").replace(/\s+/g, " ");
         if (normalizedText.length <= maxLength) {
             return normalizedText;
@@ -266,6 +266,23 @@
         return activeSort === "toolbar" && activeFilter === "all" && !searchText;
     }
 
+    function purchaseIndicator(packageInfo) {
+        if (!packageInfo.purchaseUrl) {
+            return "";
+        }
+        return "<span class='badge badge-purchase' title='Purchase required'>" + icon("shopping-cart") + "</span>";
+    }
+
+    function purchaseNotice(packageInfo) {
+        if (!packageInfo.purchaseUrl) {
+            return "";
+        }
+        return "<div class='purchase-details-notice'>" +
+            "<p class='purchase-notice-copy'>This script requires purchase. maxpkg does not process payments or take responsibility for purchases. Payment is handled by the developer. Read the documentation for full purchase details.</p>" +
+            "<div class='purchase-notice-action'><a class='button button-purchase purchase-notice-button' href='maxpkg://manager/package-link/" + Common.encode(packageInfo.guid) + "?kind=purchase'>" + icon("external-link") + "Buy</a></div>" +
+        "</div>";
+    }
+
     function visiblePackages() {
         var filteredPackages = [];
         var packageIndex;
@@ -306,6 +323,7 @@
             badges += "<span class='badge badge-warning'>v" + Common.escapeHtml(packageInfo.latestVersion) + " available</span>";
             updateAction = "<a class='button' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update</a> ";
         }
+        badges += purchaseIndicator(packageInfo);
         return "<div class='" + cardClass + "' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
             dragHandle +
             "<div class='card-content clearfix'>" +
@@ -521,6 +539,7 @@
         if (packageInfo.category) {
             badges += "<span class='badge'>" + Common.escapeHtml(packageInfo.category) + "</span>";
         }
+        badges += purchaseIndicator(packageInfo);
         return "<div class='card' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
             "<div class='card-content clearfix'>" +
                 "<button class='package-summary clearfix' type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "' title='Open package details'>" +
@@ -944,6 +963,7 @@
             "<div class='details-hero-actions'>" + actionMarkup + "</div>" +
             "<div class='details-copy'><h1>" + Common.escapeHtml(packageInfo.name) + "</h1><p>Version " + Common.escapeHtml(packageInfo.version) + " by " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</p><div class='details-badges'>" + releaseBadges + "</div></div></div>" +
             "<div class='details-section'><h3>Description</h3><p>" + Common.escapeHtml(packageInfo.description || "No description provided.") + "</p></div>" +
+            purchaseNotice(packageInfo) +
             "<div class='details-tabs' role='tablist'><button class='details-tab' type='button' data-action='details-tab' data-details-tab='information'>Information</button>" +
             (hasFullDescription ? "<button class='details-tab' type='button' data-action='details-tab' data-details-tab='description'>Description</button>" : "") +
             (screenshotCount > 0 ? "<button class='details-tab' type='button' data-action='details-tab' data-details-tab='screenshots'>Screenshots<span class='details-tab-count'>" + screenshotCount + "</span></button>" : "") +

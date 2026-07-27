@@ -400,6 +400,7 @@
                 "homepage": packageInfo.homepageUrl
                 "documentation": packageInfo.documentationUrl
                 "support": packageInfo.supportUrl
+                "purchase": packageInfo.purchaseUrl
                 "license": packageInfo.licenseUrl
                 "maxpkg": utilsModule.packagePageUrl settings.apiEndpoint packageInfo.slug
                 default: ""
@@ -408,6 +409,11 @@
 
         fn openPackageLink packageReference packageLinkKind = (
             local resolvedPackage = apiModule.resolve packages packageReference
+            if (resolvedPackage == undefined and catalogState != undefined and catalogState.success) do (
+                for catalogPackageInfo in catalogState.packages while resolvedPackage == undefined do (
+                    if ((toLower catalogPackageInfo.guid) == (toLower packageReference) or (toLower catalogPackageInfo.slug) == (toLower packageReference)) do resolvedPackage = catalogPackageInfo
+                )
+            )
             if (resolvedPackage == undefined and remotePackageDetails != undefined and remotePackageDetails.success) do (
                 local remoteInfo = remotePackageDetails.packageInfo
                 if (remoteInfo != undefined and ((toLower remoteInfo.guid) == (toLower packageReference) or (toLower remoteInfo.slug) == (toLower packageReference))) do resolvedPackage = remoteInfo
