@@ -34,25 +34,44 @@
         )
     )
 
-    fn copyTree sourceRoot targetRoot = (
-        if (sourceRoot == "" or targetRoot == "") do return false
-        if (not (doesDirectoryExist sourceRoot)) do return false
+    fn forceDeleteFolder folderPath = (
+        if (folderPath == undefined or folderPath == "" or not (doesDirectoryExist folderPath)) do return true
         try (
             local directoryClass = dotNetClass "System.IO.Directory"
             local searchOption = dotNetClass "System.IO.SearchOption"
-            makeDir targetRoot all: true
-            local files = directoryClass.GetFiles sourceRoot "*" searchOption.AllDirectories
-            for sourceFile in files do (
-                local relativePath = substring sourceFile (sourceRoot.count + 1) (sourceFile.count - sourceRoot.count)
-                local targetFile = targetRoot + relativePath
-                makeDir (getFilenamePath targetFile) all: true
-                makeFileWritable targetFile
-                if (not (copyFile sourceFile targetFile)) do return false
+            local existingFiles = directoryClass.GetFiles folderPath "*" searchOption.AllDirectories
+            for existingFile in existingFiles do (
+                if (not (makeFileWritable existingFile)) do return false
             )
-            return true
+            directoryClass.Delete folderPath true
+            return not (doesDirectoryExist folderPath)
         ) catch (
             return false
         )
+    )
+
+    fn replaceFile sourceFilePath targetFilePath = (
+        if (not (doesFileExist sourceFilePath)) do throw ("Runtime source file does not exist:\n" + sourceFilePath)
+        local targetFolder = getFilenamePath targetFilePath
+        if (not (makeDir targetFolder all: true)) do throw ("Could not create target folder:\n" + targetFolder)
+        if (not (forceDeleteFile targetFilePath)) do throw ("Could not remove the previous Runtime file:\n" + targetFilePath)
+        if (not (copyFile sourceFilePath targetFilePath)) do throw ("Could not copy Runtime file:\n" + sourceFilePath + "\n\nto:\n" + targetFilePath)
+        return true
+    )
+
+    fn copyTree sourceRoot targetRoot = (
+        if (sourceRoot == "" or targetRoot == "") do throw "Runtime copy paths are empty."
+        if (not (doesDirectoryExist sourceRoot)) do throw ("Runtime source folder does not exist:\n" + sourceRoot)
+        local directoryClass = dotNetClass "System.IO.Directory"
+        local searchOption = dotNetClass "System.IO.SearchOption"
+        if (not (makeDir targetRoot all: true)) do throw ("Could not create Runtime folder:\n" + targetRoot)
+        local sourceFiles = directoryClass.GetFiles sourceRoot "*" searchOption.AllDirectories
+        for sourceFile in sourceFiles do (
+            local relativePath = substring sourceFile (sourceRoot.count + 1) (sourceFile.count - sourceRoot.count)
+            local targetFile = targetRoot + relativePath
+            replaceFile sourceFile targetFile
+        )
+        return true
     )
 
     fn writeStartupShim shimPath runtimeStartupPath = (
@@ -146,25 +165,87 @@
     local targetRoot = ensureSlash ((getDir #userScripts) + @"\MaxPkg Runtime")
     local startupFolder = ensureSlash (getDir #userStartupScripts)
     local shimPath = startupFolder + "maxpkg-runtime-startup.ms"
+    local resultDialogModule = undefined
+    local runtimeVersion = "Unknown"
+    local installationErrorMessage = ""
 
     try (
+        resultDialogModule = fileIn (sourceRoot + @"ui\common\result-dialog.ms")
+    ) catch (
+        resultDialogModule = undefined
+    )
+    try (
+        runtimeVersion = getINISetting (sourceRoot + "version.ini") "Runtime" "Version"
+    ) catch (
+        runtimeVersion = "Unknown"
+    )
+
+    try (
+        if ((toLower sourceRoot) == (toLower targetRoot)) do throw "Runtime cannot be installed over its source folder."
+        if (MaxPkg != undefined and isProperty MaxPkg #shutdown) do (
+            try (
+                MaxPkg.shutdown()
+            ) catch (
+            )
+        )
         makeDir targetRoot all: true
-        if (not (copyTree (sourceRoot + @"core\") (targetRoot + @"core\"))) do throw "Could not copy Runtime core files."
-        if (not (copyTree (sourceRoot + @"ui\") (targetRoot + @"ui\"))) do throw "Could not copy Runtime UI files."
+        if (not (forceDeleteFolder (targetRoot + @"core\"))) do throw ("Could not remove the previous Runtime core folder:\n" + (targetRoot + @"core\"))
+        if (not (forceDeleteFolder (targetRoot + @"ui\"))) do throw ("Could not remove the previous Runtime UI folder:\n" + (targetRoot + @"ui\"))
+        copyTree (sourceRoot + @"core\") (targetRoot + @"core\")
+        copyTree (sourceRoot + @"ui\") (targetRoot + @"ui\")
         makeDir (targetRoot + @"data\packages\") all: true
         makeDir (targetRoot + @"logs\") all: true
-        makeFileWritable (targetRoot + "startup.ms")
-        if (not (copyFile (sourceRoot + "startup.ms") (targetRoot + "startup.ms"))) do throw "Could not copy startup.ms."
-        makeFileWritable (targetRoot + "version.ini")
-        if (not (copyFile (sourceRoot + "version.ini") (targetRoot + "version.ini"))) do throw "Could not copy version.ini."
-        makeFileWritable (targetRoot + "uninstall.ms")
-        if (not (copyFile (sourceRoot + "uninstall.ms") (targetRoot + "uninstall.ms"))) do throw "Could not copy uninstall.ms."
+        replaceFile (sourceRoot + "startup.ms") (targetRoot + "startup.ms")
+        replaceFile (sourceRoot + "version.ini") (targetRoot + "version.ini")
+        replaceFile (sourceRoot + "uninstall.ms") (targetRoot + "uninstall.ms")
         if (not (writeStartupShim shimPath (targetRoot + "startup.ms"))) do throw "Could not create the startup script."
         if (not (writeManagerMacro targetRoot)) do throw "Could not create the MaxPkg Manager MacroScript."
         fileIn (targetRoot + "startup.ms")
         if (MaxPkg == undefined) do throw "Runtime did not create the MaxPkg global."
-        messageBox ("MaxPkg Runtime installed.\n\n" + targetRoot) title: "MaxPkg"
+        if (resultDialogModule != undefined) then (
+            local successDialogInfo = resultDialogModule.createDialogData()
+            successDialogInfo.windowTitle = "MaxPkg Runtime Setup"
+            successDialogInfo.heading = "Installation complete"
+            successDialogInfo.summary = "MaxPkg is ready. Find, install, update, and organize useful 3ds Max scripts in one simple place."
+            successDialogInfo.versionText = runtimeVersion
+            successDialogInfo.startupText = "Enabled"
+            successDialogInfo.guideTitle = "Quick guide"
+            successDialogInfo.guideStepOneTitle = "Open MaxPkg Manager"
+            successDialogInfo.guideStepOneContent = "Click Open Manager below. You will see your installed scripts and the Discover catalog."
+            successDialogInfo.guideStepTwoTitle = "Find and install a script"
+            successDialogInfo.guideStepTwoContent = "Open Discover and search for a tool, for example Prune Scene. Click Install and MaxPkg will take care of the rest."
+            successDialogInfo.guideStepThreeTitle = "Run it from the toolbar"
+            successDialogInfo.guideStepThreeContent = "After installation, the script button appears on the MaxPkg toolbar. Click it whenever you need the tool."
+            successDialogInfo.primaryButtonText = "Open Manager"
+            fn showInstalledManager = (
+                if (MaxPkg != undefined and MaxPkg.isStarted()) do MaxPkg.openManager()
+                return true
+            )
+            successDialogInfo.primaryActionCallback = showInstalledManager
+            resultDialogModule.showDialog successDialogInfo
+        ) else (
+            messageBox ("MaxPkg Runtime installed.\n\n" + targetRoot) title: "MaxPkg"
+        )
     ) catch (
-        messageBox ("MaxPkg Runtime installation failed.\n\n" + getCurrentException()) title: "MaxPkg"
+        installationErrorMessage = getCurrentException()
+        if (resultDialogModule != undefined) then (
+            local failureDialogInfo = resultDialogModule.createDialogData()
+            failureDialogInfo.windowTitle = "MaxPkg Runtime Setup"
+            failureDialogInfo.heading = "Installation incomplete"
+            failureDialogInfo.summary = "MaxPkg could not finish installing, but your 3ds Max scenes and existing scripts were not changed."
+            failureDialogInfo.versionText = runtimeVersion
+            failureDialogInfo.startupText = "Not enabled"
+            failureDialogInfo.guideTitle = "Quick help"
+            failureDialogInfo.guideStepOneTitle = "Close MaxPkg windows"
+            failureDialogInfo.guideStepOneContent = "Close the Manager and any other MaxPkg windows, then run install.ms again."
+            failureDialogInfo.guideStepTwoTitle = "Restart 3ds Max"
+            failureDialogInfo.guideStepTwoContent = "If installation still does not finish, restart 3ds Max and try once more."
+            failureDialogInfo.guideStepThreeTitle = "Get a fresh installer"
+            failureDialogInfo.guideStepThreeContent = "Visit maxpkg.dev to download the latest MaxPkg Runtime installer and find additional help."
+            failureDialogInfo.statusKind = "error"
+            resultDialogModule.showDialog failureDialogInfo
+        ) else (
+            messageBox ("MaxPkg Runtime installation failed.\n\n" + installationErrorMessage) title: "MaxPkg"
+        )
     )
 )

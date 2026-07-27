@@ -10,8 +10,15 @@
     local startupFile = runtimeRoot + "startup.ms"
     local utilsModule = fileIn (runtimeRoot + @"core\utils.ms")
     local iniModule = fileIn (runtimeRoot + @"core\ini.ms")
+    local resultDialogModule = fileIn (runtimeRoot + @"ui\common\result-dialog.ms")
     local repositoryModule = fileIn (runtimeRoot + @"core\repository.ms")
     local installerModule = fileIn (runtimeRoot + @"core\installer.ms")
+    if (resultDialogModule == undefined) do throw "Reusable Runtime result dialog module is unavailable."
+    if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.html"))) do throw "Runtime result dialog HTML is unavailable."
+    if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.css"))) do throw "Runtime result dialog styles are unavailable."
+    if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.js"))) do throw "Runtime result dialog behavior is unavailable."
+    local resultDialogInfo = resultDialogModule.createDialogData()
+    if (resultDialogInfo == undefined or not (isProperty resultDialogInfo #heading) or not (isProperty resultDialogInfo #versionText)) do throw "Runtime result dialog data could not be created."
     installerModule.utils = utilsModule
     if ((installerModule.normalizePackageReference "  Prune   Scene  ") != "prune-scene") do throw "Human-readable package reference normalization failed."
     if ((installerModule.normalizePackageReference "3dground/prune-scene") != "3dground/prune-scene") do throw "Canonical package reference normalization changed an existing slug."
@@ -63,6 +70,7 @@
     if (not (isProperty MaxPkg.settings #toolbarSubtitleMode)) do throw "Toolbar subtitle mode is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarButtonSize)) do throw "Toolbar button size is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarDockPosition)) do throw "Toolbar dock position is unavailable."
+    if (not (isProperty MaxPkg.settings #managerFirstOpenCompleted)) do throw "Manager first-open state is unavailable."
     if (MaxPkg.settings.toolbarDockPosition != "top" and MaxPkg.settings.toolbarDockPosition != "bottom") do throw "Toolbar dock position is invalid."
     if (not (isProperty MaxPkg.settings #apiEndpoint)) do throw "API endpoint setting is unavailable."
     local runtimeStatus = MaxPkg.getStatus()

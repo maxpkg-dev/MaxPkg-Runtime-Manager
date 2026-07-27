@@ -18,7 +18,7 @@
         discover: { available: false, message: "Repository is unavailable.", packages: [] },
         remoteDetails: null
     };
-    var activeTab = "installed";
+    var activeTab = "discover";
     var activeFilter = "all";
     var activeSort = "toolbar";
     var searchText = "";
@@ -1221,6 +1221,11 @@
         }
     }
 
+    function showRuntimeUninstallConfirmation(isVisible) {
+        Common.toggleClass(Common.byId("showRuntimeUninstallConfirmationButton"), "is-hidden", isVisible);
+        Common.toggleClass(Common.byId("runtimeUninstallConfirmation"), "is-hidden", !isVisible);
+    }
+
     function handleDocumentClick(eventObject) {
         var sourceElement = Common.eventTarget(eventObject);
         var actionElement = Common.closestWithAttribute(sourceElement, "data-action");
@@ -1295,6 +1300,12 @@
                 showNotification("Clipboard is unavailable.", "error");
             }
             window.MaxPkgDropdown.close();
+        } else if (actionName === "request-runtime-uninstall") {
+            Common.preventDefault(eventObject);
+            showRuntimeUninstallConfirmation(true);
+        } else if (actionName === "cancel-runtime-uninstall") {
+            Common.preventDefault(eventObject);
+            showRuntimeUninstallConfirmation(false);
         }
     }
 
@@ -1356,6 +1367,7 @@
         });
         Common.on(Common.byId("settingsButton"), "click", function () {
             populateSettings();
+            showRuntimeUninstallConfirmation(false);
             changeSettingsPage("general");
             window.MaxPkgDialog.open(Common.byId("settingsShade"));
         });

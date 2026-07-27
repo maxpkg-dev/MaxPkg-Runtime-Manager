@@ -1147,6 +1147,16 @@
     color: #fff;
 }
 
+.settings-nav-danger {
+    color: #e5969d;
+}
+
+.settings-nav-danger:hover,
+.settings-nav-danger.is-active {
+    background: #5a343b;
+    color: #ffd8dc;
+}
+
 .settings-content {
     height: 100%;
     padding: 20px 22px;
@@ -1165,6 +1175,74 @@
 
 .about-summary p {
     margin: 0 0 12px;
+}
+
+.runtime-uninstall-summary {
+    margin: 12px 0 18px;
+    color: #b9c0cb;
+    line-height: 20px;
+}
+
+.runtime-uninstall-note {
+    margin-bottom: 18px;
+    padding: 13px 15px;
+    border: 1px solid #4d5765;
+    border-radius: 4px;
+    background: #292d33;
+}
+
+.runtime-uninstall-note strong,
+.runtime-uninstall-note span {
+    display: block;
+}
+
+.runtime-uninstall-note strong {
+    margin-bottom: 5px;
+    color: #ffffff;
+}
+
+.runtime-uninstall-note span {
+    color: #aeb6c2;
+    line-height: 19px;
+}
+
+.runtime-uninstall-steps {
+    margin: 0 0 22px;
+    padding-left: 24px;
+    color: #c7cdd7;
+    line-height: 23px;
+}
+
+.runtime-uninstall-page .button-danger {
+    border-color: #a6535f;
+    background: #703641;
+    color: #ffe1e4;
+}
+
+.runtime-uninstall-page .button-danger:hover,
+.runtime-uninstall-page .button-danger:focus {
+    border-color: #d06a78;
+    background: #87414d;
+}
+
+.runtime-uninstall-confirmation {
+    margin-top: 18px;
+    padding: 15px;
+    border: 1px solid #8e4a55;
+    border-radius: 4px;
+    background: #412a2f;
+}
+
+.runtime-uninstall-confirmation strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #ffd8dc;
+}
+
+.runtime-uninstall-confirmation p {
+    margin-bottom: 14px;
+    color: #cdb8bc;
+    line-height: 19px;
 }
 
 @media screen and (max-width: 720px) {

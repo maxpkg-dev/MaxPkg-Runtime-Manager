@@ -72,7 +72,21 @@
         userMacrosRoot + "maxpkg-runtime-manager.mcr",
         userMacrosRoot + "MaxPkg-MaxPkg_Manager.mcr"
     )
+    local resultDialogModule = undefined
+    local runtimeVersion = "Unknown"
     local isSuccess = true
+
+    try (
+        resultDialogModule = fileIn (runtimeRoot + @"ui\common\result-dialog.ms")
+        if (resultDialogModule != undefined and not (resultDialogModule.prepareTemporaryAssets())) do resultDialogModule = undefined
+    ) catch (
+        resultDialogModule = undefined
+    )
+    try (
+        runtimeVersion = getINISetting (runtimeRoot + "version.ini") "Runtime" "Version"
+    ) catch (
+        runtimeVersion = "Unknown"
+    )
 
     try (
         if (MaxPkg != undefined and isProperty MaxPkg #shutdown) do MaxPkg.shutdown()
@@ -91,7 +105,38 @@
         isSuccess = false
     )
 
-    if (isSuccess) then (
+    if (resultDialogModule != undefined) then (
+        local dialogInfo = resultDialogModule.createDialogData()
+        dialogInfo.windowTitle = "MaxPkg Runtime Removal"
+        if (isSuccess) then (
+            dialogInfo.heading = "Removal complete"
+            dialogInfo.summary = "MaxPkg Runtime has been removed from this 3ds Max installation."
+            dialogInfo.versionText = runtimeVersion
+            dialogInfo.startupText = "Disabled"
+            dialogInfo.guideTitle = "What happens now?"
+            dialogInfo.guideStepOneTitle = "MaxPkg will no longer start"
+            dialogInfo.guideStepOneContent = "The Manager and its automatic startup have been removed from this 3ds Max installation."
+            dialogInfo.guideStepTwoTitle = "Your scenes are safe"
+            dialogInfo.guideStepTwoContent = "Removing MaxPkg does not change your 3ds Max scene files."
+            dialogInfo.guideStepThreeTitle = "Come back at any time"
+            dialogInfo.guideStepThreeContent = "You can reinstall MaxPkg whenever you want by visiting maxpkg.dev."
+            dialogInfo.statusKind = "removal"
+        ) else (
+            dialogInfo.heading = "Removal incomplete"
+            dialogInfo.summary = "Some MaxPkg files could not be removed. Close 3ds Max before deleting the remaining folder manually."
+            dialogInfo.versionText = runtimeVersion
+            dialogInfo.startupText = "Needs attention"
+            dialogInfo.guideTitle = "Finish removing MaxPkg"
+            dialogInfo.guideStepOneTitle = "Restart 3ds Max"
+            dialogInfo.guideStepOneContent = "Restart 3ds Max to release any MaxPkg files that are still in use."
+            dialogInfo.guideStepTwoTitle = "Run the uninstaller again"
+            dialogInfo.guideStepTwoContent = "Start the MaxPkg uninstaller once more after restarting 3ds Max."
+            dialogInfo.guideStepThreeTitle = "Get help"
+            dialogInfo.guideStepThreeContent = "Your scene files were not changed. Visit maxpkg.dev if you need additional help."
+            dialogInfo.statusKind = "error"
+        )
+        resultDialogModule.showDialog dialogInfo
+    ) else if (isSuccess) then (
         messageBox "MaxPkg Runtime was uninstalled." title: "MaxPkg"
     ) else (
         messageBox "MaxPkg Runtime could not be removed completely. Close 3ds Max and remove the remaining files manually." title: "MaxPkg"

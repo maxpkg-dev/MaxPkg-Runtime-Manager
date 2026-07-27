@@ -56,6 +56,8 @@
         dialogOpen = false,
         browserReady = false,
         focusTimer = undefined,
+        runtimeUninstallTimer = undefined,
+        runtimeUninstallFilePath = "",
         minimumDialogWidth = 720,
         minimumDialogHeight = 520,
 
@@ -117,6 +119,65 @@
                 focusTimer = undefined
                 setManagerFocusState false
                 logger.logWarning "manager" ("Could not start Manager focus tracking: " + getCurrentException())
+                return false
+            )
+        ),
+
+        fn handleRuntimeUninstallTimer eventSender eventArgs = (
+            local scheduledUninstallFilePath = runtimeUninstallFilePath
+            try (
+                runtimeUninstallTimer.Stop()
+                dotNet.removeEventHandler runtimeUninstallTimer "Tick" handleRuntimeUninstallTimer
+                runtimeUninstallTimer.Dispose()
+            ) catch (
+                logger.logWarning "manager" ("Could not release Runtime uninstall timer: " + getCurrentException())
+            )
+            runtimeUninstallTimer = undefined
+            runtimeUninstallFilePath = ""
+            if (scheduledUninstallFilePath == "" or not (doesFileExist scheduledUninstallFilePath)) do (
+                logger.logError "manager" "Runtime uninstaller is unavailable."
+                return false
+            )
+            try (
+                fileIn scheduledUninstallFilePath
+                return true
+            ) catch (
+                logger.logError "manager" ("Runtime uninstall failed: " + getCurrentException())
+                return false
+            )
+        ),
+
+        fn stopRuntimeUninstallTimer = (
+            if (runtimeUninstallTimer == undefined) do return true
+            try (
+                runtimeUninstallTimer.Stop()
+                dotNet.removeEventHandler runtimeUninstallTimer "Tick" handleRuntimeUninstallTimer
+                runtimeUninstallTimer.Dispose()
+            ) catch (
+                logger.logWarning "manager" ("Could not stop Runtime uninstall timer: " + getCurrentException())
+            )
+            runtimeUninstallTimer = undefined
+            runtimeUninstallFilePath = ""
+            return true
+        ),
+
+        fn scheduleRuntimeUninstall = (
+            local uninstallFilePath = runtimeRoot + "uninstall.ms"
+            if (not (doesFileExist uninstallFilePath)) do (
+                logger.logError "manager" ("Runtime uninstaller not found: " + uninstallFilePath)
+                return false
+            )
+            stopRuntimeUninstallTimer()
+            try (
+                runtimeUninstallFilePath = uninstallFilePath
+                runtimeUninstallTimer = dotNetObject "System.Windows.Forms.Timer"
+                runtimeUninstallTimer.Interval = 150
+                dotNet.addEventHandler runtimeUninstallTimer "Tick" handleRuntimeUninstallTimer
+                runtimeUninstallTimer.Start()
+                return true
+            ) catch (
+                stopRuntimeUninstallTimer()
+                logger.logError "manager" ("Could not schedule Runtime uninstall: " + getCurrentException())
                 return false
             )
         ),
@@ -278,6 +339,7 @@
             settingsContent += "\"downloadUpdatesAutomatically\":" + (boolJson settings.downloadUpdatesAutomatically) + ","
             settingsContent += "\"updateFrequencyHours\":" + (settings.updateFrequencyHours as string) + ","
             settingsContent += "\"managerLastTab\":" + (utils.jsonString settings.managerLastTab) + ","
+            settingsContent += "\"managerFirstOpenCompleted\":" + (boolJson settings.managerFirstOpenCompleted) + ","
             settingsContent += "\"managerSort\":" + (utils.jsonString settings.managerSort) + ","
             settingsContent += "\"managerFilter\":" + (utils.jsonString settings.managerFilter) + ","
             settingsContent += "\"language\":" + (utils.jsonString settings.language) + ","
@@ -422,6 +484,11 @@
             local isSuccess = true
             if (commandPath == "ready") do (
                 browserReady = true
+                if (not owner.settings.managerFirstOpenCompleted) do (
+                    owner.settings.managerFirstOpenCompleted = true
+                    owner.settings.managerLastTab = "discover"
+                    if (not (owner.saveSettings())) do logger.logWarning "manager" "Could not save the first Manager opening state."
+                )
                 return refresh()
             )
             if (commandPath == "refresh") do (
@@ -452,6 +519,14 @@
                 isSuccess = saveSettings queryString
                 local isSilentSave = boolParameter queryString "silent" defaultState: false
                 if (not isSuccess or not isSilentSave) do notify (if (isSuccess) then "Settings saved." else "Could not save settings.") notificationType: (if (isSuccess) then "success" else "error")
+            )
+            if (commandPath == "uninstall-runtime") do (
+                isSuccess = scheduleRuntimeUninstall()
+                if (not isSuccess) do (
+                    notify "MaxPkg Runtime could not start uninstalling." notificationType: "error"
+                    refresh()
+                )
+                return isSuccess
             )
             if (commandPath == "view") do isSuccess = saveView queryString
             if (matchPattern commandPath pattern: "run/*" ignoreCase: true) do (
@@ -680,6 +755,7 @@
         ),
 
         fn shutdownManager = (
+            stopRuntimeUninstallTimer()
             local isClosed = destroyManagerDialog()
             if (isClosed) do managerOwner = undefined
             return isClosed

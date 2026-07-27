@@ -21,6 +21,7 @@
         downloadUpdatesAutomatically = false,
         managerLastSelection = "",
         managerLastTab = "installed",
+        managerFirstOpenCompleted = false,
         managerSort = "toolbar",
         managerFilter = "all",
         managerPositionX = -1,
@@ -171,6 +172,7 @@
             settingsData.downloadUpdatesAutomatically = utils.boolValue (ini.read settingsData.filePath "Updates" "DownloadAutomatically" defaultValue: "false") defaultValue: false
             settingsData.managerLastSelection = ini.read settingsData.filePath "Manager" "LastSelection"
             settingsData.managerLastTab = ini.read settingsData.filePath "Manager" "LastTab" defaultValue: "installed"
+            settingsData.managerFirstOpenCompleted = utils.boolValue (ini.read settingsData.filePath "Manager" "FirstOpenCompleted" defaultValue: "false") defaultValue: false
             local managerSortVersion = integerValue (ini.read settingsData.filePath "Manager" "SortVersion" defaultValue: "1") 1 "Manager.SortVersion"
             if (managerSortVersion < 2) then (
                 settingsData.managerSort = "toolbar"
@@ -231,6 +233,7 @@
             if (not (removeLegacyEndpointSettings())) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "LastSelection" settingsData.managerLastSelection)) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "LastTab" settingsData.managerLastTab)) do isSaved = false
+            if (not (ini.write settingsData.filePath "Manager" "FirstOpenCompleted" (if (settingsData.managerFirstOpenCompleted) then "true" else "false"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "Sort" settingsData.managerSort)) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "SortVersion" "2")) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "Filter" settingsData.managerFilter)) do isSaved = false

@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9">
+    <meta charset="utf-8">
+    <title>MaxPkg Runtime</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/typography.css">
+    <link rel="stylesheet" href="css/buttons.css">
+    <link rel="stylesheet" href="result-dialog.css">
+</head>
+<body id="resultBody" class="result-body status-success">
+    <div class="result-shell">
+        <div class="result-header clearfix">
+            <div class="result-logo">
+                <img src="icons/maxpkg-logo.svg" alt="MaxPkg">
+            </div>
+            <div class="result-brand">
+                <strong>MaxPkg Runtime</strong>
+                <span>Package management for Autodesk 3ds Max</span>
+            </div>
+        </div>
+
+        <div class="result-content">
+            <div class="result-accent"></div>
+            <h1 id="resultHeading">Installation complete</h1>
+            <p id="resultSummary" class="result-summary"></p>
+
+            <div class="result-meta clearfix">
+                <div class="result-meta-entry">
+                    <span>Version</span>
+                    <strong id="versionText"></strong>
+                </div>
+                <div class="result-meta-entry">
+                    <span>Startup</span>
+                    <strong id="startupText"></strong>
+                </div>
+            </div>
+
+            <div class="result-guide">
+                <h2 id="guideTitle"></h2>
+                <div class="quick-guide">
+                    <div class="quick-guide-entry is-expanded">
+                        <button class="quick-guide-toggle is-active" type="button" data-guide-toggle="guideStepOne" aria-expanded="true">
+                            <span class="quick-guide-number">1</span>
+                            <strong id="guideStepOneTitle"></strong>
+                            <img src="icons/chevron-down.svg" alt="">
+                        </button>
+                        <div id="guideStepOne" class="quick-guide-panel">
+                            <p id="guideStepOneContent"></p>
+                        </div>
+                    </div>
+                    <div class="quick-guide-entry">
+                        <button class="quick-guide-toggle" type="button" data-guide-toggle="guideStepTwo" aria-expanded="false">
+                            <span class="quick-guide-number">2</span>
+                            <strong id="guideStepTwoTitle"></strong>
+                            <img src="icons/chevron-down.svg" alt="">
+                        </button>
+                        <div id="guideStepTwo" class="quick-guide-panel is-hidden">
+                            <p id="guideStepTwoContent"></p>
+                        </div>
+                    </div>
+                    <div class="quick-guide-entry">
+                        <button class="quick-guide-toggle" type="button" data-guide-toggle="guideStepThree" aria-expanded="false">
+                            <span class="quick-guide-number">3</span>
+                            <strong id="guideStepThreeTitle"></strong>
+                            <img src="icons/chevron-down.svg" alt="">
+                        </button>
+                        <div id="guideStepThree" class="quick-guide-panel is-hidden">
+                            <p id="guideStepThreeContent"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-gratitude">
+                Thank you for choosing MaxPkg - spend less time managing scripts and more time creating.
+            </div>
+
+            <div class="result-footer clearfix">
+                <div class="result-links">
+                    <a href="https://maxpkg.dev">maxpkg.dev</a>
+                    <a href="https://3dground.net">3dground.net</a>
+                </div>
+                <div class="result-actions">
+                    <a id="primaryAction" class="button button-primary is-hidden" href="maxpkg://result/primary"></a>
+                    <a class="button" href="maxpkg://result/done">Done</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="result-dialog.js"></script>
+</body>
+</html>

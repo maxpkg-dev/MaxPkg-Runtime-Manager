@@ -54,12 +54,12 @@
         </div>
 
         <div class="tab-bar clearfix">
-            <button id="installedTab" class="tab-button is-active" type="button" data-tab="installed">Installed <span id="installedTabCount" class="tab-count">0</span></button>
-            <button id="discoverTab" class="tab-button" type="button" data-tab="discover">Discover</button>
+            <button id="discoverTab" class="tab-button is-active" type="button" data-tab="discover">Discover</button>
+            <button id="installedTab" class="tab-button" type="button" data-tab="installed">Installed <span id="installedTabCount" class="tab-count">0</span></button>
         </div>
 
         <div id="pageToolbar" class="page-toolbar clearfix">
-            <div id="installedTools">
+            <div id="installedTools" class="is-hidden">
                 <button class="filter-button is-active" type="button" data-filter="all">All</button>
                 <button class="filter-button" type="button" data-filter="updates">Updates</button>
                 <button class="filter-button" type="button" data-filter="toolbar">In toolbar</button>
@@ -76,7 +76,7 @@
                     </div>
                 </div>
             </div>
-            <div id="discoverTools" class="is-hidden"></div>
+            <div id="discoverTools"></div>
         </div>
 
         <div id="detailsNavigation" class="details-navigation is-hidden">
@@ -89,8 +89,8 @@
         </div>
 
         <div id="pageHost" class="page-host scroll-region">
-            <div id="installedPage" class="page"><div class="state-panel"><img class="state-icon" src="../common/icons/package.svg" alt=""><h2>Loading packages...</h2><p>Reading the current Runtime state.</p></div></div>
-            <div id="discoverPage" class="page is-hidden"></div>
+            <div id="discoverPage" class="page"><div class="state-panel"><img class="state-icon" src="../common/icons/search.svg" alt=""><h2>Loading Discover...</h2><p>Preparing the package catalog.</p></div></div>
+            <div id="installedPage" class="page is-hidden"></div>
             <div id="detailsPage" class="page is-hidden"></div>
         </div>
 
@@ -124,6 +124,7 @@
                     <button class="settings-nav-button" type="button" data-settings-page="developer">Developer</button>
                     <button id="endpointSettingsNavigation" class="settings-nav-button is-hidden" type="button" data-settings-page="endpoint">Endpoint</button>
                     <button class="settings-nav-button" type="button" data-settings-page="about">About</button>
+                    <button class="settings-nav-button settings-nav-danger" type="button" data-settings-page="uninstall">Uninstall</button>
                 </div>
                 <div class="settings-content scroll-region">
                     <div class="settings-page" data-settings-panel="general">
@@ -250,6 +251,30 @@
                             <p>Users can discover, install, run, update, and remove scripts in one place. Developers build and publish versioned tools with MaxPkg Packager&mdash;eliminating scattered installers, duplicate toolbar buttons, and inconsistent script versions across artists, workstations, and studios.</p>
                         </div>
                         <button id="copyRuntimeInfoButton" class="button" type="button">Copy Runtime info</button>
+                    </div>
+                    <div class="settings-page runtime-uninstall-page is-hidden" data-settings-panel="uninstall">
+                        <h3>Uninstall MaxPkg</h3>
+                        <p class="runtime-uninstall-summary">Remove MaxPkg Runtime, Manager, toolbar, startup entry, settings, and local Runtime files from this 3ds Max installation.</p>
+                        <div class="runtime-uninstall-note">
+                            <strong>Your scenes are safe.</strong>
+                            <span>Uninstalling MaxPkg does not modify your .max scene files. You can install MaxPkg again at any time.</span>
+                        </div>
+                        <ol class="runtime-uninstall-steps">
+                            <li>Save your current work.</li>
+                            <li>Click Uninstall MaxPkg and confirm the action.</li>
+                            <li>The Manager will close and a result window will appear when removal is finished.</li>
+                        </ol>
+                        <button id="showRuntimeUninstallConfirmationButton" class="button button-danger runtime-uninstall-button" type="button" data-action="request-runtime-uninstall">
+                            <img class="icon" src="../common/icons/trash-2.svg" alt="">Uninstall MaxPkg
+                        </button>
+                        <div id="runtimeUninstallConfirmation" class="runtime-uninstall-confirmation is-hidden">
+                            <strong>Uninstall MaxPkg now?</strong>
+                            <p>The Manager will close immediately. This action does not affect your scene files.</p>
+                            <button class="button" type="button" data-action="cancel-runtime-uninstall">Cancel</button>
+                            <a class="button button-danger" href="maxpkg://manager/uninstall-runtime" data-busy="Removing MaxPkg Runtime...">
+                                <img class="icon" src="../common/icons/trash-2.svg" alt="">Yes, uninstall MaxPkg
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
