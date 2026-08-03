@@ -547,7 +547,8 @@
             if (matchPattern commandPath pattern: "remote-details/*" ignoreCase: true) do (
                 local detailsResponse = owner.getRemotePackageDetails (commandArgument commandPath "remote-details/")
                 isSuccess = detailsResponse.success
-                if (not isSuccess) do notify (if (detailsResponse.errorMessage != "") then detailsResponse.errorMessage else "Could not load package details.") notificationType: "error"
+                local isManifestFallbackAllowed = boolParameter queryString "manifestFallback" defaultState: false
+                if (not isSuccess and not isManifestFallbackAllowed) do notify (if (detailsResponse.errorMessage != "") then detailsResponse.errorMessage else "Could not load package details.") notificationType: "error"
             )
             if (matchPattern commandPath pattern: "uninstall/*" ignoreCase: true) do (
                 local packageGuid = commandArgument commandPath "uninstall/"

@@ -111,7 +111,7 @@
         return targetPackage;
     }
 
-    function discoverDetailsPackage(remotePackage) {
+    function mergedDetailsPackage(remotePackage) {
         var installedPackage = installedPackageForGuid(remotePackage.guid);
         var mergedPackage;
         if (!installedPackage) {
@@ -184,16 +184,13 @@
 
     function findPackage(packageGuid) {
         var packageIndex;
-        if (activeTab === "discover" && currentState.remoteDetails && currentState.remoteDetails.guid.toLowerCase() === packageGuid.toLowerCase()) {
-            return discoverDetailsPackage(currentState.remoteDetails);
+        if (currentState.remoteDetails && currentState.remoteDetails.guid.toLowerCase() === packageGuid.toLowerCase()) {
+            return mergedDetailsPackage(currentState.remoteDetails);
         }
         for (packageIndex = 0; packageIndex < currentState.packages.length; packageIndex += 1) {
             if (currentState.packages[packageIndex].guid.toLowerCase() === packageGuid.toLowerCase()) {
                 return currentState.packages[packageIndex];
             }
-        }
-        if (currentState.remoteDetails && currentState.remoteDetails.guid.toLowerCase() === packageGuid.toLowerCase()) {
-            return discoverDetailsPackage(currentState.remoteDetails);
         }
         if (currentState.discover && currentState.discover.packages) {
             for (packageIndex = 0; packageIndex < currentState.discover.packages.length; packageIndex += 1) {
@@ -941,6 +938,11 @@
         if (packageInfo.toolbarVisible) {
             releaseBadges += "<span class='badge badge-success'>Toolbar</span>";
         }
+        if (packageInfo.detailsLoaded) {
+            releaseBadges += "<span class='badge badge-success' title='Showing current package information from the Runtime API'>Online info</span>";
+        } else if (!packageInfo.isRemote) {
+            releaseBadges += "<span class='badge badge-warning' title='Showing package information from local manifest.ini'>Offline info</span>";
+        }
         updateButton = packageInfo.updateAvailable ? "<a class='button details-action-button' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update to " + Common.escapeHtml(packageInfo.latestVersion) + "</a>" : "";
         actionMarkup = packageInfo.isRemote ?
             "<a class='button button-primary details-action-button' href='maxpkg://manager/install/" + Common.encode(packageInfo.guid) + "' data-busy='Installing package...'>" + icon("download") + "Install</a>" :
@@ -1013,11 +1015,9 @@
             activeScreenshotIndex = 0;
         }
         detailsGuid = packageGuid;
-        if (activeTab === "discover") {
-            Common.byId("busyMessage").innerHTML = "Loading package details...";
-            Common.removeClass(Common.byId("busyShade"), "is-hidden");
-            window.location.href = "maxpkg://manager/remote-details/" + Common.encode(packageGuid);
-        }
+        Common.byId("busyMessage").innerHTML = "Loading package details...";
+        Common.removeClass(Common.byId("busyShade"), "is-hidden");
+        window.location.href = "maxpkg://manager/remote-details/" + Common.encode(packageGuid) + "?manifestFallback=" + boolText(activeTab === "installed");
         Common.addClass(Common.byId("installedPage"), "is-hidden");
         Common.addClass(Common.byId("discoverPage"), "is-hidden");
         Common.removeClass(Common.byId("detailsPage"), "is-hidden");
