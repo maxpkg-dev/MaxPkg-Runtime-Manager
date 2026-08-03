@@ -158,28 +158,31 @@
         return "";
     }
 
-    function layoutHeader() {
-        var headerActions = Common.byId("headerActions");
-        var searchCell = Common.byId("searchCell");
-        var actionElements;
-        var actionIndex;
-        var actionStyle;
-        var actionWidth = 0;
-        if (!headerActions || !searchCell) {
-            return false;
+    function activeViewName() {
+        if (activeTab === "discover") {
+            return "discover";
         }
-        actionElements = headerActions.children;
-        for (actionIndex = 0; actionIndex < actionElements.length; actionIndex += 1) {
-            if (actionElements[actionIndex].offsetWidth > 0) {
-                actionStyle = actionElements[actionIndex].currentStyle;
-                actionWidth += actionElements[actionIndex].offsetWidth;
-                actionWidth += actionStyle ? parseInt(actionStyle.marginLeft, 10) || 0 : 0;
-                actionWidth += actionStyle ? parseInt(actionStyle.marginRight, 10) || 0 : 0;
-            }
+        if (activeFilter === "updates") {
+            return "updates";
         }
-        headerActions.style.width = actionWidth + "px";
-        searchCell.style.right = actionWidth + "px";
-        return true;
+        if (activeFilter === "toolbar") {
+            return "toolbar";
+        }
+        return "installed";
+    }
+
+    function updateSearchPlaceholder() {
+        var searchInput = Common.byId("searchInput");
+        var viewName = activeViewName();
+        var placeholderText = "Search installed packages";
+        if (viewName === "discover") {
+            placeholderText = "Search Discover";
+        } else if (viewName === "updates") {
+            placeholderText = "Search updates";
+        } else if (viewName === "toolbar") {
+            placeholderText = "Search toolbar packages";
+        }
+        searchInput.setAttribute("placeholder", placeholderText);
     }
 
     function findPackage(packageGuid) {
@@ -305,9 +308,11 @@
 
     function packageCard(packageInfo) {
         var badges = "<span class='badge'>" + Common.escapeHtml(packageInfo.runtime) + "</span>";
+        var isFullCard = !!currentState.settings.managerFullCards;
+        var packageDetailsContent = "";
         var updateAction = "";
         var dragHandle = "";
-        var cardClass = "card";
+        var cardClass = isFullCard ? "card" : "card card-compact";
         if (toolbarSortingEnabled()) {
             cardClass += " toolbar-sort-card";
             dragHandle = "<span class='toolbar-drag-handle' role='button' draggable='true' data-toolbar-drag='true' title='Drag to change Toolbar order'>" +
@@ -321,6 +326,10 @@
             updateAction = "<a class='button' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update</a> ";
         }
         badges += purchaseIndicator(packageInfo);
+        if (isFullCard) {
+            packageDetailsContent = "<p class='package-description'>" + Common.escapeHtml(packageDescriptionPreview(packageInfo.description)) + "</p>" +
+                "<div>" + badges + "</div>";
+        }
         return "<div class='" + cardClass + "' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
             dragHandle +
             "<div class='card-content clearfix'>" +
@@ -328,9 +337,7 @@
                     packageIcon(packageInfo, "package-icon", true) +
                     "<span class='package-heading'><span class='package-title ellipsis'>" + Common.escapeHtml(packageInfo.name) + "</span>" +
                     "<span class='package-meta ellipsis'>v" + Common.escapeHtml(packageInfo.version) + " &middot; " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</span></span>" +
-                "</button>" +
-                "<p class='package-description'>" + Common.escapeHtml(packageDescriptionPreview(packageInfo.description)) + "</p>" +
-                "<div>" + badges + "</div>" +
+                "</button>" + packageDetailsContent +
             "</div>" +
             "<div class='card-actions'>" + updateAction +
                 "<a class='button button-primary' href='maxpkg://manager/run/" + Common.encode(packageInfo.guid) + "' data-busy='Starting package...'>" + icon("play") + "Run</a>" +
@@ -939,7 +946,7 @@
             releaseBadges += "<span class='badge badge-success'>Toolbar</span>";
         }
         if (packageInfo.detailsLoaded) {
-            releaseBadges += "<span class='badge badge-success' title='Showing current package information from the Runtime API'>Online info</span>";
+            releaseBadges += "<span class='badge badge-success' title='Showing current package information from the maxpkg.dev'>Online info</span>";
         } else if (!packageInfo.isRemote) {
             releaseBadges += "<span class='badge badge-warning' title='Showing package information from local manifest.ini'>Offline info</span>";
         }
@@ -981,10 +988,19 @@
     function renderStatus() {
         var packageLabel = currentState.packages.length === 1 ? " package" : " packages";
         var updateLabel = currentState.updateCount === 1 ? " update" : " updates";
+        var toolbarPackageCount = 0;
+        var packageIndex;
+        for (packageIndex = 0; packageIndex < currentState.packages.length; packageIndex += 1) {
+            if (currentState.packages[packageIndex].toolbarVisible) {
+                toolbarPackageCount += 1;
+            }
+        }
         Common.byId("runtimeVersion").innerHTML = "Runtime " + Common.escapeHtml(currentState.runtimeVersion);
         Common.byId("footerVersion").innerHTML = "Runtime " + Common.escapeHtml(currentState.runtimeVersion);
         Common.byId("aboutVersion").innerHTML = "MaxPkg Runtime " + Common.escapeHtml(currentState.runtimeVersion);
         Common.byId("installedTabCount").innerHTML = currentState.packages.length;
+        Common.byId("updatesTabCount").innerHTML = currentState.updateCount;
+        Common.byId("toolbarTabCount").innerHTML = toolbarPackageCount;
         Common.byId("packageStatus").innerHTML = currentState.packages.length + packageLabel;
         Common.byId("updateStatus").innerHTML = currentState.updateCount + updateLabel;
         Common.byId("connectionStatus").innerHTML = currentState.connection === "online" ? "Online" : (currentState.connection === "configured" ? "Endpoint configured" : "Offline");
@@ -992,18 +1008,28 @@
         Common.toggleClass(Common.byId("updateAllButton"), "is-hidden", currentState.updateCount < 1);
     }
 
-    function showTab(tabName) {
+    function showTab(tabName, filterName) {
+        var viewName;
         activeTab = tabName === "discover" ? "discover" : "installed";
+        if (activeTab === "installed" && filterName) {
+            activeFilter = filterName === "updates" || filterName === "toolbar" ? filterName : "all";
+        }
+        if (activeFilter !== "updates" && activeFilter !== "toolbar") {
+            activeFilter = "all";
+        }
+        viewName = activeViewName();
         detailsGuid = "";
-        Common.toggleClass(Common.byId("installedTab"), "is-active", activeTab === "installed");
-        Common.toggleClass(Common.byId("discoverTab"), "is-active", activeTab === "discover");
+        Common.toggleClass(Common.byId("discoverTab"), "is-active", viewName === "discover");
+        Common.toggleClass(Common.byId("installedTab"), "is-active", viewName === "installed");
+        Common.toggleClass(Common.byId("updatesTab"), "is-active", viewName === "updates");
+        Common.toggleClass(Common.byId("toolbarTab"), "is-active", viewName === "toolbar");
         Common.toggleClass(Common.byId("installedPage"), "is-hidden", activeTab !== "installed");
         Common.toggleClass(Common.byId("discoverPage"), "is-hidden", activeTab !== "discover");
         Common.addClass(Common.byId("detailsPage"), "is-hidden");
         Common.toggleClass(Common.byId("installedTools"), "is-hidden", activeTab !== "installed");
-        Common.toggleClass(Common.byId("discoverTools"), "is-hidden", activeTab !== "discover");
         Common.removeClass(Common.byId("pageToolbar"), "is-hidden");
         Common.addClass(Common.byId("detailsNavigation"), "is-hidden");
+        updateSearchPlaceholder();
     }
 
     function showDetails(packageGuid) {
@@ -1042,7 +1068,6 @@
         } else {
             showTab(activeTab);
         }
-        layoutHeader();
         Common.addClass(Common.byId("busyShade"), "is-hidden");
     }
 
@@ -1125,19 +1150,6 @@
         window.MaxPkgDropdown.open(Common.byId("contextMenu"), sourceButton);
     }
 
-    function setFilter(filterName) {
-        var filterButtons = document.getElementsByTagName("button");
-        var buttonIndex;
-        activeFilter = filterName;
-        for (buttonIndex = 0; buttonIndex < filterButtons.length; buttonIndex += 1) {
-            if (filterButtons[buttonIndex].getAttribute("data-filter") !== null) {
-                Common.toggleClass(filterButtons[buttonIndex], "is-active", filterButtons[buttonIndex].getAttribute("data-filter") === activeFilter);
-            }
-        }
-        renderInstalled();
-        window.location.href = "maxpkg://manager/view?tab=" + Common.encode(activeTab) + "&filter=" + Common.encode(activeFilter) + "&sort=" + Common.encode(activeSort);
-    }
-
     function updateEndpointSettingsVisibility() {
         var developerModeEnabled = Common.byId("developerModeCheck").checked;
         Common.toggleClass(Common.byId("endpointSettingsNavigation"), "is-hidden", !developerModeEnabled);
@@ -1153,6 +1165,7 @@
         Common.byId("autoStartCheck").checked = !!settings.autoStart;
         Common.byId("openManagerCheck").checked = !!settings.openManagerOnStartup;
         Common.byId("notificationsCheck").checked = !!settings.notifications;
+        Common.byId("managerFullCardsCheck").checked = !!settings.managerFullCards;
         Common.byId("autoCheckPackagesCheck").checked = !!settings.autoCheckPackages;
         Common.byId("autoCheckRuntimeCheck").checked = !!settings.autoCheckRuntime;
         Common.byId("autoDownloadCheck").checked = !!settings.downloadUpdatesAutomatically;
@@ -1180,6 +1193,7 @@
         queryParts.push("autoStart=" + boolText(Common.byId("autoStartCheck").checked));
         queryParts.push("openManagerOnStartup=" + boolText(Common.byId("openManagerCheck").checked));
         queryParts.push("notifications=" + boolText(Common.byId("notificationsCheck").checked));
+        queryParts.push("managerFullCards=" + boolText(Common.byId("managerFullCardsCheck").checked));
         queryParts.push("autoCheckPackages=" + boolText(Common.byId("autoCheckPackagesCheck").checked));
         queryParts.push("autoCheckRuntime=" + boolText(Common.byId("autoCheckRuntimeCheck").checked));
         queryParts.push("downloadUpdatesAutomatically=" + boolText(Common.byId("autoDownloadCheck").checked));
@@ -1250,7 +1264,6 @@
         var sourceElement = Common.eventTarget(eventObject);
         var actionElement = Common.closestWithAttribute(sourceElement, "data-action");
         var tabElement = Common.closestWithAttribute(sourceElement, "data-tab");
-        var filterElement = Common.closestWithAttribute(sourceElement, "data-filter");
         var settingsPageElement = Common.closestWithAttribute(sourceElement, "data-settings-page");
         var busyElement = Common.closestWithAttribute(sourceElement, "data-busy");
         var actionName;
@@ -1259,16 +1272,13 @@
             Common.removeClass(Common.byId("busyShade"), "is-hidden");
         }
         if (tabElement) {
-            showTab(tabElement.getAttribute("data-tab"));
+            showTab(tabElement.getAttribute("data-tab"), tabElement.getAttribute("data-filter"));
             if (activeTab === "discover") {
                 requestCatalog(1);
             } else {
+                renderInstalled();
                 window.location.href = "maxpkg://manager/view?tab=" + Common.encode(activeTab) + "&filter=" + Common.encode(activeFilter) + "&sort=" + Common.encode(activeSort);
             }
-            return;
-        }
-        if (filterElement) {
-            setFilter(filterElement.getAttribute("data-filter"));
             return;
         }
         if (settingsPageElement) {
@@ -1354,7 +1364,6 @@
         Common.on(document, "dragover", handleToolbarDragOver);
         Common.on(document, "drop", handleToolbarDrop);
         Common.on(document, "dragend", handleToolbarDragEnd);
-        Common.on(window, "resize", layoutHeader);
         Common.on(searchInput, "keyup", queueSearch);
         Common.on(searchInput, "input", queueSearch);
         Common.on(searchInput, "propertychange", queueSearch);
@@ -1375,6 +1384,7 @@
         bindImmediateSettingsSave("autoStartCheck");
         bindImmediateSettingsSave("openManagerCheck");
         bindImmediateSettingsSave("notificationsCheck");
+        bindImmediateSettingsSave("managerFullCardsCheck");
         bindImmediateSettingsSave("autoCheckPackagesCheck");
         bindImmediateSettingsSave("autoCheckRuntimeCheck");
         bindImmediateSettingsSave("autoDownloadCheck");
@@ -1397,7 +1407,6 @@
                 showNotification("Runtime info copied.", "info");
             }
         });
-        layoutHeader();
         window.location.href = "maxpkg://manager/ready";
     }
 

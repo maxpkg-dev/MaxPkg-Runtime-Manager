@@ -24,6 +24,7 @@
         managerFirstOpenCompleted = false,
         managerSort = "toolbar",
         managerFilter = "all",
+        managerFullCards = false,
         managerPositionX = -1,
         managerPositionY = -1,
         managerWidth = 900,
@@ -182,6 +183,7 @@
                 settingsData.managerSort = ini.read settingsData.filePath "Manager" "Sort" defaultValue: "toolbar"
             )
             settingsData.managerFilter = ini.read settingsData.filePath "Manager" "Filter" defaultValue: "all"
+            settingsData.managerFullCards = utils.boolValue (ini.read settingsData.filePath "Manager" "FullCards" defaultValue: "false") defaultValue: false
             settingsData.managerPositionX = integerValue (ini.read settingsData.filePath "Manager" "PositionX" defaultValue: "-1") -1 "Manager.PositionX"
             settingsData.managerPositionY = integerValue (ini.read settingsData.filePath "Manager" "PositionY" defaultValue: "-1") -1 "Manager.PositionY"
             settingsData.managerWidth = integerValue (ini.read settingsData.filePath "Manager" "Width" defaultValue: "900") 900 "Manager.Width"
@@ -237,6 +239,7 @@
             if (not (ini.write settingsData.filePath "Manager" "Sort" settingsData.managerSort)) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "SortVersion" "2")) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "Filter" settingsData.managerFilter)) do isSaved = false
+            if (not (ini.write settingsData.filePath "Manager" "FullCards" (if (settingsData.managerFullCards) then "true" else "false"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "PositionX" (settingsData.managerPositionX as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "PositionY" (settingsData.managerPositionY as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "Width" (settingsData.managerWidth as string))) do isSaved = false

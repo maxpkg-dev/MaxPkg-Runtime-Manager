@@ -343,6 +343,7 @@
             settingsContent += "\"managerFirstOpenCompleted\":" + (boolJson settings.managerFirstOpenCompleted) + ","
             settingsContent += "\"managerSort\":" + (utils.jsonString settings.managerSort) + ","
             settingsContent += "\"managerFilter\":" + (utils.jsonString settings.managerFilter) + ","
+            settingsContent += "\"managerFullCards\":" + (boolJson settings.managerFullCards) + ","
             settingsContent += "\"language\":" + (utils.jsonString settings.language) + ","
             settingsContent += "\"autoStart\":" + (boolJson settings.autoStart) + ","
             settingsContent += "\"openManagerOnStartup\":" + (boolJson settings.openManagerOnStartup) + ","
@@ -458,6 +459,7 @@
             owner.settings.language = queryParameter queryString "language" defaultContent: owner.settings.language
             owner.settings.autoStart = boolParameter queryString "autoStart" defaultState: owner.settings.autoStart
             owner.settings.openManagerOnStartup = boolParameter queryString "openManagerOnStartup" defaultState: owner.settings.openManagerOnStartup
+            owner.settings.managerFullCards = boolParameter queryString "managerFullCards" defaultState: owner.settings.managerFullCards
             owner.settings.notifications = boolParameter queryString "notifications" defaultState: owner.settings.notifications
             owner.settings.autoCheckPackages = boolParameter queryString "autoCheckPackages" defaultState: owner.settings.autoCheckPackages
             owner.settings.autoCheckRuntime = boolParameter queryString "autoCheckRuntime" defaultState: owner.settings.autoCheckRuntime

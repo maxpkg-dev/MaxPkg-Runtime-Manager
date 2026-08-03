@@ -33,12 +33,6 @@
                         <span id="runtimeVersion">Runtime</span>
                     </div>
                 </div>
-                <div id="searchCell" class="search-cell">
-                    <div class="search-box">
-                        <img class="search-icon" src="../common/icons/search.svg" alt="">
-                        <input id="searchInput" type="text" autocomplete="off" placeholder="Search packages">
-                    </div>
-                </div>
                 <div id="headerActions" class="header-actions">
                     <a id="checkUpdatesButton" class="button" href="maxpkg://manager/check-updates" data-busy="Checking updates...">
                         <img class="icon" src="../common/icons/refresh-cw.svg" alt="">Check Updates
@@ -55,15 +49,21 @@
 
         <div class="tab-bar clearfix">
             <button id="discoverTab" class="tab-button is-active" type="button" data-tab="discover">Discover</button>
-            <button id="installedTab" class="tab-button" type="button" data-tab="installed">Installed <span id="installedTabCount" class="tab-count">0</span></button>
+            <button id="installedTab" class="tab-button" type="button" data-tab="installed" data-filter="all">Installed <span id="installedTabCount" class="tab-count">0</span></button>
+            <button id="updatesTab" class="tab-button" type="button" data-tab="installed" data-filter="updates">Updates <span id="updatesTabCount" class="tab-count">0</span></button>
+            <button id="toolbarTab" class="tab-button" type="button" data-tab="installed" data-filter="toolbar">In toolbar <span id="toolbarTabCount" class="tab-count">0</span></button>
         </div>
 
         <div id="pageToolbar" class="page-toolbar clearfix">
-            <div id="installedTools" class="is-hidden">
-                <button class="filter-button is-active" type="button" data-filter="all">All</button>
-                <button class="filter-button" type="button" data-filter="updates">Updates</button>
-                <button class="filter-button" type="button" data-filter="toolbar">In toolbar</button>
-                <div id="sortSelect" class="html-select sort-select" data-value="toolbar">
+            <div class="page-toolbar-layout">
+                <div class="page-search-cell">
+                    <div class="search-box">
+                        <img class="search-icon" src="../common/icons/search.svg" alt="">
+                        <input id="searchInput" type="text" autocomplete="off" placeholder="Search Discover">
+                    </div>
+                </div>
+                <div id="installedTools" class="page-sort-cell is-hidden">
+                    <div id="sortSelect" class="html-select sort-select" data-value="toolbar">
                     <button class="html-select-button" type="button" title="Sort installed packages" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger="true">
                         <span data-select-label="sortSelect">Toolbar order</span>
                         <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
@@ -76,7 +76,7 @@
                     </div>
                 </div>
             </div>
-            <div id="discoverTools"></div>
+            </div>
         </div>
 
         <div id="detailsNavigation" class="details-navigation is-hidden">
@@ -144,6 +144,7 @@
                         <label class="check-row"><input id="autoStartCheck" type="checkbox">Start Runtime with 3ds Max</label>
                         <label class="check-row"><input id="openManagerCheck" type="checkbox">Open Manager on startup</label>
                         <label class="check-row"><input id="notificationsCheck" type="checkbox">Show notifications</label>
+                        <label class="check-row"><input id="managerFullCardsCheck" type="checkbox">Show full package cards in Installed views</label>
                     </div>
                     <div class="settings-page is-hidden" data-settings-panel="updates">
                         <h3>Updates</h3>
