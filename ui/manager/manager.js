@@ -435,7 +435,7 @@
         draggedToolbarGrid = packageCardElement.parentNode;
         draggedToolbarOriginalNextSibling = packageCardElement.nextSibling;
         toolbarDropPlaceholder = document.createElement("div");
-        toolbarDropPlaceholder.className = "card toolbar-drop-placeholder";
+        toolbarDropPlaceholder.className = "card toolbar-drop-placeholder" + (Common.hasClass(packageCardElement, "card-compact") ? " card-compact" : "");
         toolbarDropPlaceholder.innerHTML = "<span>Drop here</span>";
         draggedToolbarGrid.insertBefore(toolbarDropPlaceholder, packageCardElement);
         if (eventObject.dataTransfer) {

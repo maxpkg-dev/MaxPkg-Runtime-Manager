@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+- Fixed: Drag-and-drop placeholder now matches the size of compact Installed cards.
+
 ## 1.0.2
 
 - Added: Setting to switch Installed package views between compact and full cards.
