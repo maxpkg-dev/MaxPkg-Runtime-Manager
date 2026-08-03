@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4
+
+- Fixed: Automatic Runtime updates can now replace existing and read-only Runtime files.
+
 ## 1.0.3
 
 - Fixed: Drag-and-drop placeholder now matches the size of compact Installed cards.

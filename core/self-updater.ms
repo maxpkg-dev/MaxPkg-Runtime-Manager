@@ -139,6 +139,17 @@
             return true
         ),
 
+        fn replaceRuntimeFile sourceFilePath targetFilePath = (
+            if (not (doesFileExist sourceFilePath)) do throw ("Runtime update source file does not exist: " + sourceFilePath)
+            local targetFolderPath = getFilenamePath targetFilePath
+            if (not (makeDir targetFolderPath all: true)) do throw ("Could not create Runtime update folder: " + targetFolderPath)
+            if (not (utils.makeFileWritable targetFilePath)) do throw ("Could not make Runtime file writable: " + targetFilePath)
+            local fileClass = dotNetClass "System.IO.File"
+            fileClass.Copy sourceFilePath targetFilePath true
+            if (not (doesFileExist targetFilePath)) do throw ("Could not replace Runtime file: " + targetFilePath)
+            return true
+        ),
+
         fn copyRuntimeTree sourceRoot targetRoot = (
             local normalizedSourceRoot = utils.ensureSlash sourceRoot
             local normalizedTargetRoot = utils.ensureSlash targetRoot
@@ -151,9 +162,7 @@
                     local relativeFilePath = substring sourceFilePath (normalizedSourceRoot.count + 1) (sourceFilePath.count - normalizedSourceRoot.count)
                     if (shouldCopyRelativeFile relativeFilePath) do (
                         local targetFilePath = normalizedTargetRoot + relativeFilePath
-                        makeDir (getFilenamePath targetFilePath) all: true
-                        utils.makeFileWritable targetFilePath
-                        if (not (copyFile sourceFilePath targetFilePath)) do throw ("Could not copy " + relativeFilePath)
+                        replaceRuntimeFile sourceFilePath targetFilePath
                     )
                 )
                 return true

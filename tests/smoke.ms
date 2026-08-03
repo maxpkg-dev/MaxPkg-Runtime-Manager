@@ -13,6 +13,8 @@
     local resultDialogModule = fileIn (runtimeRoot + @"ui\common\result-dialog.ms")
     local repositoryModule = fileIn (runtimeRoot + @"core\repository.ms")
     local installerModule = fileIn (runtimeRoot + @"core\installer.ms")
+    local loggerModule = fileIn (runtimeRoot + @"core\logger.ms")
+    local selfUpdaterModule = fileIn (runtimeRoot + @"core\self-updater.ms")
     if (resultDialogModule == undefined) do throw "Reusable Runtime result dialog module is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.html"))) do throw "Runtime result dialog HTML is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.css"))) do throw "Runtime result dialog styles are unavailable."
@@ -40,6 +42,18 @@
     setFileAttribute deleteTestFilePath #readOnly true
     if (not (utilsModule.writeText deleteTestFilePath "After")) do throw "Read-only file overwrite failed."
     if ((utilsModule.readText deleteTestFilePath) != "After") do throw "Read-only file overwrite produced unexpected content."
+    local updateCopySourceRoot = deleteTestRoot + @"update-source\"
+    local updateCopyTargetRoot = deleteTestRoot + @"update-target\"
+    local updateCopySourceFilePath = updateCopySourceRoot + "startup.ms"
+    local updateCopyTargetFilePath = updateCopyTargetRoot + "startup.ms"
+    if (not (utilsModule.writeText updateCopySourceFilePath "Updated Runtime")) do throw "Could not create the Runtime update source file."
+    if (not (utilsModule.writeText updateCopyTargetFilePath "Previous Runtime")) do throw "Could not create the Runtime update target file."
+    setFileAttribute updateCopyTargetFilePath #readOnly true
+    loggerModule.initialize deleteTestRoot
+    selfUpdaterModule.utils = utilsModule
+    selfUpdaterModule.logger = loggerModule
+    if (not (selfUpdaterModule.copyRuntimeTree updateCopySourceRoot updateCopyTargetRoot)) do throw "Runtime update could not overwrite an existing file."
+    if ((utilsModule.readText updateCopyTargetFilePath) != "Updated Runtime") do throw "Runtime update produced unexpected file content."
     deleteTestStream = createFile deleteTestFilePath
     if (deleteTestStream == undefined) do throw "Could not recreate the read-only deletion test file."
     format "MaxPkg" to: deleteTestStream
