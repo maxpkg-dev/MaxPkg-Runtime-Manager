@@ -261,6 +261,7 @@
             packageContent += "\"homepageUrl\":" + (utils.jsonString packageInfo.homepageUrl) + ","
             packageContent += "\"supportUrl\":" + (utils.jsonString packageInfo.supportUrl) + ","
             packageContent += "\"purchaseUrl\":" + (utils.jsonString (optionalString packageInfo #purchaseUrl)) + ","
+            packageContent += "\"purchaseButtonLabel\":" + (utils.jsonString (optionalString packageInfo #purchaseButtonLabel)) + ","
             packageContent += "\"licenseType\":" + (utils.jsonString packageInfo.licenseType) + ","
             packageContent += "\"licenseUrl\":" + (utils.jsonString packageInfo.licenseUrl) + ","
             packageContent += "\"releaseChannel\":" + (utils.jsonString packageInfo.releaseChannel) + ","

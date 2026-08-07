@@ -273,13 +273,18 @@
         return "<span class='badge badge-purchase' title='Purchase required'>" + icon("shopping-cart") + "</span>";
     }
 
+    function purchaseActionLabel(packageInfo) {
+        var buttonLabel = String(packageInfo.purchaseButtonLabel || "").replace(/^\s+|\s+$/g, "");
+        return buttonLabel || "Buy";
+    }
+
     function purchaseNotice(packageInfo) {
         if (!packageInfo.purchaseUrl) {
             return "";
         }
         return "<div class='purchase-details-notice'>" +
             "<p class='purchase-notice-copy'>This script requires purchase. maxpkg does not process payments or take responsibility for purchases. Payment is handled by the developer. Read the documentation for full purchase details.</p>" +
-            "<div class='purchase-notice-action'><a class='button button-purchase purchase-notice-button' href='maxpkg://manager/package-link/" + Common.encode(packageInfo.guid) + "?kind=purchase'>" + icon("external-link") + "Buy</a></div>" +
+            "<div class='purchase-notice-action'><a class='button button-purchase purchase-notice-button' href='maxpkg://manager/package-link/" + Common.encode(packageInfo.guid) + "?kind=purchase'>" + icon("external-link") + Common.escapeHtml(purchaseActionLabel(packageInfo)) + "</a></div>" +
         "</div>";
     }
 

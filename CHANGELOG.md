@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.5
+
+- Added: Purchase buttons now use the action label selected by the package developer.
+
 ## 1.0.4
 
 - Fixed: Automatic Runtime updates can now replace existing and read-only Runtime files.

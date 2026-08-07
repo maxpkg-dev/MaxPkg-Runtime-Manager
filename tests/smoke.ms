@@ -12,6 +12,7 @@
     local iniModule = fileIn (runtimeRoot + @"core\ini.ms")
     local resultDialogModule = fileIn (runtimeRoot + @"ui\common\result-dialog.ms")
     local repositoryModule = fileIn (runtimeRoot + @"core\repository.ms")
+    local scannerModule = fileIn (runtimeRoot + @"core\scanner.ms")
     local installerModule = fileIn (runtimeRoot + @"core\installer.ms")
     local loggerModule = fileIn (runtimeRoot + @"core\logger.ms")
     local selfUpdaterModule = fileIn (runtimeRoot + @"core\self-updater.ms")
@@ -63,7 +64,7 @@
     local apiTestFilePath = (utilsModule.ensureSlash (getDir #temp)) + "maxpkg-api-response-" + deleteTestId + ".ini"
     local apiTestStream = createFile apiTestFilePath
     if (apiTestStream == undefined) do throw "Could not create the Runtime API parser test file."
-    format "[Catalog]\nPage=1\nPageSize=24\nTotal=1\nTotalPages=1\n\n[test-package-guid]\nGuid=test-package-guid\nSlug=test-package\nName=Test Package\nVersion=1.2.3\nDescription=Line one\\nLine two\nMin3dsMax=2012\nMax3dsMax=2026\nPurchaseUrl=https://developer.example/buy\nDownloadUrl=https://maxpkg.dev/api/runtime/v1/download/package/test-package-guid/1.2.3\n" to: apiTestStream
+    format "[Catalog]\nPage=1\nPageSize=24\nTotal=1\nTotalPages=1\n\n[test-package-guid]\nGuid=test-package-guid\nSlug=test-package\nName=Test Package\nVersion=1.2.3\nDescription=Line one\\nLine two\nMin3dsMax=2012\nMax3dsMax=2026\nPurchaseUrl=https://developer.example/buy\nPurchaseButtonLabel=Get license\nDownloadUrl=https://maxpkg.dev/api/runtime/v1/download/package/test-package-guid/1.2.3\n" to: apiTestStream
     close apiTestStream
     repositoryModule.ini = iniModule
     repositoryModule.utils = utilsModule
@@ -71,10 +72,22 @@
     if (not parsedApiResponse.success or parsedApiResponse.packages.count != 1) do throw "Runtime API catalog response parsing failed."
     if (parsedApiResponse.packageInfo.description != "Line one\r\nLine two") do throw "Runtime API escaped newline parsing failed."
     if (parsedApiResponse.packageInfo.purchaseUrl != "https://developer.example/buy") do throw "Runtime API PurchaseUrl parsing failed."
+    if (parsedApiResponse.packageInfo.purchaseButtonLabel != "Get license") do throw "Runtime API PurchaseButtonLabel parsing failed."
     if (parsedApiResponse.packageInfo.downloadUrl == "") do throw "Runtime API DownloadUrl parsing failed."
     local compatibleApiResponse = repositoryModule.enforceMinimum3dsMax parsedApiResponse requireCompatiblePackage: true
     if (not compatibleApiResponse.success or compatibleApiResponse.packages.count != 1) do throw "Maximum 3ds Max version incorrectly restricted package compatibility."
     utilsModule.forceDeleteFile apiTestFilePath
+    local manifestTestFilePath = (utilsModule.ensureSlash (getDir #temp)) + "maxpkg-manifest-" + deleteTestId + ".ini"
+    local manifestTestStream = createFile manifestTestFilePath
+    if (manifestTestStream == undefined) do throw "Could not create the manifest parser test file."
+    format "[package]\npackageGuid=test-package-guid\nname=Test Package\nversion=1.2.3\nruntime=MaxScript\nentry=test.ms\npurchase=https://developer.example/buy\npurchaseButtonLabel=Support\n" to: manifestTestStream
+    close manifestTestStream
+    scannerModule.ini = iniModule
+    scannerModule.utils = utilsModule
+    scannerModule.logger = loggerModule
+    local parsedManifestPackage = scannerModule.packageFromManifest manifestTestFilePath
+    if (parsedManifestPackage.purchaseButtonLabel != "Support") do throw "Manifest purchaseButtonLabel parsing failed."
+    utilsModule.forceDeleteFile manifestTestFilePath
     if (not (fileIn startupFile)) do throw "Initial Runtime startup failed."
     if (MaxPkg == undefined) do throw "MaxPkg global was not created."
     if (maxpkg != MaxPkg) do throw "Lowercase maxpkg did not resolve to the MaxPkg global."

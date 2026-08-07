@@ -32,6 +32,7 @@
         homepageUrl = "",
         supportUrl = "",
         purchaseUrl = "",
+        purchaseButtonLabel = "",
         licenseType = "",
         licenseUrl = "",
         releaseChannel = "",
@@ -239,6 +240,7 @@
             packageInfo.homepageUrl = ini.readAny apiResponseFilePath iniSection #("Homepage", "HomepageUrl", "homepage", "homepageUrl")
             packageInfo.supportUrl = ini.readAny apiResponseFilePath iniSection #("Support", "SupportUrl", "support", "supportUrl")
             packageInfo.purchaseUrl = ini.readAny apiResponseFilePath iniSection #("PurchaseUrl", "purchaseUrl", "Purchase", "purchase")
+            packageInfo.purchaseButtonLabel = ini.readAny apiResponseFilePath iniSection #("PurchaseButtonLabel", "purchaseButtonLabel")
             packageInfo.licenseType = ini.readAny apiResponseFilePath iniSection #("License", "LicenseType", "license")
             packageInfo.licenseUrl = ini.readAny apiResponseFilePath iniSection #("LicenseUrl", "licenseUrl")
             packageInfo.releaseChannel = ini.readAny apiResponseFilePath iniSection #("Channel", "ReleaseChannel", "releaseChannel") defaultValue: "stable"

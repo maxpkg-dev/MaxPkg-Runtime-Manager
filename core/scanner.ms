@@ -22,6 +22,7 @@
         homepageUrl = "",
         supportUrl = "",
         purchaseUrl = "",
+        purchaseButtonLabel = "Buy",
         licenseType = "",
         licenseUrl = "",
         releaseChannel = "",
@@ -86,6 +87,7 @@
             package.homepageUrl = ini.readAny manifestPath iniSection #("homepage", "Homepage", "homepageUrl") defaultValue: ""
             package.supportUrl = ini.readAny manifestPath iniSection #("support", "Support", "supportUrl") defaultValue: ""
             package.purchaseUrl = ini.readAny manifestPath iniSection #("purchase", "Purchase", "purchaseUrl", "PurchaseUrl") defaultValue: ""
+            package.purchaseButtonLabel = ini.readAny manifestPath iniSection #("purchaseButtonLabel", "PurchaseButtonLabel") defaultValue: "Buy"
             package.licenseType = ini.readAny manifestPath iniSection #("license", "License") defaultValue: ""
             package.licenseUrl = ini.readAny manifestPath iniSection #("licenseUrl", "LicenseUrl") defaultValue: ""
             package.releaseChannel = ini.readAny manifestPath iniSection #("releaseChannel", "ReleaseChannel") defaultValue: "stable"
