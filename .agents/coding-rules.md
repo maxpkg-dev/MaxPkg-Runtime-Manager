@@ -219,6 +219,14 @@ for packageIndex in 1 to packages.count do (
 )
 ```
 
+## Arrays
+
+- Do not use the mapped MaxScript `copy` function to clone an array. For an
+  empty array it can return `OK` instead of another array.
+- Clone arrays explicitly by creating `#()` and appending each source entry.
+- Validate persisted collection values before iterating them and recover with
+  an empty array when their type is invalid.
+
 ## Strings
 
 - Never use `format` for string concatenation.

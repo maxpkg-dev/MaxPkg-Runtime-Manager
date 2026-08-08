@@ -102,6 +102,9 @@
     if (not (isProperty MaxPkg.settings #managerFullCards)) do throw "Manager full-card setting is unavailable."
     if (MaxPkg.settings.toolbarDockPosition != "top" and MaxPkg.settings.toolbarDockPosition != "bottom") do throw "Toolbar dock position is invalid."
     if (not (isProperty MaxPkg.settings #apiEndpoint)) do throw "API endpoint setting is unavailable."
+    MaxPkg.settings.toolbarOrder = #()
+    if (not (MaxPkg.resetToolbarOrder())) do throw "Empty toolbar order could not be synchronized."
+    if ((classOf MaxPkg.settings.toolbarOrder) != Array) do throw "Toolbar order synchronization did not preserve an array."
     local runtimeStatus = MaxPkg.getStatus()
     if (runtimeStatus.connection != "configured") do throw "Default API endpoint fallback is unavailable."
     if ((classOf (MaxPkg.getPackages())) != Array) do throw "MaxPkg.getPackages() did not return an array."

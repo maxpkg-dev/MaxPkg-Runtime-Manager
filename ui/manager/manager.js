@@ -20,6 +20,7 @@
     };
     var activeTab = "discover";
     var activeFilter = "all";
+    var toolbarVisibilityFilter = "all";
     var activeSort = "toolbar";
     var searchText = "";
     var detailsGuid = "";
@@ -165,9 +166,6 @@
         if (activeFilter === "updates") {
             return "updates";
         }
-        if (activeFilter === "toolbar") {
-            return "toolbar";
-        }
         return "installed";
     }
 
@@ -179,10 +177,34 @@
             placeholderText = "Search Discover";
         } else if (viewName === "updates") {
             placeholderText = "Search updates";
-        } else if (viewName === "toolbar") {
-            placeholderText = "Search toolbar packages";
         }
         searchInput.setAttribute("placeholder", placeholderText);
+    }
+
+    function readManagerFilter(filterContent) {
+        var normalizedFilter = String(filterContent || "all").toLowerCase();
+        activeFilter = normalizedFilter.indexOf("updates") === 0 ? "updates" : "all";
+        if (normalizedFilter.indexOf("hidden") >= 0) {
+            toolbarVisibilityFilter = "hidden";
+        } else if (normalizedFilter.indexOf("toolbar") >= 0) {
+            toolbarVisibilityFilter = "toolbar";
+        } else {
+            toolbarVisibilityFilter = "all";
+        }
+    }
+
+    function managerFilterContent() {
+        if (activeFilter === "updates" && toolbarVisibilityFilter !== "all") {
+            return "updates-" + toolbarVisibilityFilter;
+        }
+        if (activeFilter === "updates") {
+            return "updates";
+        }
+        return toolbarVisibilityFilter;
+    }
+
+    function saveManagerView() {
+        window.location.href = "maxpkg://manager/view?tab=" + Common.encode(activeTab) + "&filter=" + Common.encode(managerFilterContent()) + "&sort=" + Common.encode(activeSort);
     }
 
     function findPackage(packageGuid) {
@@ -250,20 +272,32 @@
         return 0;
     }
 
-    function toolbarOrderIndex(packageGuid) {
-        var toolbarOrder = currentState.settings.toolbarOrder || [];
+    function packageGuidIndex(packageGuids, packageGuid) {
         var normalizedGuid = String(packageGuid || "").toLowerCase();
         var orderIndex;
-        for (orderIndex = 0; orderIndex < toolbarOrder.length; orderIndex += 1) {
-            if (String(toolbarOrder[orderIndex] || "").toLowerCase() === normalizedGuid) {
+        for (orderIndex = 0; orderIndex < packageGuids.length; orderIndex += 1) {
+            if (String(packageGuids[orderIndex] || "").toLowerCase() === normalizedGuid) {
                 return orderIndex;
             }
         }
-        return toolbarOrder.length;
+        return -1;
+    }
+
+    function toolbarOrderIndex(packageGuid) {
+        var toolbarOrder = currentState.settings.toolbarOrder || [];
+        var orderIndex = packageGuidIndex(toolbarOrder, packageGuid);
+        return orderIndex < 0 ? toolbarOrder.length : orderIndex;
     }
 
     function toolbarSortingEnabled() {
-        return activeSort === "toolbar" && activeFilter === "all" && !searchText;
+        return activeSort === "toolbar" && !searchText;
+    }
+
+    function toolbarHiddenIndicator(packageInfo) {
+        if (!packageInfo || packageInfo.toolbarVisible !== false) {
+            return "";
+        }
+        return "<span class='toolbar-hidden-indicator' title='Hidden from toolbar'>" + icon("eye-off") + "</span>";
     }
 
     function purchaseIndicator(packageInfo) {
@@ -302,7 +336,10 @@
             if (activeFilter === "updates" && !packageInfo.updateAvailable) {
                 continue;
             }
-            if (activeFilter === "toolbar" && !packageInfo.toolbarVisible) {
+            if (toolbarVisibilityFilter === "toolbar" && !packageInfo.toolbarVisible) {
+                continue;
+            }
+            if (toolbarVisibilityFilter === "hidden" && packageInfo.toolbarVisible) {
                 continue;
             }
             filteredPackages.push(packageInfo);
@@ -341,7 +378,7 @@
                 "<button class='package-summary clearfix' type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "' title='Open package details'>" +
                     packageIcon(packageInfo, "package-icon", true) +
                     "<span class='package-heading'><span class='package-title ellipsis'>" + Common.escapeHtml(packageInfo.name) + "</span>" +
-                    "<span class='package-meta ellipsis'>v" + Common.escapeHtml(packageInfo.version) + " &middot; " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</span></span>" +
+                    "<span class='package-meta ellipsis'>" + toolbarHiddenIndicator(packageInfo) + "v" + Common.escapeHtml(packageInfo.version) + " &middot; " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</span></span>" +
                 "</button>" + packageDetailsContent +
             "</div>" +
             "<div class='card-actions'>" + updateAction +
@@ -381,18 +418,51 @@
 
     function toolbarOrderFromGrid(cardGrid) {
         var orderedGuids = [];
+        var visibleGuidLookup = {};
+        var savedToolbarOrder = currentState.settings.toolbarOrder || [];
+        var mergedGuids = [];
         var childElement = cardGrid.firstChild;
         var packageGuid;
+        var normalizedGuid;
+        var orderIndex;
+        var visibleOrderIndex = 0;
+        var packageIndex;
         while (childElement) {
             if (childElement.nodeType === 1 && childElement.getAttribute) {
                 packageGuid = childElement.getAttribute("data-package-guid");
                 if (packageGuid) {
                     orderedGuids.push(packageGuid);
+                    visibleGuidLookup["guid:" + String(packageGuid).toLowerCase()] = true;
                 }
             }
             childElement = childElement.nextSibling;
         }
-        return orderedGuids;
+        if (activeFilter === "all" && toolbarVisibilityFilter === "all") {
+            return orderedGuids;
+        }
+        for (orderIndex = 0; orderIndex < savedToolbarOrder.length; orderIndex += 1) {
+            packageGuid = savedToolbarOrder[orderIndex];
+            normalizedGuid = "guid:" + String(packageGuid || "").toLowerCase();
+            if (visibleGuidLookup[normalizedGuid]) {
+                if (visibleOrderIndex < orderedGuids.length) {
+                    mergedGuids.push(orderedGuids[visibleOrderIndex]);
+                    visibleOrderIndex += 1;
+                }
+            } else {
+                mergedGuids.push(packageGuid);
+            }
+        }
+        while (visibleOrderIndex < orderedGuids.length) {
+            mergedGuids.push(orderedGuids[visibleOrderIndex]);
+            visibleOrderIndex += 1;
+        }
+        for (packageIndex = 0; packageIndex < currentState.packages.length; packageIndex += 1) {
+            packageGuid = currentState.packages[packageIndex].guid;
+            if (packageGuidIndex(mergedGuids, packageGuid) < 0) {
+                mergedGuids.push(packageGuid);
+            }
+        }
+        return mergedGuids;
     }
 
     function finishToolbarDrag(shouldSave) {
@@ -539,8 +609,10 @@
         var badges = "";
         var resolvedPackage = findPackage(packageInfo.guid);
         var installAction = "<a class='button button-primary' href='maxpkg://manager/install/" + Common.encode(packageInfo.guid) + "' data-busy='Installing package...'>" + icon("download") + "Install</a>";
+        var toolbarIndicator = "";
         if (resolvedPackage && !resolvedPackage.isRemote) {
             installAction = "<button class='button' type='button' disabled='disabled'>" + icon("check") + "Installed</button>";
+            toolbarIndicator = toolbarHiddenIndicator(resolvedPackage);
         }
         if (packageInfo.runtime) {
             badges += "<span class='badge'>" + Common.escapeHtml(packageInfo.runtime) + "</span>";
@@ -554,7 +626,7 @@
                 "<button class='package-summary clearfix' type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "' title='Open package details'>" +
                     packageIcon(packageInfo, "package-icon", true) +
                     "<span class='package-heading'><span class='package-title ellipsis'>" + Common.escapeHtml(packageInfo.name) + "</span>" +
-                    "<span class='package-meta ellipsis'>v" + Common.escapeHtml(packageInfo.version) + " &middot; " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</span></span>" +
+                    "<span class='package-meta ellipsis'>" + toolbarIndicator + "v" + Common.escapeHtml(packageInfo.version) + " &middot; " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</span></span>" +
                 "</button>" +
                 "<p class='package-description'>" + Common.escapeHtml(packageDescriptionPreview(packageInfo.description)) + "</p>" +
                 "<div>" + badges + "</div>" +
@@ -993,19 +1065,11 @@
     function renderStatus() {
         var packageLabel = currentState.packages.length === 1 ? " package" : " packages";
         var updateLabel = currentState.updateCount === 1 ? " update" : " updates";
-        var toolbarPackageCount = 0;
-        var packageIndex;
-        for (packageIndex = 0; packageIndex < currentState.packages.length; packageIndex += 1) {
-            if (currentState.packages[packageIndex].toolbarVisible) {
-                toolbarPackageCount += 1;
-            }
-        }
         Common.byId("runtimeVersion").innerHTML = "Runtime " + Common.escapeHtml(currentState.runtimeVersion);
         Common.byId("footerVersion").innerHTML = "Runtime " + Common.escapeHtml(currentState.runtimeVersion);
         Common.byId("aboutVersion").innerHTML = "MaxPkg Runtime " + Common.escapeHtml(currentState.runtimeVersion);
         Common.byId("installedTabCount").innerHTML = currentState.packages.length;
         Common.byId("updatesTabCount").innerHTML = currentState.updateCount;
-        Common.byId("toolbarTabCount").innerHTML = toolbarPackageCount;
         Common.byId("packageStatus").innerHTML = currentState.packages.length + packageLabel;
         Common.byId("updateStatus").innerHTML = currentState.updateCount + updateLabel;
         Common.byId("connectionStatus").innerHTML = currentState.connection === "online" ? "Online" : (currentState.connection === "configured" ? "Endpoint configured" : "Offline");
@@ -1013,13 +1077,24 @@
         Common.toggleClass(Common.byId("updateAllButton"), "is-hidden", currentState.updateCount < 1);
     }
 
+    function updateInstalledToolsState() {
+        var hasActiveFilter = toolbarVisibilityFilter !== "all";
+        var hasCustomSort = activeSort !== "toolbar";
+        window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarFilterSelect"), toolbarVisibilityFilter);
+        window.MaxPkgDropdown.setSelectValue(Common.byId("sortSelect"), activeSort);
+        Common.toggleClass(Common.byId("toolbarFilterControl"), "has-active-filter", hasActiveFilter);
+        Common.toggleClass(Common.byId("clearToolbarFilterButton"), "is-hidden", !hasActiveFilter);
+        Common.toggleClass(Common.byId("sortControl"), "has-custom-sort", hasCustomSort);
+        Common.toggleClass(Common.byId("clearSortButton"), "is-hidden", !hasCustomSort);
+    }
+
     function showTab(tabName, filterName) {
         var viewName;
         activeTab = tabName === "discover" ? "discover" : "installed";
         if (activeTab === "installed" && filterName) {
-            activeFilter = filterName === "updates" || filterName === "toolbar" ? filterName : "all";
+            activeFilter = filterName === "updates" ? "updates" : "all";
         }
-        if (activeFilter !== "updates" && activeFilter !== "toolbar") {
+        if (activeFilter !== "updates") {
             activeFilter = "all";
         }
         viewName = activeViewName();
@@ -1027,13 +1102,13 @@
         Common.toggleClass(Common.byId("discoverTab"), "is-active", viewName === "discover");
         Common.toggleClass(Common.byId("installedTab"), "is-active", viewName === "installed");
         Common.toggleClass(Common.byId("updatesTab"), "is-active", viewName === "updates");
-        Common.toggleClass(Common.byId("toolbarTab"), "is-active", viewName === "toolbar");
         Common.toggleClass(Common.byId("installedPage"), "is-hidden", activeTab !== "installed");
         Common.toggleClass(Common.byId("discoverPage"), "is-hidden", activeTab !== "discover");
         Common.addClass(Common.byId("detailsPage"), "is-hidden");
         Common.toggleClass(Common.byId("installedTools"), "is-hidden", activeTab !== "installed");
         Common.removeClass(Common.byId("pageToolbar"), "is-hidden");
         Common.addClass(Common.byId("detailsNavigation"), "is-hidden");
+        updateInstalledToolsState();
         updateSearchPlaceholder();
     }
 
@@ -1082,7 +1157,7 @@
         try {
             currentState = JSON.parse(sourceText);
             activeTab = currentState.settings.managerLastTab || activeTab;
-            activeFilter = currentState.settings.managerFilter || activeFilter;
+            readManagerFilter(currentState.settings.managerFilter || "all");
             activeSort = currentState.settings.managerSort || activeSort;
             window.MaxPkgDropdown.setSelectValue(Common.byId("sortSelect"), activeSort);
             renderAll();
@@ -1130,6 +1205,7 @@
 
     function openPackageMenu(sourceButton, packageGuid) {
         var packageInfo = findPackage(packageGuid);
+        var developerModeEnabled = !!currentState.settings.developerMode;
         var toolbarLabel;
         var menuHtml;
         if (!packageInfo) {
@@ -1140,16 +1216,20 @@
         if (packageInfo.updateAvailable) {
             menuHtml += "<a href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>Update</a>";
         }
-        menuHtml += "<button type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "'>Details</button>" +
-            "<a href='maxpkg://manager/open-folder/" + Common.encode(packageInfo.guid) + "'>Open Folder</a>";
+        menuHtml += "<button type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "'>Details</button>";
+        if (developerModeEnabled) {
+            menuHtml += "<a href='maxpkg://manager/open-folder/" + Common.encode(packageInfo.guid) + "'>Open Folder</a>";
+        }
         if (packageInfo.helpUrl) {
             menuHtml += "<a href='maxpkg://manager/help/" + Common.encode(packageInfo.guid) + "'>Help</a>";
         }
-        menuHtml += "<a href='maxpkg://manager/toggle-package-toolbar/" + Common.encode(packageInfo.guid) + "'>" + toolbarLabel + "</a>" +
-            "<div class='context-separator'></div>" +
-            "<button type='button' data-action='copy' data-copy='" + Common.escapeHtml(packageInfo.guid) + "'>Copy GUID</button>" +
-            "<button type='button' data-action='copy' data-copy='" + Common.escapeHtml(packageInfo.installPath) + "'>Copy Path</button>" +
-            "<div class='context-separator'></div>" +
+        menuHtml += "<a href='maxpkg://manager/toggle-package-toolbar/" + Common.encode(packageInfo.guid) + "'>" + toolbarLabel + "</a>";
+        if (developerModeEnabled) {
+            menuHtml += "<div class='context-separator'></div>" +
+                "<button type='button' data-action='copy' data-copy='" + Common.escapeHtml(packageInfo.guid) + "'>Copy GUID</button>" +
+                "<button type='button' data-action='copy' data-copy='" + Common.escapeHtml(packageInfo.installPath) + "'>Copy Path</button>";
+        }
+        menuHtml += "<div class='context-separator'></div>" +
             "<a class='context-danger' href='maxpkg://manager/uninstall/" + Common.encode(packageInfo.guid) + "' data-busy='Uninstalling package...'>" + icon("trash-2") + "Uninstall</a>";
         Common.byId("contextMenu").innerHTML = menuHtml;
         window.MaxPkgDropdown.open(Common.byId("contextMenu"), sourceButton);
@@ -1282,7 +1362,7 @@
                 requestCatalog(1);
             } else {
                 renderInstalled();
-                window.location.href = "maxpkg://manager/view?tab=" + Common.encode(activeTab) + "&filter=" + Common.encode(activeFilter) + "&sort=" + Common.encode(activeSort);
+                saveManagerView();
             }
             return;
         }
@@ -1335,6 +1415,20 @@
                 showNotification("Clipboard is unavailable.", "error");
             }
             window.MaxPkgDropdown.close();
+        } else if (actionName === "clear-toolbar-filter") {
+            Common.preventDefault(eventObject);
+            toolbarVisibilityFilter = "all";
+            window.MaxPkgDropdown.close();
+            updateInstalledToolsState();
+            renderInstalled();
+            saveManagerView();
+        } else if (actionName === "clear-sort") {
+            Common.preventDefault(eventObject);
+            activeSort = "toolbar";
+            window.MaxPkgDropdown.close();
+            updateInstalledToolsState();
+            renderInstalled();
+            saveManagerView();
         } else if (actionName === "request-runtime-uninstall") {
             Common.preventDefault(eventObject);
             showRuntimeUninstallConfirmation(true);
@@ -1375,10 +1469,17 @@
         Common.on(searchInput, "paste", queueSearch);
         Common.on(searchInput, "cut", queueSearch);
         window.setInterval(queueSearch, 200);
+        window.MaxPkgDropdown.bindSelect(Common.byId("toolbarFilterSelect"), function (selectedValue) {
+            toolbarVisibilityFilter = selectedValue === "toolbar" || selectedValue === "hidden" ? selectedValue : "all";
+            updateInstalledToolsState();
+            renderInstalled();
+            saveManagerView();
+        });
         window.MaxPkgDropdown.bindSelect(Common.byId("sortSelect"), function (selectedValue) {
             activeSort = selectedValue;
+            updateInstalledToolsState();
             renderInstalled();
-            window.location.href = "maxpkg://manager/view?tab=" + Common.encode(activeTab) + "&filter=" + Common.encode(activeFilter) + "&sort=" + Common.encode(activeSort);
+            saveManagerView();
         });
         window.MaxPkgDropdown.bindSelect(Common.byId("languageSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("frequencySelect"), saveSettings);
@@ -1397,6 +1498,7 @@
         bindImmediateSettingsSave("debugLoggingCheck");
         bindTextSettingsSave("apiEndpointInput");
         Common.on(Common.byId("developerModeCheck"), "change", function () {
+            currentState.settings.developerMode = Common.byId("developerModeCheck").checked;
             updateEndpointSettingsVisibility();
             saveSettings();
         });

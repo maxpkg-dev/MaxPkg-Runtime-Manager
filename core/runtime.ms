@@ -121,6 +121,13 @@
             )
         ),
 
+        fn cloneArrayValues sourceValues = (
+            local clonedValues = #()
+            if ((classOf sourceValues) != Array) do return clonedValues
+            for sourceEntry in sourceValues do append clonedValues sourceEntry
+            return clonedValues
+        ),
+
         fn packageGuidExists packageGuids packageGuid = (
             for existingGuid in packageGuids where (toLower existingGuid) == (toLower packageGuid) do return true
             return false
@@ -136,7 +143,7 @@
 
         fn synchronizeToolbarOrder = (
             if (settings == undefined) do return false
-            local previousToolbarOrder = copy settings.toolbarOrder
+            local previousToolbarOrder = cloneArrayValues settings.toolbarOrder
             local normalizedToolbarOrder = #()
             for savedGuid in previousToolbarOrder do (
                 local savedPackage = apiModule.resolve packages savedGuid
@@ -326,7 +333,7 @@
         fn setToolbarVisible packageReference isVisible = (
             local resolvedPackage = apiModule.resolve packages packageReference
             if (resolvedPackage == undefined) do return false
-            local previousHiddenPackages = copy settings.hiddenPackages
+            local previousHiddenPackages = cloneArrayValues settings.hiddenPackages
             local hiddenPackageIndex = 0
             for hiddenIndex in 1 to settings.hiddenPackages.count do (
                 if ((toLower settings.hiddenPackages[hiddenIndex]) == (toLower resolvedPackage.guid)) do hiddenPackageIndex = hiddenIndex
@@ -347,7 +354,7 @@
         ),
 
         fn resetToolbarOrder = (
-            local previousToolbarOrder = copy settings.toolbarOrder
+            local previousToolbarOrder = cloneArrayValues settings.toolbarOrder
             settings.toolbarOrder = #()
             for packageInfo in packages do append settings.toolbarOrder packageInfo.guid
             if (not (settingsModule.save())) do (
@@ -362,7 +369,7 @@
 
         fn setToolbarOrder requestedPackageGuids = (
             if ((classOf requestedPackageGuids) != Array) do return false
-            local previousToolbarOrder = copy settings.toolbarOrder
+            local previousToolbarOrder = cloneArrayValues settings.toolbarOrder
             local reorderedGuids = #()
             for requestedGuid in requestedPackageGuids do (
                 local resolvedPackage = apiModule.resolve packages requestedGuid

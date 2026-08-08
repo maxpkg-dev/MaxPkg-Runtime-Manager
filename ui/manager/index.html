@@ -51,7 +51,6 @@
             <button id="discoverTab" class="tab-button is-active" type="button" data-tab="discover">Discover</button>
             <button id="installedTab" class="tab-button" type="button" data-tab="installed" data-filter="all">Installed <span id="installedTabCount" class="tab-count">0</span></button>
             <button id="updatesTab" class="tab-button" type="button" data-tab="installed" data-filter="updates">Updates <span id="updatesTabCount" class="tab-count">0</span></button>
-            <button id="toolbarTab" class="tab-button" type="button" data-tab="installed" data-filter="toolbar">In toolbar <span id="toolbarTabCount" class="tab-count">0</span></button>
         </div>
 
         <div id="pageToolbar" class="page-toolbar clearfix">
@@ -62,20 +61,41 @@
                         <input id="searchInput" type="text" autocomplete="off" placeholder="Search Discover">
                     </div>
                 </div>
-                <div id="installedTools" class="page-sort-cell is-hidden">
-                    <div id="sortSelect" class="html-select sort-select" data-value="toolbar">
-                    <button class="html-select-button" type="button" title="Sort installed packages" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger="true">
-                        <span data-select-label="sortSelect">Toolbar order</span>
-                        <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
-                    </button>
-                    <div class="html-select-menu is-hidden" data-dropdown-width="source">
-                        <button type="button" data-dropdown-option="toolbar">Toolbar order</button>
-                        <button type="button" data-dropdown-option="name">Name</button>
-                        <button type="button" data-dropdown-option="developer">Developer</button>
-                        <button type="button" data-dropdown-option="version">Version</button>
+                <div id="installedTools" class="page-tools-cell is-hidden">
+                    <div id="toolbarFilterControl" class="toolbar-filter-control">
+                        <div id="toolbarFilterSelect" class="html-select toolbar-filter-select" data-value="all">
+                            <button class="html-select-button" type="button" title="Filter installed packages" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger="true">
+                                <span data-select-label="toolbarFilterSelect">All</span>
+                                <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                            </button>
+                            <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                <button type="button" data-dropdown-option="all">All</button>
+                                <button type="button" data-dropdown-option="toolbar">In toolbar</button>
+                                <button type="button" data-dropdown-option="hidden">Hidden</button>
+                            </div>
+                        </div>
+                        <button id="clearToolbarFilterButton" class="toolbar-filter-clear is-hidden" type="button" title="Clear filter" data-action="clear-toolbar-filter">
+                            <img src="../common/icons/x.svg" alt="Clear filter">
+                        </button>
+                    </div>
+                    <div id="sortControl" class="sort-control">
+                        <div id="sortSelect" class="html-select sort-select" data-value="toolbar">
+                            <button class="html-select-button" type="button" title="Sort installed packages" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger="true">
+                                <span data-select-label="sortSelect">Toolbar order</span>
+                                <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                            </button>
+                            <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                <button type="button" data-dropdown-option="toolbar">Toolbar order</button>
+                                <button type="button" data-dropdown-option="name">Name</button>
+                                <button type="button" data-dropdown-option="developer">Developer</button>
+                                <button type="button" data-dropdown-option="version">Version</button>
+                            </div>
+                        </div>
+                        <button id="clearSortButton" class="sort-clear is-hidden" type="button" title="Reset sorting" data-action="clear-sort">
+                            <img src="../common/icons/x.svg" alt="Reset sorting">
+                        </button>
                     </div>
                 </div>
-            </div>
             </div>
         </div>
 

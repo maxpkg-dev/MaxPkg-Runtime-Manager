@@ -204,7 +204,7 @@
 }
 
 .page-search-cell,
-.page-sort-cell {
+.page-tools-cell {
     display: table-cell;
     height: 31px;
     vertical-align: top;
@@ -222,15 +222,88 @@
     top: 7px;
 }
 
-.page-sort-cell {
-    width: 165px;
+.page-tools-cell {
+    width: 320px;
     padding-left: 15px;
+    white-space: nowrap;
+}
+
+.toolbar-filter-control {
+    position: relative;
+    display: inline-block;
+    width: 145px;
+    height: 30px;
+    vertical-align: top;
+}
+
+.toolbar-filter-select {
+    width: 145px;
+    height: 30px;
+}
+
+.toolbar-filter-select .html-select-button {
+    height: 30px;
+}
+
+.toolbar-filter-clear,
+.sort-clear {
+    position: absolute;
+    z-index: 3;
+    top: 3px;
+    right: 25px;
+    width: 24px;
+    height: 24px;
+    padding: 5px;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.toolbar-filter-clear:hover,
+.toolbar-filter-clear:focus,
+.sort-clear:hover,
+.sort-clear:focus {
+    background: #4a5e84;
+    outline: none;
+}
+
+.toolbar-filter-clear img,
+.sort-clear img {
+    display: block;
+    width: 14px;
+    height: 14px;
+}
+
+.toolbar-filter-control.has-active-filter .toolbar-filter-select .html-select-button {
+    padding-right: 56px;
+}
+
+.toolbar-filter-control.has-active-filter .html-select-button,
+.sort-control.has-custom-sort .html-select-button {
+    border-color: #6689d2;
+    background: #34435e;
+    box-shadow: inset 0 0 0 1px #40577f;
+}
+
+.sort-control {
+    position: relative;
+    display: inline-block;
+    width: 150px;
+    height: 30px;
+    margin-left: 10px;
+    vertical-align: top;
+}
+
+.sort-control.has-custom-sort .sort-select .html-select-button {
+    padding-right: 56px;
 }
 
 .sort-select {
-    float: none;
+    display: inline-block;
     width: 150px;
     height: 30px;
+    vertical-align: top;
 }
 
 .sort-select .html-select-button {
@@ -341,6 +414,21 @@
     display: block;
     color: #9299a5;
     font-size: 11px;
+}
+
+.toolbar-hidden-indicator {
+    display: inline-block;
+    height: 14px;
+    margin-right: 5px;
+    vertical-align: -3px;
+    opacity: .8;
+}
+
+.toolbar-hidden-indicator .icon {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    vertical-align: 0;
 }
 
 .package-description {

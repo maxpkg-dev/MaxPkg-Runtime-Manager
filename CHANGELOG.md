@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.6
+
+- Added: Installed packages can now be filtered by toolbar visibility using All, In toolbar, and Hidden options.
+- Added: Hidden packages now display a crossed-out eye indicator on their cards.
+- Fixed: Toolbar order and visibility settings no longer fail when their saved lists are empty.
+- Changed: Active filters and custom sorting are highlighted and can be reset with a single click.
+- Changed: Drag-and-drop toolbar ordering now works in Installed, Updates, and filtered package views while preserving the position of other packages.
+- Changed: Open Folder, Copy GUID, and Copy Path actions are now shown only in Developer mode.
+
 ## 1.0.5
 
 - Added: Purchase buttons now use the action label selected by the package developer.
