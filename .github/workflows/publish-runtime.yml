@@ -1,0 +1,82 @@
+name: Publish MaxPkg Runtime Manager
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Runtime version from version.ini
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-maxpkg-runtime
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build and publish Runtime
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Require the main branch
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "Releases must be published from the main branch."
+            exit 1
+          fi
+
+      - name: Validate release target
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          RELEASE_TAG="v${RELEASE_VERSION}"
+
+          if gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "GitHub Release ${RELEASE_TAG} already exists."
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "Git tag ${RELEASE_TAG} already exists."
+            exit 1
+          fi
+
+      - name: Build and validate MZP
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          python .github/scripts/build_mzp.py \
+            --root . \
+            --manifest .github/mzp-files.txt \
+            --output dist/MaxPkg-Runtime-Manager.mzp \
+            --version "${RELEASE_VERSION}" \
+            --changelog CHANGELOG.md \
+            --notes-output dist/release-notes.md
+
+      - name: Create GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          gh release create "v${RELEASE_VERSION}" \
+            dist/MaxPkg-Runtime-Manager.mzp \
+            dist/MaxPkg-Runtime-Manager.sha256 \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "MaxPkg Runtime Manager ${RELEASE_VERSION}" \
+            --notes-file dist/release-notes.md \
+            --latest

@@ -50,6 +50,23 @@
         )
     )
 
+    fn clearFolderReadOnly folderPath = (
+        local normalizedFolderPath = ensureSlash folderPath
+        if (normalizedFolderPath == "" or not (doesDirectoryExist normalizedFolderPath)) do return true
+        local isWritable = true
+        try (
+            local directoryClass = dotNetClass "System.IO.Directory"
+            local searchOption = dotNetClass "System.IO.SearchOption"
+            local existingFiles = directoryClass.GetFiles normalizedFolderPath "*" searchOption.AllDirectories
+            for existingFile in existingFiles do (
+                if (not (makeFileWritable existingFile)) do isWritable = false
+            )
+        ) catch (
+            isWritable = false
+        )
+        return isWritable
+    )
+
     fn replaceFile sourceFilePath targetFilePath = (
         if (not (doesFileExist sourceFilePath)) do throw ("Runtime source file does not exist:\n" + sourceFilePath)
         local targetFolder = getFilenamePath targetFilePath
@@ -78,6 +95,7 @@
         local stream = undefined
         try (
             makeDir (getFilenamePath shimPath) all: true
+            if (not (clearFolderReadOnly (getFilenamePath shimPath))) do return false
             if (not (forceDeleteFile shimPath)) do return false
             stream = createFile shimPath
             if (stream == undefined) do return false
@@ -162,7 +180,8 @@
     local sourceFile = getSourceFileName()
     if (sourceFile == undefined or sourceFile == "") do sourceFile = getThisScriptFileName()
     local sourceRoot = ensureSlash (getFilenamePath sourceFile)
-    local targetRoot = ensureSlash ((getDir #userScripts) + @"\MaxPkg Runtime")
+    local temporaryRoot = ensureSlash (getDir #temp)
+    local targetRoot = if (temporaryRoot != "") then temporaryRoot + @"MaxPkg-Runtime-Manager\" else ""
     local startupFolder = ensureSlash (getDir #userStartupScripts)
     local shimPath = startupFolder + "maxpkg-runtime-startup.ms"
     local resultDialogModule = undefined
@@ -181,6 +200,7 @@
     )
 
     try (
+        if (targetRoot == "") do throw "The 3ds Max temporary folder is unavailable."
         if ((toLower sourceRoot) == (toLower targetRoot)) do throw "Runtime cannot be installed over its source folder."
         if (MaxPkg != undefined and isProperty MaxPkg #shutdown) do (
             try (

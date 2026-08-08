@@ -1,0 +1,10 @@
+# Files and directories included in MaxPkg-Runtime-Manager.mzp.
+# Keep this list explicit: everything not listed here is excluded.
+
+mzp.run
+install.ms
+startup.ms
+uninstall.ms
+version.ini
+core/
+ui/

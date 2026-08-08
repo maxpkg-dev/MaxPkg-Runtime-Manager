@@ -1,0 +1,7 @@
+name "MaxPkg Runtime Manager"
+description "Package management for Autodesk 3ds Max"
+
+run "install.ms"
+drop "install.ms"
+
+clear temp on MAX exit

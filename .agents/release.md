@@ -90,3 +90,53 @@ When the user asks to prepare a release:
    results.
 6. Show the prepared version and changelog summary to the user for review.
 7. Stop without committing, tagging, or pushing.
+
+## Publishing The Prepared Release
+
+- The user reviews, commits, and pushes the prepared release to `main`.
+- The user starts publication by running the root `publish-release.bat` file.
+- Do not run `publish-release.bat` unless the user explicitly asks to publish
+  the already reviewed release.
+- The batch file must read the version from `version.ini`, require Y/N
+  confirmation, reject dirty or unpushed repositories, and reject an existing
+  GitHub Release or tag with the same version.
+- Publication is performed by the manual GitHub Actions workflow. It builds
+  `MaxPkg-Runtime-Manager.mzp` from `.github/mzp-files.txt`, validates the
+  archive, creates the version tag and GitHub Release, and uploads the MZP and
+  SHA-256 checksum.
+- `publish-release.bat`, repository settings, tests, logs, internal rules, and
+  GitHub workflow files must never be included in the MZP archive.
+
+### First-Time Setup
+
+GitHub CLI is required to start the release workflow from
+`publish-release.bat`.
+
+1. Install GitHub CLI:
+
+   ```bat
+   winget install --id GitHub.cli
+   ```
+
+2. Sign in to GitHub once:
+
+   ```bat
+   gh auth login
+   ```
+
+### Publishing A Release
+
+After Codex has prepared the version and changelog, and the user has reviewed
+the changes:
+
+1. Commit all prepared release changes.
+2. Push the commit to the `main` branch.
+3. Run `publish-release.bat` from the repository root.
+4. Review the version and release information shown by the script.
+5. Press `Y` to confirm publication.
+6. Follow the GitHub Actions page opened by the script until the workflow
+   finishes successfully.
+
+The batch file will stop without publishing if the working tree is dirty, the
+local commit has not been pushed to `main`, or the same version already has a
+GitHub tag or Release.

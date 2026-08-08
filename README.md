@@ -30,11 +30,9 @@ not installed yet, it is installed automatically at the same time.
 
 If you prefer to install MaxPkg before choosing a script:
 
-1. Download the archive from the
-   [MaxPkg Runtime repository](https://github.com/maxpkg-dev/runtime).
-2. Extract all files from the archive.
-3. In 3ds Max, choose `Scripting > Run Script`.
-4. Select `install.ms`.
+1. Download `MaxPkg-Runtime-Manager.mzp` from the
+   [latest release](https://github.com/maxpkg-dev/runtime/releases/latest).
+2. Drag the downloaded file into a 3ds Max viewport.
 
 MaxPkg will start automatically the next time you open 3ds Max.
 
@@ -120,8 +118,7 @@ When you install or remove a script from MAXScript Listener, MaxPkg shows a
 small Windows notification instead of interrupting your work with another
 dialog.
 
-To remove MaxPkg Runtime itself, run `uninstall.ms` from the installed
-`MaxPkg Runtime` folder.
+To remove MaxPkg Runtime itself, open `Settings > Uninstall` in the Manager.
 
 ## Requirements
 

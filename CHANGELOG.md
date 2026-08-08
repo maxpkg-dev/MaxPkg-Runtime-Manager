@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.7
+
+- Added: MaxPkg Runtime Manager can now be downloaded and installed as a single MZP package.
+- Changed: Manual installation now starts by dragging the downloaded MZP into a 3ds Max viewport.
+- Changed: Runtime files are now kept in the 3ds Max temporary MaxPkg-Runtime-Manager folder instead of the user scripts folder.
+
 ## 1.0.6
 
 - Added: Installed packages can now be filtered by toolbar visibility using All, In toolbar, and Hidden options.

@@ -64,8 +64,8 @@
         )
     )
 
-    local userScriptsRoot = ensureSlash (getDir #userScripts)
-    local runtimeRoot = userScriptsRoot + @"MaxPkg Runtime\"
+    local temporaryRoot = ensureSlash (getDir #temp)
+    local runtimeRoot = if (temporaryRoot != "") then temporaryRoot + @"MaxPkg-Runtime-Manager\" else ""
     local startupShimPath = (ensureSlash (getDir #userStartupScripts)) + "maxpkg-runtime-startup.ms"
     local userMacrosRoot = ensureSlash (getDir #userMacros)
     local managerMacroPaths = #(
@@ -99,12 +99,11 @@
         if (not (forceDeleteFile managerMacroPath)) do isSuccess = false
     )
     if (not (forceDeleteFile startupShimPath)) do isSuccess = false
-    if (userScriptsRoot == "" or (toLower runtimeRoot) == (toLower userScriptsRoot)) then (
+    if (temporaryRoot == "" or (toLower runtimeRoot) == (toLower temporaryRoot)) then (
         isSuccess = false
     ) else if (not (forceDeleteFolder runtimeRoot)) then (
         isSuccess = false
     )
-
     if (resultDialogModule != undefined) then (
         local dialogInfo = resultDialogModule.createDialogData()
         dialogInfo.windowTitle = "MaxPkg Runtime Removal"

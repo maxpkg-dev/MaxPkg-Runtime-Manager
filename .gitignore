@@ -4,3 +4,4 @@ data/update-response.ini
 data/api-response.ini
 logs/*.log
 tests/*.log
+/dist/
