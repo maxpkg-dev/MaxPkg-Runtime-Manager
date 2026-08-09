@@ -20,7 +20,7 @@
             try (
                 local systemIconsClass = dotNetClass "System.Drawing.SystemIcons"
                 notificationIcon = dotNetObject "System.Windows.Forms.NotifyIcon"
-                notificationIcon.Icon = systemIconsClass.Application
+                notificationIcon.Icon = systemIconsClass.Information
                 notificationIcon.Text = "MaxPkg"
                 notificationTimer = dotNetObject "System.Windows.Forms.Timer"
                 notificationTimer.Interval = 6500
@@ -39,8 +39,10 @@
             local displayContent = notificationContent as string
             if (displayContent.count > 240) do displayContent = (substring displayContent 1 237) + "..."
             try (
+                local systemIconsClass = dotNetClass "System.Drawing.SystemIcons"
                 local tooltipIconClass = dotNetClass "System.Windows.Forms.ToolTipIcon"
                 notificationTimer.Stop()
+                notificationIcon.Icon = if (isError) then systemIconsClass.Error else systemIconsClass.Information
                 notificationIcon.BalloonTipTitle = notificationTitle
                 notificationIcon.BalloonTipText = displayContent
                 notificationIcon.BalloonTipIcon = if (isError) then tooltipIconClass.Error else tooltipIconClass.Info

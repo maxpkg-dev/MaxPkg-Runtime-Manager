@@ -15,6 +15,7 @@
     local scannerModule = fileIn (runtimeRoot + @"core\scanner.ms")
     local installerModule = fileIn (runtimeRoot + @"core\installer.ms")
     local loggerModule = fileIn (runtimeRoot + @"core\logger.ms")
+    local notifierModule = fileIn (runtimeRoot + @"core\notifier.ms")
     local selfUpdaterModule = fileIn (runtimeRoot + @"core\self-updater.ms")
     if (resultDialogModule == undefined) do throw "Reusable Runtime result dialog module is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.html"))) do throw "Runtime result dialog HTML is unavailable."
@@ -51,6 +52,10 @@
     if (not (utilsModule.writeText updateCopyTargetFilePath "Previous Runtime")) do throw "Could not create the Runtime update target file."
     setFileAttribute updateCopyTargetFilePath #readOnly true
     loggerModule.initialize deleteTestRoot
+    notifierModule.logger = loggerModule
+    if (not (notifierModule.initialize())) do throw "Runtime notifier could not be initialized."
+    if (notifierModule.notificationIcon == undefined or notifierModule.notificationIcon.Icon == undefined) do throw "The notification information icon could not be loaded."
+    if (not (notifierModule.shutdown())) do throw "Runtime notifier could not be released."
     selfUpdaterModule.utils = utilsModule
     selfUpdaterModule.logger = loggerModule
     if (not (selfUpdaterModule.copyRuntimeTree updateCopySourceRoot updateCopyTargetRoot)) do throw "Runtime update could not overwrite an existing file."
