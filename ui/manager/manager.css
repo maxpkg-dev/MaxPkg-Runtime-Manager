@@ -432,15 +432,13 @@
 }
 
 .package-description {
-    display: -webkit-box;
+    display: block;
     height: 90px;
     margin: 10px 0 8px;
     overflow: hidden;
     color: #b4bac4;
     font-size: 12px;
     line-height: 18px;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 5;
 }
 
 .card.card-compact {

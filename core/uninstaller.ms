@@ -65,6 +65,8 @@
                 userMacrosRoot + "maxpkg-" + package.guid + ".mcr",
                 userMacrosRoot + "MaxPkg-" + macroName + ".mcr"
             )
+            local generatedMacroFilePaths = try (getFiles (userMacrosRoot + "maxpkg-" + package.guid + "-*.mcr")) catch(#())
+            for generatedMacroFilePath in generatedMacroFilePaths do appendIfUnique macroFilePaths generatedMacroFilePath
             local iconFilePath = userIconsRoot + package.guid + ".svg"
             local isRemoved = true
             for macroFilePath in macroFilePaths do (
@@ -79,6 +81,40 @@
             return isRemoved
         ),
 
+        fn maxScriptStringLiteral sourceContent = (
+            local literalContent = sourceContent as string
+            literalContent = substituteString literalContent "\\" "\\\\"
+            literalContent = substituteString literalContent "\"" "\\\""
+            return "\"" + literalContent + "\""
+        ),
+
+        fn removePackageQuadMenu package = (
+            local helperFilePath = (utils.ensureSlash package.installPath) + "maxpkg-quad.ms"
+            local startupFilePath = (utils.ensureSlash (getDir #userStartupScripts)) + "maxpkg-" + package.guid + "-quad-startup.ms"
+            local isQuadMenuRemoved = true
+
+            if (doesFileExist helperFilePath) do (
+                try (
+                    fileIn helperFilePath
+                    local commandContent = "(MaxPkgQuadMenuManagerData packageFolder: " + (maxScriptStringLiteral package.installPath) + ").uninstall()"
+                    isQuadMenuRemoved = (execute commandContent) == true
+                ) catch (
+                    logger.logError "uninstaller" ("Quad Menu cleanup failed for " + package.guid + ": " + getCurrentException())
+                    isQuadMenuRemoved = false
+                )
+            )
+
+            if (not isQuadMenuRemoved) do (
+                logger.logError "uninstaller" ("Could not remove package Quad Menu commands: " + package.guid)
+                return false
+            )
+            if (not (utils.forceDeleteFile startupFilePath)) do (
+                logger.logError "uninstaller" ("Could not remove package Quad Menu startup script: " + startupFilePath)
+                return false
+            )
+            return true
+        ),
+
         fn uninstall package = (
             if (package == undefined) do return false
             if (not (operations.begin "uninstall" packageGuid: package.guid)) do return false
@@ -86,6 +122,7 @@
             try (
                 isSuccess = isSafePackageFolder package
                 if (isSuccess) do isSuccess = runHook package
+                if (isSuccess) do isSuccess = removePackageQuadMenu package
                 if (isSuccess) do (
                     local isMacroRemoved = removePackageMacro package
                     local isFolderRemoved = removeFolder package

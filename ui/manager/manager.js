@@ -28,6 +28,7 @@
     var activeScreenshotIndex = 0;
     var detailsListScrollTop = 0;
     var settingsSaveTimer = null;
+    var descriptionResizeTimer = null;
     var draggedToolbarCard = null;
     var draggedToolbarGrid = null;
     var toolbarDropPlaceholder = null;
@@ -48,6 +49,73 @@
             return normalizedText;
         }
         return normalizedText.substring(0, maxLength - 3).replace(/\s+$/g, "") + "...";
+    }
+
+    function packageDescriptionHtml(descriptionText) {
+        var previewText = packageDescriptionPreview(descriptionText);
+        var escapedPreviewText = Common.escapeHtml(previewText);
+        return "<p class='package-description' data-preview-text='" + escapedPreviewText + "'>" + escapedPreviewText + "</p>";
+    }
+
+    function fittedDescriptionText(sourceText, characterCount) {
+        var fittedText = sourceText.substring(0, characterCount).replace(/\s+$/g, "");
+        return fittedText + "...";
+    }
+
+    function truncatePackageDescription(descriptionElement) {
+        var previewText = descriptionElement.getAttribute("data-preview-text") || "";
+        var sourceText;
+        var lowerBound;
+        var upperBound;
+        var middleIndex;
+        var fittedLength = 0;
+        var fittedText;
+        var lastSpaceIndex;
+        descriptionElement.innerText = previewText;
+        if (descriptionElement.clientHeight <= 0 || descriptionElement.scrollHeight <= descriptionElement.clientHeight) {
+            return;
+        }
+
+        sourceText = previewText.replace(/\.\.\.$/, "");
+        lowerBound = 0;
+        upperBound = sourceText.length;
+        while (lowerBound <= upperBound) {
+            middleIndex = Math.floor((lowerBound + upperBound) / 2);
+            descriptionElement.innerText = fittedDescriptionText(sourceText, middleIndex);
+            if (descriptionElement.scrollHeight <= descriptionElement.clientHeight) {
+                fittedLength = middleIndex;
+                lowerBound = middleIndex + 1;
+            } else {
+                upperBound = middleIndex - 1;
+            }
+        }
+
+        fittedText = sourceText.substring(0, fittedLength).replace(/\s+$/g, "");
+        lastSpaceIndex = fittedText.lastIndexOf(" ");
+        if (fittedLength < sourceText.length && fittedLength > 0 &&
+                sourceText.charAt(fittedLength) !== " " && sourceText.charAt(fittedLength - 1) !== " " &&
+                lastSpaceIndex > 0) {
+            fittedText = fittedText.substring(0, lastSpaceIndex).replace(/\s+$/g, "");
+        }
+        descriptionElement.innerText = fittedText + "...";
+    }
+
+    function truncatePackageDescriptions() {
+        var descriptionElements = document.querySelectorAll(".package-description");
+        var descriptionIndex;
+        for (descriptionIndex = 0; descriptionIndex < descriptionElements.length; descriptionIndex += 1) {
+            truncatePackageDescription(descriptionElements[descriptionIndex]);
+        }
+    }
+
+    function schedulePackageDescriptionTruncation() {
+        if (descriptionResizeTimer !== null) {
+            window.clearTimeout(descriptionResizeTimer);
+        }
+        descriptionResizeTimer = window.setTimeout(function () {
+            descriptionResizeTimer = null;
+            truncatePackageDescriptions();
+        }, 0);
     }
 
     function safeHttpImageUrl(sourceUrl) {
@@ -369,7 +437,7 @@
         }
         badges += purchaseIndicator(packageInfo);
         if (isFullCard) {
-            packageDetailsContent = "<p class='package-description'>" + Common.escapeHtml(packageDescriptionPreview(packageInfo.description)) + "</p>" +
+            packageDetailsContent = packageDescriptionHtml(packageInfo.description) +
                 "<div>" + badges + "</div>";
         }
         return "<div class='" + cardClass + "' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
@@ -403,6 +471,7 @@
             packageCards.push(packageCard(packages[packageIndex]));
         }
         Common.byId("installedPage").innerHTML = packageCards.length ? "<div class='card-grid'>" + packageCards.join("") + "</div>" : emptyInstalledState();
+        schedulePackageDescriptionTruncation();
     }
 
     function ancestorWithClass(sourceElement, className) {
@@ -603,6 +672,7 @@
         }
         Common.byId("discoverPage").innerHTML = packageCards.length ? "<div class='catalog-summary'>" + discoverState.total + " packages</div><div class='card-grid'>" + packageCards.join("") + "</div>" + pagination :
             "<div class='state-panel'><img class='state-icon' src='../common/icons/search.svg' alt=''><h2>No packages found</h2><p>Try a different search phrase.</p></div>";
+        schedulePackageDescriptionTruncation();
     }
 
     function remotePackageCard(packageInfo) {
@@ -628,7 +698,7 @@
                     "<span class='package-heading'><span class='package-title ellipsis'>" + Common.escapeHtml(packageInfo.name) + "</span>" +
                     "<span class='package-meta ellipsis'>" + toolbarIndicator + "v" + Common.escapeHtml(packageInfo.version) + " &middot; " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</span></span>" +
                 "</button>" +
-                "<p class='package-description'>" + Common.escapeHtml(packageDescriptionPreview(packageInfo.description)) + "</p>" +
+                packageDescriptionHtml(packageInfo.description) +
                 "<div>" + badges + "</div>" +
             "</div>" +
             "<div class='card-actions'>" + installAction + "</div>" +
@@ -1110,6 +1180,7 @@
         Common.addClass(Common.byId("detailsNavigation"), "is-hidden");
         updateInstalledToolsState();
         updateSearchPlaceholder();
+        schedulePackageDescriptionTruncation();
     }
 
     function showDetails(packageGuid) {
@@ -1514,6 +1585,7 @@
                 showNotification("Runtime info copied.", "info");
             }
         });
+        Common.on(window, "resize", schedulePackageDescriptionTruncation);
         window.location.href = "maxpkg://manager/ready";
     }
 

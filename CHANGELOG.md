@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.8
+
+- Fixed: Removing a package now also cleans up its generated actions, Quad Menu commands, and Quad Menu startup file.
+- Fixed: Package card descriptions now end with three dots when all five lines do not fit.
+- Changed: Windows notifications now use matching Information and Error icons.
+
 ## 1.0.7
 
 - Added: MaxPkg Runtime Manager can now be downloaded and installed as a single MZP package.
