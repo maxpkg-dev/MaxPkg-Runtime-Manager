@@ -515,6 +515,15 @@
                 isSuccess = owner.updateAll()
                 notify (if (isSuccess) then "Packages updated." else "Package update failed. Check the Runtime log.") notificationType: (if (isSuccess) then "success" else "error")
             )
+            if (commandPath == "open-website") do (
+                try (
+                    shellLaunch "https://maxpkg.dev/" ""
+                ) catch (
+                    logger.logError "manager" ("Could not open maxpkg.dev: " + getCurrentException())
+                    isSuccess = false
+                )
+                if (not isSuccess) do notify "maxpkg.dev could not be opened." notificationType: "error"
+            )
             if (commandPath == "reset-toolbar-order") do (
                 isSuccess = owner.resetToolbarOrder()
                 notify (if (isSuccess) then "Toolbar order reset." else "Could not reset toolbar order.") notificationType: (if (isSuccess) then "success" else "error")

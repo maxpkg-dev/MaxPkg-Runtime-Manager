@@ -1239,6 +1239,31 @@
     margin-right: 18px;
 }
 
+.status-bar .footer-website {
+    position: absolute;
+    top: 5px;
+    right: 35%;
+    left: 35%;
+    overflow: hidden;
+    color: #9dbcf7;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.status-bar .footer-website:hover,
+.status-bar .footer-website:focus {
+    color: #c5d7fa;
+    text-decoration: underline;
+}
+
+.status-bar .footer-website img {
+    width: 11px;
+    height: 11px;
+    margin-left: 4px;
+    vertical-align: -2px;
+}
+
 .status-bar .connection-status,
 .status-bar .footer-version {
     float: right;
