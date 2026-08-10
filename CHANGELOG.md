@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0
+
+- Added: Manager and toolbar themes can now be selected independently from the new Themes settings section.
+- Added: Five ready-to-use theme sets: 3ds Max Dark, Midnight Blue, Forest Green, Light Studio, and Violet Night.
+- Added: Additional theme INI files are discovered automatically and safely fall back to Default when incomplete or unavailable.
+- Fixed: Changelog badges now use clear colors for Added, Fixed, Improved, Changed, and Removed entries.
+- Fixed: Light Studio buttons and MaxPkg logos now remain easy to read on light backgrounds.
+- Changed: Installation and removal windows now follow the selected Manager theme.
+- Changed: Runtime installation and updates include built-in themes while preserving additional user themes.
 ## 1.0.9
 
 - Added: Automatic CURL fallback keeps online features working when 3ds Max network access through .NET is blocked by a firewall.
