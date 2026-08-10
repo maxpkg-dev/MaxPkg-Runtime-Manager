@@ -8,3 +8,4 @@ uninstall.ms
 version.ini
 core/
 ui/
+themes/

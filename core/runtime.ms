@@ -49,6 +49,8 @@
     settingsModule.utils = utilsModule
     settingsModule.ini = iniModule
     settingsModule.logger = loggerModule
+    local themesModule = fileIn (coreRoot + @"themes.ms")
+    themesModule.initialize runtimeRoot iniModule utilsModule loggerModule
     local scannerModule = fileIn (coreRoot + @"scanner.ms")
     scannerModule.utils = utilsModule
     scannerModule.ini = iniModule
@@ -211,6 +213,10 @@
             if (started) do return true
             try (
                 settings = settingsModule.load runtimeRoot
+                settings.managerTheme = themesModule.resolveThemeId "manager" settings.managerTheme
+                settings.toolbarTheme = themesModule.resolveThemeId "toolbar" settings.toolbarTheme
+                if (not (themesModule.prepareManagerAssets settings.managerTheme)) do loggerModule.logWarning "startup" "Manager theme assets could not be prepared."
+                if (not (themesModule.prepareToolbarAssets settings.toolbarTheme)) do loggerModule.logWarning "startup" "Toolbar theme assets could not be prepared."
                 version = iniModule.read (runtimeRoot + "version.ini") "Runtime" "Version" defaultValue: "1.0.0"
                 runtimeChannel = iniModule.read (runtimeRoot + "version.ini") "Runtime" "Channel" defaultValue: "stable"
                 scan()
@@ -477,7 +483,9 @@
     MaxPkg = MaxPkgRuntimeFacade()
 
     toolbarModule.initialize MaxPkg runtimeRoot utilsModule loggerModule toolbarModule
+    toolbarModule.themes = themesModule
     managerModule.initialize MaxPkg runtimeRoot utilsModule managerModule
+    managerModule.themes = themesModule
     managerModule.logger = loggerModule
     managerModule.http = httpModule
     managerModule.imageCache = imageCacheModule

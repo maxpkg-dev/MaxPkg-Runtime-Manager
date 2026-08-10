@@ -6,7 +6,7 @@
 .table th,
 .table td {
     padding: 8px 10px;
-    border-bottom: 1px solid #41464f;
+    border-bottom: 1px solid {{borderDefault}};
     text-align: left;
 }
 

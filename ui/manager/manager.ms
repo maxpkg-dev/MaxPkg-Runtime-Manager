@@ -53,6 +53,7 @@
         logger,
         http,
         imageCache,
+        themes,
         runtimeRoot,
         rolloutRef,
         dialogOpen = false,
@@ -355,6 +356,19 @@
             return packageJson responseInfo.packageInfo
         ),
 
+        fn themeOptionsJson requestedThemeKind = (
+            if (themes == undefined) do return "[]"
+            local themeOptions = themes.listThemes requestedThemeKind
+            local themeContent = "["
+            for themeIndex in 1 to themeOptions.count do (
+                if (themeIndex > 1) do themeContent += ","
+                local themeInfo = themeOptions[themeIndex]
+                themeContent += "{\"id\":" + (utils.jsonString themeInfo.themeId) + ",\"name\":" + (utils.jsonString themeInfo.displayName) + "}"
+            )
+            themeContent += "]"
+            return themeContent
+        ),
+
         fn settingsJson = (
             local settings = owner.settings
             local settingsContent = "{"
@@ -363,6 +377,8 @@
             settingsContent += "\"toolbarSubtitleMode\":" + (utils.jsonString settings.toolbarSubtitleMode) + ","
             settingsContent += "\"toolbarButtonSize\":" + (utils.jsonString settings.toolbarButtonSize) + ","
             settingsContent += "\"toolbarDockPosition\":" + (utils.jsonString settings.toolbarDockPosition) + ","
+            settingsContent += "\"toolbarTheme\":" + (utils.jsonString settings.toolbarTheme) + ","
+            settingsContent += "\"toolbarThemes\":" + (themeOptionsJson "toolbar") + ","
             settingsContent += "\"toolbarOrder\":" + (stringArrayJson settings.toolbarOrder) + ","
             settingsContent += "\"notifications\":" + (boolJson settings.notifications) + ","
             settingsContent += "\"autoCheckPackages\":" + (boolJson settings.autoCheckPackages) + ","
@@ -375,6 +391,8 @@
             settingsContent += "\"managerFilter\":" + (utils.jsonString settings.managerFilter) + ","
             settingsContent += "\"managerFullCards\":" + (boolJson settings.managerFullCards) + ","
             settingsContent += "\"language\":" + (utils.jsonString settings.language) + ","
+            settingsContent += "\"managerTheme\":" + (utils.jsonString settings.managerTheme) + ","
+            settingsContent += "\"managerThemes\":" + (themeOptionsJson "manager") + ","
             settingsContent += "\"autoStart\":" + (boolJson settings.autoStart) + ","
             settingsContent += "\"openManagerOnStartup\":" + (boolJson settings.openManagerOnStartup) + ","
             settingsContent += "\"developerMode\":" + (boolJson settings.developerMode) + ","
@@ -522,7 +540,11 @@
             local previousToolbarSubtitleMode = owner.settings.toolbarSubtitleMode
             local previousToolbarButtonSize = owner.settings.toolbarButtonSize
             local previousToolbarDockPosition = owner.settings.toolbarDockPosition
+            local previousToolbarTheme = owner.settings.toolbarTheme
+            local previousManagerTheme = owner.settings.managerTheme
             owner.settings.language = queryParameter queryString "language" defaultContent: owner.settings.language
+            owner.settings.managerTheme = queryParameter queryString "managerTheme" defaultContent: owner.settings.managerTheme
+            if (themes != undefined) do owner.settings.managerTheme = themes.resolveThemeId "manager" owner.settings.managerTheme
             owner.settings.autoStart = boolParameter queryString "autoStart" defaultState: owner.settings.autoStart
             owner.settings.openManagerOnStartup = boolParameter queryString "openManagerOnStartup" defaultState: owner.settings.openManagerOnStartup
             owner.settings.managerFullCards = boolParameter queryString "managerFullCards" defaultState: owner.settings.managerFullCards
@@ -537,10 +559,20 @@
             owner.settings.toolbarSubtitleMode = queryParameter queryString "toolbarSubtitleMode" defaultContent: owner.settings.toolbarSubtitleMode
             owner.settings.toolbarButtonSize = queryParameter queryString "toolbarButtonSize" defaultContent: owner.settings.toolbarButtonSize
             owner.settings.toolbarDockPosition = queryParameter queryString "toolbarDockPosition" defaultContent: owner.settings.toolbarDockPosition
+            owner.settings.toolbarTheme = queryParameter queryString "toolbarTheme" defaultContent: owner.settings.toolbarTheme
+            if (themes != undefined) do owner.settings.toolbarTheme = themes.resolveThemeId "toolbar" owner.settings.toolbarTheme
             owner.settings.developerMode = boolParameter queryString "developerMode" defaultState: owner.settings.developerMode
             owner.settings.debugLogging = boolParameter queryString "debugLogging" defaultState: owner.settings.debugLogging
             if (not (owner.saveSettings())) do return false
-            if (previousToolbarVisibility != owner.settings.toolbarVisible or previousToolbarTitleMode != owner.settings.toolbarTitleMode or previousToolbarSubtitleMode != owner.settings.toolbarSubtitleMode or previousToolbarButtonSize != owner.settings.toolbarButtonSize or previousToolbarDockPosition != owner.settings.toolbarDockPosition) do owner.rebuildToolbar()
+            if (previousToolbarVisibility != owner.settings.toolbarVisible or previousToolbarTitleMode != owner.settings.toolbarTitleMode or previousToolbarSubtitleMode != owner.settings.toolbarSubtitleMode or previousToolbarButtonSize != owner.settings.toolbarButtonSize or previousToolbarDockPosition != owner.settings.toolbarDockPosition or previousToolbarTheme != owner.settings.toolbarTheme) do owner.rebuildToolbar()
+            if (previousManagerTheme != owner.settings.managerTheme and themes != undefined) do (
+                if (themes.prepareManagerAssets owner.settings.managerTheme) then (
+                    browserReady = false
+                    rolloutRef.browser.Navigate (utils.fileUrl (runtimeRoot + @"ui\manager\index.html"))
+                ) else (
+                    logger.logError "themes" "Manager theme assets could not be prepared."
+                )
+            )
             return true
         ),
 
@@ -708,6 +740,7 @@
         ),
 
         fn configureBrowser browserControl = (
+            if (themes != undefined and not (themes.prepareManagerAssets owner.settings.managerTheme)) do logger.logWarning "themes" "Manager theme assets could not be refreshed."
             local managerHtmlPath = runtimeRoot + @"ui\manager\index.html"
             if (not (doesFileExist managerHtmlPath)) do (
                 logger.logError "manager" ("HTML file not found: " + managerHtmlPath)

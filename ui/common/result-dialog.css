@@ -8,22 +8,22 @@
 .result-body {
     min-width: 620px;
     min-height: 460px;
-    background: #25282d;
+    background: {{backgroundWindow}};
 }
 
 .result-shell {
     position: relative;
     width: 100%;
     height: 100%;
-    background: #25282d;
-    color: #d9dde5;
+    background: {{backgroundWindow}};
+    color: {{textPrimary}};
 }
 
 .result-header {
     height: 82px;
     padding: 16px 24px;
-    border-bottom: 1px solid #454a53;
-    background: #2f3339;
+    border-bottom: 1px solid {{borderDefault}};
+    background: {{surfacePrimary}};
 }
 
 .result-logo {
@@ -32,7 +32,7 @@
     height: 50px;
     padding: 11px;
     border-radius: 5px;
-    background: #4b6da9;
+    background: {{accentActive}};
 }
 
 .result-logo img {
@@ -51,13 +51,13 @@
 }
 
 .result-brand strong {
-    color: #ffffff;
+    color: {{textStrong}};
     font-size: 20px;
     line-height: 27px;
 }
 
 .result-brand span {
-    color: #a8b0bd;
+    color: {{textSecondary}};
     font-size: 12px;
     line-height: 18px;
 }
@@ -77,35 +77,35 @@
     bottom: 0;
     left: 0;
     width: 6px;
-    background: #37b489;
+    background: {{successHover}};
 }
 
 .status-error .result-accent {
-    background: #d45265;
+    background: {{dangerHover}};
 }
 
 .status-removal .result-accent {
-    background: #d2747d;
+    background: {{danger}};
 }
 
 .result-content h1 {
     margin-bottom: 8px;
-    color: #37b489;
+    color: {{successHover}};
     font-size: 21px;
 }
 
 .status-error .result-content h1 {
-    color: #ef8585;
+    color: {{danger}};
 }
 
 .status-removal .result-content h1 {
-    color: #e08a91;
+    color: {{danger}};
 }
 
 .result-summary {
     height: 38px;
     margin-bottom: 12px;
-    color: #e2e6ed;
+    color: {{textPrimary}};
     font-size: 13px;
     line-height: 19px;
 }
@@ -113,9 +113,9 @@
 .result-meta {
     margin-bottom: 14px;
     padding: 10px 13px;
-    border: 1px solid #454a53;
+    border: 1px solid {{borderDefault}};
     border-radius: 4px;
-    background: #2f3339;
+    background: {{surfacePrimary}};
 }
 
 .result-meta-entry {
@@ -131,11 +131,11 @@
 
 .result-meta-entry span {
     width: 62px;
-    color: #9299a6;
+    color: {{textMuted}};
 }
 
 .result-meta-entry strong {
-    color: #ffffff;
+    color: {{textStrong}};
     font-weight: 600;
 }
 
@@ -145,19 +145,19 @@
 
 .result-guide h2 {
     margin-bottom: 7px;
-    color: #ffffff;
+    color: {{textStrong}};
     font-size: 15px;
 }
 
 .quick-guide {
-    border: 1px solid #454a53;
+    border: 1px solid {{borderDefault}};
     border-radius: 4px;
-    background: #292c31;
+    background: {{surfaceSecondary}};
     overflow: hidden;
 }
 
 .quick-guide-entry + .quick-guide-entry {
-    border-top: 1px solid #41464e;
+    border-top: 1px solid {{borderDefault}};
 }
 
 .quick-guide-toggle {
@@ -167,8 +167,8 @@
     height: 34px;
     padding: 0 38px 0 48px;
     border: 0;
-    background: #2f3339;
-    color: #d9dde5;
+    background: {{surfacePrimary}};
+    color: {{textPrimary}};
     font-family: "Segoe UI", Arial, sans-serif;
     font-size: 13px;
     line-height: 34px;
@@ -179,8 +179,8 @@
 .quick-guide-toggle:hover,
 .quick-guide-toggle:focus,
 .quick-guide-toggle.is-active {
-    background: #373d46;
-    color: #ffffff;
+    background: {{surfaceRaised}};
+    color: {{textStrong}};
     outline: none;
 }
 
@@ -191,8 +191,8 @@
     width: 20px;
     height: 20px;
     border-radius: 10px;
-    background: #4b6da9;
-    color: #ffffff;
+    background: {{accentActive}};
+    color: {{textStrong}};
     font-size: 11px;
     font-weight: 600;
     line-height: 20px;
@@ -215,12 +215,12 @@
 
 .quick-guide-panel {
     padding: 9px 14px 10px 48px;
-    background: #292c31;
+    background: {{surfaceSecondary}};
 }
 
 .quick-guide-panel p {
     margin: 0;
-    color: #bfc6d2;
+    color: {{textSecondary}};
     font-size: 12px;
     line-height: 17px;
 }
@@ -231,7 +231,7 @@
     bottom: 120px;
     left: 34px;
     overflow: hidden;
-    color: #9299a6;
+    color: {{textMuted}};
     font-size: 11px;
     line-height: 17px;
     white-space: nowrap;
@@ -252,13 +252,13 @@
 
 .result-links a {
     margin-right: 22px;
-    color: #8bb1ff;
+    color: {{accentHover}};
     text-decoration: none;
 }
 
 .result-links a:hover,
 .result-links a:focus {
-    color: #ffffff;
+    color: {{textStrong}};
     text-decoration: underline;
 }
 

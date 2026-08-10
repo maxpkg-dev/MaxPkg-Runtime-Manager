@@ -45,6 +45,7 @@
         owner,
         utils,
         logger,
+        themes,
         runtimeRoot,
         rolloutRef,
 
@@ -120,13 +121,12 @@
         ),
 
         fn buildHtml = (
-            local brandIconFilePath = runtimeRoot + @"ui\common\icons\maxpkg-logo.svg"
+            if (themes != undefined) do themes.prepareToolbarAssets owner.settings.toolbarTheme
+            local brandIconFilePath = runtimeRoot + @"data\themes\toolbar\icons\maxpkg-logo.svg"
             local brandIconUrl = utils.htmlEscape (utils.fileUrl brandIconFilePath)
+            local themeCss = if (themes != undefined) then themes.renderToolbarCss owner.settings.toolbarTheme else ""
             local html = "<!doctype html><html><head><meta http-equiv='X-UA-Compatible' content='IE=edge'><meta charset='utf-8'>"
-            html += "<style>" + (assetContent @"ui\common\css\variables.css")
-            html += assetContent @"ui\common\css\layout.css"
-            html += assetContent @"ui\common\css\typography.css"
-            html += assetContent @"ui\toolbar\toolbar.css"
+            html += "<style>" + themeCss
             html += "</style></head><body>"
             html += "<div class='wrap' id='wrap'><a class='brand' id='brand' href='maxpkg://ui/openManager' title='Open MaxPkg Manager'><img class='brand-icon' src='" + brandIconUrl + "' alt=''><span>maxpkg</span></a><a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><div class='viewport' id='viewport'><div class='strip' id='strip'>"
             for package in orderedPackages() do html += packageButtonHtml package

@@ -64,12 +64,20 @@
         browserReady = false,
         commonRoot = "",
         htmlFilePath = "",
+        themes,
+        themeId = "default",
         temporaryAssetRoot = "",
         minimumDialogWidth = 640,
         minimumDialogHeight = 580,
 
         fn createDialogData = (
             return MaxPkgResultDialogData()
+        ),
+
+        fn configureTheme themesModule selectedThemeId = (
+            themes = themesModule
+            themeId = if (selectedThemeId == undefined or selectedThemeId == "") then "default" else selectedThemeId
+            return themes != undefined
         ),
 
         fn launchWebsite websiteUrl = (
@@ -189,6 +197,7 @@
                     if (not (copyFile sourceFilePath targetFilePath)) do throw ("Could not prepare result window asset: " + sourceFilePath)
                 )
                 htmlFilePath = temporaryAssetRoot + "result-dialog.html"
+                if (themes == undefined or not (themes.prepareResultDialogAssets themeId temporaryAssetRoot)) do throw "Could not prepare result window theme assets."
                 return true
             ) catch (
                 cleanupTemporaryAssets()

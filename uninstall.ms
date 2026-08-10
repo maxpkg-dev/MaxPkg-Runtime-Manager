@@ -78,7 +78,14 @@
 
     try (
         resultDialogModule = fileIn (runtimeRoot + @"ui\common\result-dialog.ms")
-        if (resultDialogModule != undefined and not (resultDialogModule.prepareTemporaryAssets())) do resultDialogModule = undefined
+        local uninstallIniModule = fileIn (runtimeRoot + @"core\ini.ms")
+        local uninstallUtilsModule = fileIn (runtimeRoot + @"core\utils.ms")
+        local uninstallThemesModule = fileIn (runtimeRoot + @"core\themes.ms")
+        uninstallThemesModule.initialize runtimeRoot uninstallIniModule uninstallUtilsModule undefined
+        local selectedManagerTheme = getINISetting (runtimeRoot + "settings.ini") "General" "ManagerTheme"
+        if (selectedManagerTheme == undefined or selectedManagerTheme == "") do selectedManagerTheme = "default"
+        resultDialogModule.configureTheme uninstallThemesModule selectedManagerTheme
+        if (not (resultDialogModule.prepareTemporaryAssets())) do resultDialogModule = undefined
     ) catch (
         resultDialogModule = undefined
     )

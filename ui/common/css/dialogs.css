@@ -5,8 +5,8 @@
     right: 0;
     bottom: 0;
     left: 0;
-    background: #111318;
-    background: rgba(13, 15, 18, .78);
+    background: {{backgroundDeep}};
+    background: {{backgroundOverlay}};
 }
 
 .modal {
@@ -16,10 +16,10 @@
     width: 700px;
     height: 88%;
     margin-left: -350px;
-    border: 1px solid #555c67;
+    border: 1px solid {{textDisabled}};
     border-radius: 7px;
-    background: #30343a;
-    box-shadow: 0 8px 30px #111318;
+    background: {{surfacePrimary}};
+    box-shadow: 0 8px 30px {{backgroundDeep}};
 }
 
 .modal-header,
@@ -33,7 +33,7 @@
 .modal-header {
     top: 0;
     height: 58px;
-    border-bottom: 1px solid #454b54;
+    border-bottom: 1px solid {{borderDefault}};
 }
 
 .modal-header h2 {
@@ -64,7 +64,7 @@
 .modal-footer {
     bottom: 0;
     height: 62px;
-    border-top: 1px solid #454b54;
+    border-top: 1px solid {{borderDefault}};
     text-align: right;
 }
 

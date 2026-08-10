@@ -10,6 +10,7 @@
     local startupFile = runtimeRoot + "startup.ms"
     local utilsModule = fileIn (runtimeRoot + @"core\utils.ms")
     local iniModule = fileIn (runtimeRoot + @"core\ini.ms")
+    local themesModule = fileIn (runtimeRoot + @"core\themes.ms")
     local resultDialogModule = fileIn (runtimeRoot + @"ui\common\result-dialog.ms")
     local repositoryModule = fileIn (runtimeRoot + @"core\repository.ms")
     local scannerModule = fileIn (runtimeRoot + @"core\scanner.ms")
@@ -19,6 +20,16 @@
     local imageCacheModule = fileIn (runtimeRoot + @"core\image-cache.ms")
     local notifierModule = fileIn (runtimeRoot + @"core\notifier.ms")
     local selfUpdaterModule = fileIn (runtimeRoot + @"core\self-updater.ms")
+    themesModule.initialize runtimeRoot iniModule utilsModule undefined
+    resultDialogModule.configureTheme themesModule "default"
+    if ((themesModule.listThemes "manager").count < 1) do throw "Manager themes are unavailable."
+    if ((themesModule.listThemes "toolbar").count < 1) do throw "Toolbar themes are unavailable."
+    if ((themesModule.resolveThemeId "manager" "missing-theme") != "default") do throw "Missing Manager theme did not use the default fallback."
+    if ((themesModule.resolveThemeId "toolbar" "missing-theme") != "default") do throw "Missing Toolbar theme did not use the default fallback."
+    local renderedManagerCss = themesModule.renderManagerCss "default"
+    local renderedToolbarCss = themesModule.renderToolbarCss "default"
+    if (renderedManagerCss == "" or renderedToolbarCss == "") do throw "Runtime theme CSS is empty."
+    if ((findString renderedManagerCss "{{") != undefined or (findString renderedToolbarCss "{{") != undefined) do throw "Runtime theme CSS contains unresolved tokens."
     if (resultDialogModule == undefined) do throw "Reusable Runtime result dialog module is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.html"))) do throw "Runtime result dialog HTML is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.css"))) do throw "Runtime result dialog styles are unavailable."
@@ -149,6 +160,8 @@
     if (not (isProperty MaxPkg.settings #toolbarSubtitleMode)) do throw "Toolbar subtitle mode is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarButtonSize)) do throw "Toolbar button size is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarDockPosition)) do throw "Toolbar dock position is unavailable."
+    if (not (isProperty MaxPkg.settings #toolbarTheme)) do throw "Toolbar theme setting is unavailable."
+    if (not (isProperty MaxPkg.settings #managerTheme)) do throw "Manager theme setting is unavailable."
     if (not (isProperty MaxPkg.settings #managerFirstOpenCompleted)) do throw "Manager first-open state is unavailable."
     if (not (isProperty MaxPkg.settings #managerFullCards)) do throw "Manager full-card setting is unavailable."
     if (MaxPkg.settings.toolbarDockPosition != "top" and MaxPkg.settings.toolbarDockPosition != "bottom") do throw "Toolbar dock position is invalid."

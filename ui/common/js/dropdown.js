@@ -196,7 +196,6 @@
 
     function bindSelect(selectElement, changeHandler) {
         var parts = selectParts(selectElement);
-        var optionIndex;
 
         if (!parts.trigger || !parts.menu) {
             return false;
@@ -216,35 +215,42 @@
                 close();
             }
         });
-        for (optionIndex = 0; optionIndex < parts.options.length; optionIndex += 1) {
-            (function (optionElement) {
-                Common.on(optionElement, "click", function (eventObject) {
-                    var selectedValue = optionElement.getAttribute("data-dropdown-option");
-                    Common.preventDefault(eventObject);
-                    Common.stopPropagation(eventObject);
-                    setSelectValue(selectElement, selectedValue);
-                    close();
-                    parts.trigger.focus();
-                    if (changeHandler) {
-                        changeHandler(selectedValue, selectElement);
-                    }
-                });
-                Common.on(optionElement, "keydown", function (eventObject) {
-                    var keyCode = eventObject.keyCode || eventObject.which;
-                    if (keyCode === 38 || keyCode === 40) {
-                        Common.preventDefault(eventObject);
-                        focusRelativeOption(parts, optionElement, keyCode === 38 ? -1 : 1);
-                    } else if (keyCode === 27) {
-                        Common.preventDefault(eventObject);
-                        close();
-                        parts.trigger.focus();
-                    } else if (keyCode === 13 || keyCode === 32) {
-                        Common.preventDefault(eventObject);
-                        optionElement.click();
-                    }
-                });
-            }(parts.options[optionIndex]));
-        }
+        Common.on(parts.menu, "click", function (eventObject) {
+            var optionElement = Common.closestWithAttribute(Common.eventTarget(eventObject), "data-dropdown-option");
+            var selectedValue;
+            if (!optionElement) {
+                return;
+            }
+            selectedValue = optionElement.getAttribute("data-dropdown-option");
+            Common.preventDefault(eventObject);
+            Common.stopPropagation(eventObject);
+            setSelectValue(selectElement, selectedValue);
+            close();
+            parts.trigger.focus();
+            if (changeHandler) {
+                changeHandler(selectedValue, selectElement);
+            }
+        });
+        Common.on(parts.menu, "keydown", function (eventObject) {
+            var optionElement = Common.closestWithAttribute(Common.eventTarget(eventObject), "data-dropdown-option");
+            var keyCode = eventObject.keyCode || eventObject.which;
+            var currentParts;
+            if (!optionElement) {
+                return;
+            }
+            if (keyCode === 38 || keyCode === 40) {
+                Common.preventDefault(eventObject);
+                currentParts = selectParts(selectElement);
+                focusRelativeOption(currentParts, optionElement, keyCode === 38 ? -1 : 1);
+            } else if (keyCode === 27) {
+                Common.preventDefault(eventObject);
+                close();
+                parts.trigger.focus();
+            } else if (keyCode === 13 || keyCode === 32) {
+                Common.preventDefault(eventObject);
+                optionElement.click();
+            }
+        });
         setSelectValue(selectElement, getSelectValue(selectElement));
         return true;
     }

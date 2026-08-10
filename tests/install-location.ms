@@ -29,6 +29,8 @@
 
         if (not (doesFileExist expectedStartupPath)) do throw "Installed startup.ms is missing."
         if (not (doesFileExist (expectedRuntimeRoot + @"core\runtime.ms"))) do throw "Installed core/runtime.ms is missing."
+        if (not (doesFileExist (expectedRuntimeRoot + @"themes\manager\default.ini"))) do throw "Installed Manager default theme is missing."
+        if (not (doesFileExist (expectedRuntimeRoot + @"themes\toolbar\default.ini"))) do throw "Installed Toolbar default theme is missing."
         if (not (doesFileExist (expectedRuntimeRoot + "version.ini"))) do throw "Installed version.ini is missing."
         if (not (doesFileExist (expectedRuntimeRoot + "uninstall.ms"))) do throw "Installed uninstall.ms is missing."
         if (not (doesFileExist startupShimPath)) do throw "The startup loader is missing."

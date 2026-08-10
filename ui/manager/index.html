@@ -4,17 +4,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=9">
     <meta charset="utf-8">
     <title>maxpkg Manager</title>
-    <link rel="stylesheet" href="../common/css/variables.css">
-    <link rel="stylesheet" href="../common/css/layout.css">
-    <link rel="stylesheet" href="../common/css/typography.css">
-    <link rel="stylesheet" href="../common/css/buttons.css">
-    <link rel="stylesheet" href="../common/css/cards.css">
-    <link rel="stylesheet" href="../common/css/forms.css">
-    <link rel="stylesheet" href="../common/css/badges.css">
-    <link rel="stylesheet" href="../common/css/dialogs.css">
-    <link rel="stylesheet" href="../common/css/notifications.css">
-    <link rel="stylesheet" href="../common/css/tables.css">
-    <link rel="stylesheet" href="manager.css">
+    <link rel="stylesheet" href="../../data/themes/manager/theme.css">
 </head>
 <body>
     <div id="runtimePayload" class="is-hidden"></div>
@@ -26,7 +16,7 @@
             <div class="header-layout">
                 <div class="brand-block">
                     <div class="brand-mark">
-                        <img src="../common/icons/maxpkg-logo.svg" alt="MaxPkg">
+                        <img src="../../data/themes/manager/icons/maxpkg-logo.svg" alt="MaxPkg">
                     </div>
                     <div class="brand-copy">
                         <strong>maxpkg</strong>
@@ -35,13 +25,13 @@
                 </div>
                 <div id="headerActions" class="header-actions">
                     <a id="checkUpdatesButton" class="button" href="maxpkg://manager/check-updates" data-busy="Checking updates...">
-                        <img class="icon" src="../common/icons/refresh-cw.svg" alt="">Check Updates
+                        <img class="icon" src="../../data/themes/manager/icons/refresh-cw.svg" alt="">Check Updates
                     </a>
                     <a id="updateAllButton" class="button button-primary" href="maxpkg://manager/update-all" data-busy="Updating packages...">
-                        <img class="icon" src="../common/icons/download.svg" alt="">Update All
+                        <img class="icon" src="../../data/themes/manager/icons/download.svg" alt="">Update All
                     </a>
                     <button id="settingsButton" class="icon-button" type="button" title="Settings">
-                        <img class="icon" src="../common/icons/settings.svg" alt="Settings">
+                        <img class="icon" src="../../data/themes/manager/icons/settings.svg" alt="Settings">
                     </button>
                 </div>
             </div>
@@ -57,7 +47,7 @@
             <div class="page-toolbar-layout">
                 <div class="page-search-cell">
                     <div class="search-box">
-                        <img class="search-icon" src="../common/icons/search.svg" alt="">
+                        <img class="search-icon" src="../../data/themes/manager/icons/search.svg" alt="">
                         <input id="searchInput" type="text" autocomplete="off" placeholder="Search Discover">
                     </div>
                 </div>
@@ -66,7 +56,7 @@
                         <div id="toolbarFilterSelect" class="html-select toolbar-filter-select" data-value="all">
                             <button class="html-select-button" type="button" title="Filter installed packages" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger="true">
                                 <span data-select-label="toolbarFilterSelect">All</span>
-                                <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
                             </button>
                             <div class="html-select-menu is-hidden" data-dropdown-width="source">
                                 <button type="button" data-dropdown-option="all">All</button>
@@ -75,14 +65,14 @@
                             </div>
                         </div>
                         <button id="clearToolbarFilterButton" class="toolbar-filter-clear is-hidden" type="button" title="Clear filter" data-action="clear-toolbar-filter">
-                            <img src="../common/icons/x.svg" alt="Clear filter">
+                            <img src="../../data/themes/manager/icons/x.svg" alt="Clear filter">
                         </button>
                     </div>
                     <div id="sortControl" class="sort-control">
                         <div id="sortSelect" class="html-select sort-select" data-value="toolbar">
                             <button class="html-select-button" type="button" title="Sort installed packages" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger="true">
                                 <span data-select-label="sortSelect">Toolbar order</span>
-                                <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
                             </button>
                             <div class="html-select-menu is-hidden" data-dropdown-width="source">
                                 <button type="button" data-dropdown-option="toolbar">Toolbar order</button>
@@ -92,7 +82,7 @@
                             </div>
                         </div>
                         <button id="clearSortButton" class="sort-clear is-hidden" type="button" title="Reset sorting" data-action="clear-sort">
-                            <img src="../common/icons/x.svg" alt="Reset sorting">
+                            <img src="../../data/themes/manager/icons/x.svg" alt="Reset sorting">
                         </button>
                     </div>
                 </div>
@@ -100,7 +90,7 @@
         </div>
 
         <div id="detailsNavigation" class="details-navigation is-hidden">
-            <a class="details-back-link" href="#" data-action="details-back"><img class="details-back-icon" src="../common/icons/arrow-left.svg" alt="">Back</a>
+            <a class="details-back-link" href="#" data-action="details-back"><img class="details-back-icon" src="../../data/themes/manager/icons/arrow-left.svg" alt="">Back</a>
             <span class="details-pathway">
                 <span id="detailsPathRoot">Installed</span>
                 <span class="details-pathway-separator">/</span>
@@ -109,7 +99,7 @@
         </div>
 
         <div id="pageHost" class="page-host scroll-region">
-            <div id="discoverPage" class="page"><div class="state-panel"><img class="state-icon" src="../common/icons/search.svg" alt=""><h2>Loading Discover...</h2><p>Preparing the package catalog.</p></div></div>
+            <div id="discoverPage" class="page"><div class="state-panel"><img class="state-icon" src="../../data/themes/manager/icons/search.svg" alt=""><h2>Loading Discover...</h2><p>Preparing the package catalog.</p></div></div>
             <div id="installedPage" class="page is-hidden"></div>
             <div id="detailsPage" class="page is-hidden"></div>
         </div>
@@ -117,7 +107,7 @@
         <div class="status-bar clearfix">
             <span id="packageStatus">0 packages</span>
             <span id="updateStatus">0 updates</span>
-            <a class="footer-website" href="maxpkg://manager/open-website" title="Open maxpkg.dev in your browser">maxpkg.dev<img src="../common/icons/external-link.svg" alt=""></a>
+            <a class="footer-website" href="maxpkg://manager/open-website" title="Open maxpkg.dev in your browser">maxpkg.dev<img src="../../data/themes/manager/icons/external-link.svg" alt=""></a>
             <span id="connectionStatus" class="connection-status">Offline</span>
             <span id="footerVersion" class="footer-version">Runtime</span>
         </div>
@@ -134,7 +124,7 @@
             <div class="modal-header">
                 <h2 id="settingsTitle">Settings</h2>
                 <button id="closeSettingsButton" class="icon-button modal-close-button" type="button" title="Close Settings" aria-label="Close Settings">
-                    <img class="icon" src="../common/icons/x.svg" alt="">
+                    <img class="icon" src="../../data/themes/manager/icons/x.svg" alt="">
                 </button>
             </div>
             <div class="modal-body clearfix">
@@ -155,10 +145,22 @@
                             <div id="languageSelect" class="html-select html-select-wide" data-value="English">
                                 <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="languageLabel" data-dropdown-trigger="true">
                                     <span data-select-label="languageSelect">English</span>
-                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
                                 </button>
                                 <div class="html-select-menu is-hidden" data-dropdown-width="source">
                                     <button type="button" data-dropdown-option="English">English</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <span id="managerThemeLabel" class="field-label">Manager theme</span>
+                            <div id="managerThemeSelect" class="html-select html-select-wide" data-value="default">
+                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="managerThemeLabel" data-dropdown-trigger="true">
+                                    <span data-select-label="managerThemeSelect">Default</span>
+                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
+                                </button>
+                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                    <button type="button" data-dropdown-option="default">Default</button>
                                 </div>
                             </div>
                         </div>
@@ -177,7 +179,7 @@
                             <div id="frequencySelect" class="html-select html-select-wide" data-value="24">
                                 <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="frequencyLabel" data-dropdown-trigger="true">
                                     <span data-select-label="frequencySelect">Every day</span>
-                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
                                 </button>
                                 <div class="html-select-menu is-hidden" data-dropdown-width="source">
                                     <button type="button" data-dropdown-option="1">Every hour</button>
@@ -194,11 +196,23 @@
                         <h3>Toolbar</h3>
                         <label class="check-row"><input id="toolbarVisibleCheck" type="checkbox">Show MaxPkg toolbar</label>
                         <div class="field">
+                            <span id="toolbarThemeLabel" class="field-label">Toolbar theme</span>
+                            <div id="toolbarThemeSelect" class="html-select html-select-wide" data-value="default">
+                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarThemeLabel" data-dropdown-trigger="true">
+                                    <span data-select-label="toolbarThemeSelect">Default</span>
+                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
+                                </button>
+                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                    <button type="button" data-dropdown-option="default">Default</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
                             <span id="toolbarDockPositionLabel" class="field-label">Toolbar position</span>
                             <div id="toolbarDockPositionSelect" class="html-select html-select-wide" data-value="top">
                                 <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarDockPositionLabel" data-dropdown-trigger="true">
                                     <span data-select-label="toolbarDockPositionSelect">Top</span>
-                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
                                 </button>
                                 <div class="html-select-menu is-hidden" data-dropdown-width="source">
                                     <button type="button" data-dropdown-option="top">Top</button>
@@ -211,7 +225,7 @@
                             <div id="toolbarTitleSelect" class="html-select html-select-wide" data-value="packageName">
                                 <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarTitleLabel" data-dropdown-trigger="true">
                                     <span data-select-label="toolbarTitleSelect">Package name</span>
-                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
                                 </button>
                                 <div class="html-select-menu is-hidden" data-dropdown-width="source">
                                     <button type="button" data-dropdown-option="packageName">Package name</button>
@@ -224,7 +238,7 @@
                             <div id="toolbarButtonSizeSelect" class="html-select html-select-wide" data-value="medium">
                                 <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarButtonSizeLabel" data-dropdown-trigger="true">
                                     <span data-select-label="toolbarButtonSizeSelect">Medium</span>
-                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
                                 </button>
                                 <div class="html-select-menu is-hidden" data-dropdown-width="source">
                                     <button type="button" data-dropdown-option="large">Large</button>
@@ -239,7 +253,7 @@
                             <div id="toolbarSubtitleSelect" class="html-select html-select-wide" data-value="version">
                                 <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarSubtitleLabel" data-dropdown-trigger="true">
                                     <span data-select-label="toolbarSubtitleSelect">Version</span>
-                                    <img class="html-select-caret" src="../common/icons/chevron-down.svg" alt="">
+                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
                                 </button>
                                 <div class="html-select-menu is-hidden" data-dropdown-width="source">
                                     <button type="button" data-dropdown-option="none">Nothing</button>
@@ -287,14 +301,14 @@
                             <li>The Manager will close and a result window will appear when removal is finished.</li>
                         </ol>
                         <button id="showRuntimeUninstallConfirmationButton" class="button button-danger runtime-uninstall-button" type="button" data-action="request-runtime-uninstall">
-                            <img class="icon" src="../common/icons/trash-2.svg" alt="">Uninstall MaxPkg
+                            <img class="icon" src="../../data/themes/manager/icons/trash-2.svg" alt="">Uninstall MaxPkg
                         </button>
                         <div id="runtimeUninstallConfirmation" class="runtime-uninstall-confirmation is-hidden">
                             <strong>Uninstall MaxPkg now?</strong>
                             <p>The Manager will close immediately. This action does not affect your scene files.</p>
                             <button class="button" type="button" data-action="cancel-runtime-uninstall">Cancel</button>
                             <a class="button button-danger" href="maxpkg://manager/uninstall-runtime" data-busy="Removing MaxPkg Runtime...">
-                                <img class="icon" src="../common/icons/trash-2.svg" alt="">Yes, uninstall MaxPkg
+                                <img class="icon" src="../../data/themes/manager/icons/trash-2.svg" alt="">Yes, uninstall MaxPkg
                             </a>
                         </div>
                     </div>

@@ -1,37 +1,37 @@
 /* IE9 has no CSS custom properties. Theme values live in this shared file. */
 html,
 body {
-    background: #25282d;
-    color: #d9dde5;
+    background: {{backgroundWindow}};
+    color: {{textPrimary}};
 }
 
 .surface-primary {
-    background: #2f3339;
-    border-color: #454a53;
+    background: {{surfacePrimary}};
+    border-color: {{borderDefault}};
 }
 
 .surface-secondary {
-    background: #292c31;
-    border-color: #3c4149;
+    background: {{surfaceSecondary}};
+    border-color: {{borderSoft}};
 }
 
 .text-muted {
-    color: #9299a6;
+    color: {{textMuted}};
 }
 
 .text-accent {
-    color: #8bb1ff;
+    color: {{accentHover}};
 }
 
 .text-success {
-    color: #7dcf91;
+    color: {{successText}};
 }
 
 .text-warning {
-    color: #e3b56d;
+    color: {{warning}};
 }
 
 .text-danger {
-    color: #ef8585;
+    color: {{danger}};
 }
 

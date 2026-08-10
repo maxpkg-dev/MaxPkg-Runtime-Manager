@@ -185,13 +185,21 @@
     local startupFolder = ensureSlash (getDir #userStartupScripts)
     local shimPath = startupFolder + "maxpkg-runtime-startup.ms"
     local resultDialogModule = undefined
+    local themesModule = undefined
     local runtimeVersion = "Unknown"
     local installationErrorMessage = ""
 
     try (
         resultDialogModule = fileIn (sourceRoot + @"ui\common\result-dialog.ms")
+        local installIniModule = fileIn (sourceRoot + @"core\ini.ms")
+        local installUtilsModule = fileIn (sourceRoot + @"core\utils.ms")
+        themesModule = fileIn (sourceRoot + @"core\themes.ms")
+        themesModule.initialize sourceRoot installIniModule installUtilsModule undefined
+        resultDialogModule.configureTheme themesModule "default"
+        if (not (resultDialogModule.prepareTemporaryAssets())) do resultDialogModule = undefined
     ) catch (
         resultDialogModule = undefined
+        themesModule = undefined
     )
     try (
         runtimeVersion = getINISetting (sourceRoot + "version.ini") "Runtime" "Version"
@@ -213,6 +221,7 @@
         if (not (forceDeleteFolder (targetRoot + @"ui\"))) do throw ("Could not remove the previous Runtime UI folder:\n" + (targetRoot + @"ui\"))
         copyTree (sourceRoot + @"core\") (targetRoot + @"core\")
         copyTree (sourceRoot + @"ui\") (targetRoot + @"ui\")
+        copyTree (sourceRoot + @"themes\") (targetRoot + @"themes\")
         makeDir (targetRoot + @"data\packages\") all: true
         makeDir (targetRoot + @"logs\") all: true
         replaceFile (sourceRoot + "startup.ms") (targetRoot + "startup.ms")

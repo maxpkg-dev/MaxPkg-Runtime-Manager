@@ -79,6 +79,7 @@ MaxPkg can create a toolbar with buttons for your installed scripts. You can:
 - Hide buttons you do not need
 - Change the button order
 - Turn the MaxPkg toolbar off completely
+- Choose separate themes for the Manager and the toolbar
 
 Prefer regular 3ds Max toolbars? Script actions are available in the `MaxPkg`
 category, so you can place them where you already keep your favorite tools.

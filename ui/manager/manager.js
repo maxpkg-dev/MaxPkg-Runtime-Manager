@@ -35,7 +35,7 @@
     var draggedToolbarOriginalNextSibling = null;
 
     function icon(iconName) {
-        return "<img class='icon' src='../common/icons/" + iconName + ".svg' alt=''>";
+        return "<img class='icon' src='../../data/themes/manager/icons/" + iconName + ".svg' alt=''>";
     }
 
     function boolText(isEnabled) {
@@ -457,7 +457,7 @@
         if (toolbarSortingEnabled()) {
             cardClass += " toolbar-sort-card";
             dragHandle = "<span class='toolbar-drag-handle' role='button' draggable='true' data-toolbar-drag='true' title='Drag to change Toolbar order'>" +
-                "<img src='../common/icons/grip-vertical.svg' draggable='false' alt=''></span>";
+                "<img src='../../data/themes/manager/icons/grip-vertical.svg' draggable='false' alt=''></span>";
         }
         if (packageInfo.toolbarVisible) {
             badges += "<span class='badge badge-success'>Toolbar</span>";
@@ -490,7 +490,7 @@
     function emptyInstalledState() {
         var title = currentState.packages.length ? "No packages match" : "No packages installed";
         var message = currentState.packages.length ? "Try a different search or filter." : "Installed packages will appear here as soon as Runtime discovers their manifests.";
-        return "<div class='state-panel'><img class='state-icon' src='../common/icons/package.svg' alt=''><h2>" + title + "</h2><p>" + message + "</p>" +
+        return "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/package.svg' alt=''><h2>" + title + "</h2><p>" + message + "</p>" +
             "<a class='button' href='maxpkg://manager/refresh' data-busy='Scanning packages...'>" + icon("refresh-cw") + "Refresh</a></div>";
     }
 
@@ -688,7 +688,7 @@
         var packageIndex;
         var pagination = "";
         if (!discoverState.available) {
-            Common.byId("discoverPage").innerHTML = "<div class='state-panel'><img class='state-icon' src='../common/icons/cloud-off.svg' alt=''><h2>Catalog unavailable</h2>" +
+            Common.byId("discoverPage").innerHTML = "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/cloud-off.svg' alt=''><h2>Catalog unavailable</h2>" +
                 "<p>" + Common.escapeHtml(discoverState.message || "Load the catalog to browse packages.") + "</p><button class='button' type='button' data-action='catalog-retry'>" + icon("refresh-cw") + "Retry</button></div>";
             return;
         }
@@ -702,7 +702,7 @@
                 "<button class='button' type='button' data-action='discover-page' data-page='" + (discoverState.page + 1) + "'" + (discoverState.page >= discoverState.totalPages ? " disabled='disabled'" : "") + ">Next</button></div>";
         }
         Common.byId("discoverPage").innerHTML = packageCards.length ? "<div class='catalog-summary'>" + discoverState.total + " packages</div><div class='card-grid'>" + packageCards.join("") + "</div>" + pagination :
-            "<div class='state-panel'><img class='state-icon' src='../common/icons/search.svg' alt=''><h2>No packages found</h2><p>Try a different search phrase.</p></div>";
+            "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/search.svg' alt=''><h2>No packages found</h2><p>Try a different search phrase.</p></div>";
         schedulePackageDescriptionTruncation();
     }
 
@@ -1282,11 +1282,11 @@
             normalizedNotificationType = "info";
         }
         if (normalizedNotificationType === "success") {
-            notificationIcon = "<img class='notification-icon-image' src='../common/icons/circle-check.svg' alt=''>";
+            notificationIcon = "<img class='notification-icon-image' src='../../data/themes/manager/icons/circle-check.svg' alt=''>";
         } else if (normalizedNotificationType === "warning") {
             notificationIcon = "!";
         } else if (normalizedNotificationType === "error") {
-            notificationIcon = "<img class='notification-icon-image' src='../common/icons/circle-x.svg' alt=''>";
+            notificationIcon = "<img class='notification-icon-image' src='../../data/themes/manager/icons/circle-x.svg' alt=''>";
         }
         notificationElement.className = "notification notification-" + normalizedNotificationType;
         notificationElement.innerHTML = "<span class='notification-icon'>" + notificationIcon + "</span><span class='notification-message'>" + Common.escapeHtml(messageText) + "</span>";
@@ -1347,9 +1347,34 @@
         }
     }
 
+    function populateThemeSelect(selectId, themeOptions, selectedThemeId) {
+        var selectElement = Common.byId(selectId);
+        var menuElements = selectElement.getElementsByTagName("div");
+        var menuElement = menuElements.length > 0 ? menuElements[0] : null;
+        var optionIndex;
+        var optionButton;
+        if (!menuElement) {
+            return;
+        }
+        while (menuElement.firstChild) {
+            menuElement.removeChild(menuElement.firstChild);
+        }
+        themeOptions = themeOptions || [];
+        for (optionIndex = 0; optionIndex < themeOptions.length; optionIndex += 1) {
+            optionButton = document.createElement("button");
+            optionButton.type = "button";
+            optionButton.setAttribute("data-dropdown-option", themeOptions[optionIndex].id);
+            optionButton.appendChild(document.createTextNode(themeOptions[optionIndex].name));
+            menuElement.appendChild(optionButton);
+        }
+        window.MaxPkgDropdown.setSelectValue(selectElement, selectedThemeId || "default");
+    }
+
     function populateSettings() {
         var settings = currentState.settings;
         window.MaxPkgDropdown.setSelectValue(Common.byId("languageSelect"), settings.language || "English");
+        populateThemeSelect("managerThemeSelect", settings.managerThemes, settings.managerTheme);
+        populateThemeSelect("toolbarThemeSelect", settings.toolbarThemes, settings.toolbarTheme);
         window.MaxPkgDropdown.setSelectValue(Common.byId("frequencySelect"), String(settings.updateFrequencyHours || 24));
         Common.byId("autoStartCheck").checked = !!settings.autoStart;
         Common.byId("openManagerCheck").checked = !!settings.openManagerOnStartup;
@@ -1379,6 +1404,7 @@
             settingsSaveTimer = null;
         }
         queryParts.push("language=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("languageSelect"))));
+        queryParts.push("managerTheme=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("managerThemeSelect"))));
         queryParts.push("autoStart=" + boolText(Common.byId("autoStartCheck").checked));
         queryParts.push("openManagerOnStartup=" + boolText(Common.byId("openManagerCheck").checked));
         queryParts.push("notifications=" + boolText(Common.byId("notificationsCheck").checked));
@@ -1396,6 +1422,7 @@
         queryParts.push("apiEndpoint=" + Common.encode(endpointOverride));
         queryParts.push("toolbarVisible=" + boolText(Common.byId("toolbarVisibleCheck").checked));
         queryParts.push("toolbarDockPosition=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarDockPositionSelect"))));
+        queryParts.push("toolbarTheme=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarThemeSelect"))));
         queryParts.push("toolbarTitleMode=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarTitleSelect"))));
         queryParts.push("toolbarButtonSize=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarButtonSizeSelect"))));
         queryParts.push("toolbarSubtitleMode=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarSubtitleSelect"))));
@@ -1586,6 +1613,8 @@
             saveManagerView();
         });
         window.MaxPkgDropdown.bindSelect(Common.byId("languageSelect"), saveSettings);
+        window.MaxPkgDropdown.bindSelect(Common.byId("managerThemeSelect"), saveSettings);
+        window.MaxPkgDropdown.bindSelect(Common.byId("toolbarThemeSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("frequencySelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarDockPositionSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarTitleSelect"), saveSettings);

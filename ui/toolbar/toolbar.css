@@ -1,7 +1,7 @@
 html,
 body {
-    background: #3b3b3b;
-    color: #dddddd;
+    background: {{toolbarBackground}};
+    color: {{buttonText}};
     font-size: 12px;
 }
 
@@ -9,18 +9,18 @@ body {
     position: relative;
     height: 50px;
     overflow: hidden;
-    border-top: 1px solid #4b4b4b;
-    border-bottom: 1px solid #222222;
+    border-top: 1px solid {{toolbarBorder}};
+    border-bottom: 1px solid {{toolbarBorder}};
 }
 
 .brand,
 .arrow,
 .toolBtn {
     height: 38px;
-    border: 1px solid #666666;
+    border: 1px solid {{buttonBorder}};
     border-radius: 4px;
-    background: #484848;
-    color: #eeeeee;
+    background: {{buttonBackground}};
+    color: {{buttonText}};
     text-decoration: none;
 }
 
@@ -50,9 +50,9 @@ body {
 .brand:hover,
 .arrow:hover,
 .toolBtn:hover {
-    border-color: #8aa7d8;
-    background: #566783;
-    color: #ffffff;
+    border-color: {{buttonHoverBorder}};
+    background: {{buttonHoverBackground}};
+    color: {{buttonHoverText}};
 }
 
 .arrow {
@@ -117,8 +117,8 @@ body {
 }
 
 .fallback {
-    background: #607ec7;
-    color: #ffffff;
+    background: {{fallbackBackground}};
+    color: {{buttonHoverText}};
     font-size: 18px;
     line-height: 23px;
     text-align: center;
@@ -153,13 +153,13 @@ body {
 }
 
 .name {
-    color: #f0f0f0;
+    color: {{buttonText}};
     font-weight: bold;
     line-height: 15px;
 }
 
 .subtitle {
-    color: #bbbbbb;
+    color: {{buttonSecondaryText}};
     font-size: 10px;
     line-height: 13px;
 }

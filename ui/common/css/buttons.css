@@ -1,10 +1,10 @@
 .button,
 .icon-button {
     display: inline-block;
-    border: 1px solid #565d68;
+    border: 1px solid {{textDisabled}};
     border-radius: 4px;
-    background: #3b4048;
-    color: #e7eaf0;
+    background: {{borderSoft}};
+    color: {{textPrimary}};
     text-align: center;
     text-decoration: none;
     vertical-align: middle;
@@ -34,21 +34,21 @@
 .button:focus,
 .icon-button:hover,
 .icon-button:focus {
-    border-color: #86a7ea;
-    background: #4a5e84;
-    color: #ffffff;
+    border-color: {{accentHover}};
+    background: {{borderStrong}};
+    color: {{textStrong}};
     outline: none;
 }
 
 .button-primary {
-    border-color: #6689d2;
-    background: #4b6da9;
-    color: #ffffff;
+    border-color: {{borderFocus}};
+    background: {{accentActive}};
+    color: {{textStrong}};
 }
 
 .button-danger {
-    border-color: #9b5555;
-    color: #ffc4c4;
+    border-color: {{dangerActive}};
+    color: {{dangerText}};
 }
 
 .button[disabled],

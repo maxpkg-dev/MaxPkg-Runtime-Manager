@@ -11,12 +11,12 @@
     min-height: 48px;
     margin-bottom: 8px;
     padding: 13px 15px 12px 50px;
-    border: 1px solid #4e6078;
-    border-left: 4px solid #6394df;
+    border: 1px solid {{borderStrong}};
+    border-left: 4px solid {{borderFocus}};
     border-radius: 6px;
-    background: #293442;
-    color: #f0f2f5;
-    box-shadow: 0 5px 16px #15181d;
+    background: {{surfaceTertiary}};
+    color: {{textStrong}};
+    box-shadow: 0 5px 16px {{backgroundDeep}};
 }
 
 .notification-icon {
@@ -27,8 +27,8 @@
     width: 25px;
     height: 25px;
     border-radius: 13px;
-    background: #4775b9;
-    color: #ffffff;
+    background: {{accentActive}};
+    color: {{textStrong}};
     font-size: 14px;
     font-weight: bold;
     line-height: 25px;
@@ -41,9 +41,9 @@
 }
 
 .notification-success {
-    border-color: #476f61;
-    border-left-color: #57bd91;
-    background: #293a36;
+    border-color: {{successBorder}};
+    border-left-color: {{success}};
+    background: {{successSurface}};
 }
 
 .notification-success .notification-icon {
@@ -57,19 +57,19 @@
 }
 
 .notification-warning {
-    border-color: #766747;
-    border-left-color: #e2ac4f;
-    background: #3c3529;
+    border-color: {{warningBorder}};
+    border-left-color: {{warningHover}};
+    background: {{warningSurface}};
 }
 
 .notification-warning .notification-icon {
-    background: #b9842e;
+    background: {{warningHover}};
 }
 
 .notification-error {
-    border-color: #7c4d55;
-    border-left-color: #df6b78;
-    background: #3c2b30;
+    border-color: {{dangerBorder}};
+    border-left-color: {{danger}};
+    background: {{dangerSurface}};
 }
 
 .notification-error .notification-icon {
@@ -83,8 +83,8 @@
     right: 0;
     bottom: 0;
     left: 0;
-    background: #15181c;
-    background: rgba(20, 22, 26, .6);
+    background: {{backgroundDeep}};
+    background: {{overlay}};
 }
 
 .busy-message {
@@ -94,8 +94,8 @@
     width: 220px;
     margin-left: -110px;
     padding: 15px;
-    border: 1px solid #596273;
+    border: 1px solid {{textDisabled}};
     border-radius: 5px;
-    background: #30353d;
+    background: {{surfaceTertiary}};
     text-align: center;
 }

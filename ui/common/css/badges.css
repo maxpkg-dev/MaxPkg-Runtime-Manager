@@ -2,22 +2,22 @@
     display: inline-block;
     margin-right: 5px;
     padding: 2px 6px;
-    border: 1px solid #525965;
+    border: 1px solid {{borderStrong}};
     border-radius: 9px;
-    background: #282c31;
-    color: #aeb5c1;
+    background: {{surfaceDisabled}};
+    color: {{textSecondary}};
     font-size: 10px;
     line-height: 14px;
     vertical-align: middle;
 }
 
 .badge-success {
-    border-color: #477555;
-    color: #83d39a;
+    border-color: {{successBorder}};
+    color: {{successText}};
 }
 
 .badge-warning {
-    border-color: #806b45;
-    color: #e2bd77;
+    border-color: {{warningBorder}};
+    color: {{warning}};
 }
 

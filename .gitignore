@@ -2,6 +2,7 @@ settings.ini
 data/settings.ini
 data/update-response.ini
 data/api-response.ini
+data/themes/
 logs/*.log
 tests/*.log
 /dist/

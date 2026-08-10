@@ -14,6 +14,7 @@
         toolbarSubtitleMode = "version",
         toolbarButtonSize = "medium",
         toolbarDockPosition = "top",
+        toolbarTheme = "default",
         updateFrequencyHours = 24,
         notifications = true,
         autoCheckPackages = true,
@@ -30,6 +31,7 @@
         managerWidth = 900,
         managerHeight = 650,
         language = "English",
+        managerTheme = "default",
         autoStart = true,
         openManagerOnStartup = false,
         developerMode = false,
@@ -166,6 +168,7 @@
             settingsData.toolbarSubtitleMode = normalizeToolbarSubtitleMode (ini.read settingsData.filePath "Toolbar" "SubtitleMode" defaultValue: "version")
             settingsData.toolbarButtonSize = normalizeToolbarButtonSize (ini.read settingsData.filePath "Toolbar" "ButtonSize" defaultValue: "medium")
             settingsData.toolbarDockPosition = normalizeToolbarDockPosition (ini.read settingsData.filePath "Toolbar" "DockPosition" defaultValue: "top")
+            settingsData.toolbarTheme = ini.read settingsData.filePath "Toolbar" "Theme" defaultValue: "default"
             settingsData.updateFrequencyHours = normalizeUpdateFrequency (integerValue (ini.read settingsData.filePath "Updates" "FrequencyHours" defaultValue: "24") 24 "Updates.FrequencyHours")
             settingsData.notifications = utils.boolValue (ini.read settingsData.filePath "Updates" "Notifications" defaultValue: "true") defaultValue: true
             settingsData.autoCheckPackages = utils.boolValue (ini.read settingsData.filePath "Updates" "AutoCheckPackages" defaultValue: "true") defaultValue: true
@@ -189,6 +192,7 @@
             settingsData.managerWidth = integerValue (ini.read settingsData.filePath "Manager" "Width" defaultValue: "900") 900 "Manager.Width"
             settingsData.managerHeight = integerValue (ini.read settingsData.filePath "Manager" "Height" defaultValue: "650") 650 "Manager.Height"
             settingsData.language = ini.read settingsData.filePath "General" "Language" defaultValue: "English"
+            settingsData.managerTheme = ini.read settingsData.filePath "General" "ManagerTheme" defaultValue: "default"
             settingsData.autoStart = utils.boolValue (ini.read settingsData.filePath "General" "AutoStart" defaultValue: "true") defaultValue: true
             settingsData.openManagerOnStartup = utils.boolValue (ini.read settingsData.filePath "General" "OpenManagerOnStartup" defaultValue: "false") defaultValue: false
             settingsData.developerMode = utils.boolValue (ini.read settingsData.filePath "Developer" "Enabled" defaultValue: "false") defaultValue: false
@@ -226,6 +230,7 @@
             if (not (ini.write settingsData.filePath "Toolbar" "SubtitleMode" settingsData.toolbarSubtitleMode)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "ButtonSize" settingsData.toolbarButtonSize)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "DockPosition" settingsData.toolbarDockPosition)) do isSaved = false
+            if (not (ini.write settingsData.filePath "Toolbar" "Theme" settingsData.toolbarTheme)) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "FrequencyHours" (settingsData.updateFrequencyHours as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "Notifications" (if (settingsData.notifications) then "true" else "false"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "AutoCheckPackages" (if (settingsData.autoCheckPackages) then "true" else "false"))) do isSaved = false
@@ -245,6 +250,7 @@
             if (not (ini.write settingsData.filePath "Manager" "Width" (settingsData.managerWidth as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "Height" (settingsData.managerHeight as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "General" "Language" settingsData.language)) do isSaved = false
+            if (not (ini.write settingsData.filePath "General" "ManagerTheme" settingsData.managerTheme)) do isSaved = false
             if (not (ini.write settingsData.filePath "General" "AutoStart" (if (settingsData.autoStart) then "true" else "false"))) do isSaved = false
             if (not (ini.write settingsData.filePath "General" "OpenManagerOnStartup" (if (settingsData.openManagerOnStartup) then "true" else "false"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Developer" "Enabled" (if (settingsData.developerMode) then "true" else "false"))) do isSaved = false

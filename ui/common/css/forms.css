@@ -2,17 +2,17 @@ input[type="text"],
 input[type="number"],
 select,
 textarea {
-    border: 1px solid #505762;
+    border: 1px solid {{borderStrong}};
     border-radius: 4px;
-    background: #22252a;
-    color: #e4e7ec;
+    background: {{backgroundWindow}};
+    color: {{textPrimary}};
 }
 
 input[type="text"]:focus,
 input[type="number"]:focus,
 select:focus,
 textarea:focus {
-    border-color: #7e9fe0;
+    border-color: {{accentHover}};
     outline: none;
 }
 
@@ -23,7 +23,7 @@ textarea:focus {
 .field-label {
     display: block;
     margin-bottom: 5px;
-    color: #c7ccd5;
+    color: {{textPrimary}};
 }
 
 .field-control {
@@ -61,10 +61,10 @@ textarea:focus {
     height: 32px;
     padding: 5px 32px 5px 9px;
     overflow: hidden;
-    border: 1px solid #505762;
+    border: 1px solid {{borderStrong}};
     border-radius: 4px;
-    background: #22252a;
-    color: #e4e7ec;
+    background: {{backgroundWindow}};
+    color: {{textPrimary}};
     text-align: left;
     white-space: nowrap;
     cursor: pointer;
@@ -73,8 +73,8 @@ textarea:focus {
 .html-select-button:hover,
 .html-select-button:focus,
 .html-select.is-open .html-select-button {
-    border-color: #7e9fe0;
-    background: #292e36;
+    border-color: {{accentHover}};
+    background: {{surfaceSecondary}};
     outline: none;
 }
 
@@ -91,10 +91,10 @@ textarea:focus {
     position: fixed;
     z-index: 1300;
     padding: 4px;
-    border: 1px solid #59616d;
+    border: 1px solid {{textDisabled}};
     border-radius: 4px;
-    background: #30353d;
-    box-shadow: 0 5px 18px #15171a;
+    background: {{surfaceTertiary}};
+    box-shadow: 0 5px 18px {{backgroundDeep}};
 }
 
 .html-select-menu button,
@@ -107,7 +107,7 @@ textarea:focus {
     border: 0;
     border-radius: 3px;
     background: transparent;
-    color: #dce0e7;
+    color: {{textPrimary}};
     text-align: left;
     text-decoration: none;
     cursor: pointer;
@@ -119,12 +119,12 @@ textarea:focus {
 .context-menu button:focus,
 .context-menu a:hover,
 .context-menu a:focus {
-    background: #4a5e84;
-    color: #ffffff;
+    background: {{borderStrong}};
+    color: {{textStrong}};
     outline: none;
 }
 
 .html-select-menu button.is-selected {
-    background: #415476;
-    color: #ffffff;
+    background: {{borderStrong}};
+    color: {{textStrong}};
 }
