@@ -1,4 +1,4 @@
-# MaxPkg Runtime
+# MaxPkg Runtime Manager
 
 ## Your 3ds Max scripts, all in one place
 
