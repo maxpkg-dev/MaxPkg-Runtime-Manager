@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- Fixed: Runtime self-updates and release links now use the renamed MaxPkg Runtime Manager GitHub repository.
+
 ## 1.1.0
 
 - Added: Manager and toolbar themes can now be selected independently from the new Themes settings section.
