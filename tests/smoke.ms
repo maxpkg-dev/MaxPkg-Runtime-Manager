@@ -113,7 +113,7 @@
     local apiTestFilePath = (utilsModule.ensureSlash (getDir #temp)) + "maxpkg-api-response-" + deleteTestId + ".ini"
     local apiTestStream = createFile apiTestFilePath
     if (apiTestStream == undefined) do throw "Could not create the Runtime API parser test file."
-    format "[Catalog]\nPage=1\nPageSize=24\nTotal=1\nTotalPages=1\n\n[test-package-guid]\nGuid=test-package-guid\nSlug=test-package\nName=Test Package\nVersion=1.2.3\nDescription=Line one\\nLine two\nMin3dsMax=2012\nMax3dsMax=2026\nPurchaseUrl=https://developer.example/buy\nPurchaseButtonLabel=Get license\nDownloadUrl=https://maxpkg.dev/api/runtime/v1/download/package/test-package-guid/1.2.3\n" to: apiTestStream
+    format "[Catalog]\nPage=1\nPageSize=24\nTotal=1\nTotalPages=1\n\n[test-package-guid]\nGuid=test-package-guid\nSlug=test-package\nName=Test Package\nVersion=1.2.3\nDescription=Line one\\nLine two\nMin3dsMax=2012\nMax3dsMax=2026\nPurchaseUrl=https://developer.example/buy\nPurchaseButtonLabel=Get license\nRating=4.8\nReviewCount=12\nDownloadCount=3456\nDownloadUrl=https://maxpkg.dev/api/runtime/v1/download/package/test-package-guid/1.2.3\n" to: apiTestStream
     close apiTestStream
     repositoryModule.ini = iniModule
     repositoryModule.utils = utilsModule
@@ -122,6 +122,8 @@
     if (parsedApiResponse.packageInfo.description != "Line one\r\nLine two") do throw "Runtime API escaped newline parsing failed."
     if (parsedApiResponse.packageInfo.purchaseUrl != "https://developer.example/buy") do throw "Runtime API PurchaseUrl parsing failed."
     if (parsedApiResponse.packageInfo.purchaseButtonLabel != "Get license") do throw "Runtime API PurchaseButtonLabel parsing failed."
+    if (parsedApiResponse.packageInfo.rating != 4.8 or parsedApiResponse.packageInfo.reviewCount != 12) do throw "Runtime API rating statistics parsing failed."
+    if (parsedApiResponse.packageInfo.downloadCount != 3456) do throw "Runtime API download statistics parsing failed."
     if (parsedApiResponse.packageInfo.downloadUrl == "") do throw "Runtime API DownloadUrl parsing failed."
     local compatibleApiResponse = repositoryModule.enforceMinimum3dsMax parsedApiResponse requireCompatiblePackage: true
     if (not compatibleApiResponse.success or compatibleApiResponse.packages.count != 1) do throw "Maximum 3ds Max version incorrectly restricted package compatibility."

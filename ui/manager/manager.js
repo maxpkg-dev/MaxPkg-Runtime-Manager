@@ -376,11 +376,11 @@
         return "<span class='toolbar-hidden-indicator' title='Hidden from toolbar'>" + icon("eye-off") + "</span>";
     }
 
-    function purchaseIndicator(packageInfo) {
+    function purchaseIndicator(packageInfo, includeLabel) {
         if (!packageInfo.purchaseUrl) {
             return "";
         }
-        return "<span class='badge badge-purchase' title='Purchase required'>" + icon("shopping-cart") + "</span>";
+        return "<span class='badge badge-purchase'>" + icon("shopping-cart") + (includeLabel ? Common.escapeHtml(purchaseActionLabel(packageInfo)) : "") + "</span>";
     }
 
     function purchaseActionLabel(packageInfo) {
@@ -396,6 +396,29 @@
             "<p class='purchase-notice-copy'>This script requires purchase. maxpkg does not process payments or take responsibility for purchases. Payment is handled by the developer. Read the documentation for full purchase details.</p>" +
             "<div class='purchase-notice-action'><a class='button button-purchase purchase-notice-button' href='maxpkg://manager/package-link/" + Common.encode(packageInfo.guid) + "?kind=purchase'>" + icon("external-link") + Common.escapeHtml(purchaseActionLabel(packageInfo)) + "</a></div>" +
         "</div>";
+    }
+
+    function compactStatNumber(sourceNumber) {
+        var normalizedNumber = Math.max(0, parseInt(sourceNumber, 10) || 0);
+        var compactNumber;
+        if (normalizedNumber >= 1000000) {
+            compactNumber = Math.round(normalizedNumber / 100000) / 10;
+            return compactNumber + "M";
+        }
+        if (normalizedNumber >= 1000) {
+            compactNumber = Math.round(normalizedNumber / 100) / 10;
+            return compactNumber + "K";
+        }
+        return String(normalizedNumber);
+    }
+
+    function discoverPackageStats(packageInfo) {
+        var downloadCount = Math.max(0, parseInt(packageInfo.downloadCount, 10) || 0);
+        var reviewCount = Math.max(0, parseInt(packageInfo.reviewCount, 10) || 0);
+        var rating = parseFloat(packageInfo.rating) || 0;
+        var statsContent = "<span class='catalog-stat' title='" + downloadCount + " downloads'>" + icon("download") + compactStatNumber(downloadCount) + "</span>";
+        statsContent += "<span class='catalog-stat' title='Rating " + rating.toFixed(1) + " from " + reviewCount + " review(s)'>" + icon("star") + rating.toFixed(1) + " <span class='catalog-stat-secondary'>(" + compactStatNumber(reviewCount) + ")</span></span>";
+        return statsContent;
     }
 
     function visiblePackages() {
@@ -443,7 +466,7 @@
             badges += "<span class='badge badge-warning'>v" + Common.escapeHtml(packageInfo.latestVersion) + " available</span>";
             updateAction = "<a class='button' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update</a> ";
         }
-        badges += purchaseIndicator(packageInfo);
+        badges += purchaseIndicator(packageInfo, false);
         if (isFullCard) {
             packageDetailsContent = packageDescriptionHtml(packageInfo.description) +
                 "<div>" + badges + "</div>";
@@ -684,7 +707,7 @@
     }
 
     function remotePackageCard(packageInfo) {
-        var badges = "";
+        var purchaseBadge = purchaseIndicator(packageInfo, true);
         var resolvedPackage = findPackage(packageInfo.guid);
         var installAction = "<a class='button button-primary' href='maxpkg://manager/install/" + Common.encode(packageInfo.guid) + "' data-busy='Installing package...'>" + icon("download") + "Install</a>";
         var toolbarIndicator = "";
@@ -692,13 +715,6 @@
             installAction = "<button class='button' type='button' disabled='disabled'>" + icon("check") + "Installed</button>";
             toolbarIndicator = toolbarHiddenIndicator(resolvedPackage);
         }
-        if (packageInfo.runtime) {
-            badges += "<span class='badge'>" + Common.escapeHtml(packageInfo.runtime) + "</span>";
-        }
-        if (packageInfo.category) {
-            badges += "<span class='badge'>" + Common.escapeHtml(packageInfo.category) + "</span>";
-        }
-        badges += purchaseIndicator(packageInfo);
         return "<div class='card' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
             "<div class='card-content clearfix'>" +
                 "<button class='package-summary clearfix' type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "' title='Open package details'>" +
@@ -707,7 +723,7 @@
                     "<span class='package-meta ellipsis'>" + toolbarIndicator + "v" + Common.escapeHtml(packageInfo.version) + " &middot; " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</span></span>" +
                 "</button>" +
                 packageDescriptionHtml(packageInfo.description) +
-                "<div>" + badges + "</div>" +
+                "<div class='catalog-card-meta clearfix'><span class='catalog-card-stats'>" + discoverPackageStats(packageInfo) + "</span><span class='catalog-card-purchase'>" + purchaseBadge + "</span></div>" +
             "</div>" +
             "<div class='card-actions'>" + installAction + "</div>" +
         "</div>";

@@ -246,6 +246,15 @@
             return getProperty sourceData propertyName
         ),
 
+        fn optionalNumberJson sourceData propertyName defaultNumber: 0 = (
+            if (not (isProperty sourceData propertyName)) do return defaultNumber as string
+            try (
+                return (getProperty sourceData propertyName) as string
+            ) catch (
+                return defaultNumber as string
+            )
+        ),
+
         fn packageJson packageInfo = (
             local isRemotePackage = optionalBoolean packageInfo #isRemote
             local toolbarVisible = if (isRemotePackage) then false else packageInfo.toolbarVisible and not (packageIsHidden packageInfo.guid)
@@ -296,6 +305,9 @@
             packageContent += "\"coverImageUrl\":" + (utils.jsonString coverImageUrl) + ","
             packageContent += "\"screenshots\":" + (screenshotsJson screenshotEntries) + ","
             packageContent += "\"downloadUrl\":" + (utils.jsonString (optionalString packageInfo #downloadUrl)) + ","
+            packageContent += "\"rating\":" + (optionalNumberJson packageInfo #rating) + ","
+            packageContent += "\"reviewCount\":" + (optionalNumberJson packageInfo #reviewCount) + ","
+            packageContent += "\"downloadCount\":" + (optionalNumberJson packageInfo #downloadCount) + ","
             packageContent += "\"installPath\":" + (utils.jsonString packageInfo.installPath) + ","
             packageContent += "\"toolbarVisible\":" + (boolJson toolbarVisible) + ","
             packageContent += "\"updateAvailable\":" + (boolJson packageInfo.updateAvailable) + ","

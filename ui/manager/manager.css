@@ -441,6 +441,51 @@
     line-height: 18px;
 }
 
+.catalog-card-meta {
+    height: 22px;
+    color: #9ca5b2;
+    font-size: 11px;
+    line-height: 20px;
+}
+
+.catalog-card-stats {
+    float: left;
+    white-space: nowrap;
+}
+
+.catalog-stat {
+    display: inline-block;
+    margin-right: 11px;
+    white-space: nowrap;
+}
+
+.catalog-stat .icon {
+    width: 13px;
+    height: 13px;
+    margin: 0 4px 0 0;
+    vertical-align: -3px;
+    opacity: .85;
+}
+
+.catalog-stat-secondary {
+    color: #7f8793;
+}
+
+.catalog-card-purchase {
+    float: right;
+}
+
+.catalog-card-purchase .badge-purchase {
+    padding-right: 7px;
+    padding-left: 6px;
+    color: #86d8ad;
+    line-height: 17px;
+}
+
+.catalog-card-purchase .badge-purchase .icon {
+    margin-right: 4px;
+}
+
 .card.card-compact {
     height: 128px;
 }

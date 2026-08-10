@@ -51,6 +51,9 @@
         coverImageUrl = "",
         screenshotEntries = #(),
         downloadUrl = "",
+        rating = 0.0,
+        reviewCount = 0,
+        downloadCount = 0,
         latestVersion = "",
         installPath = "",
         toolbarVisible = false,
@@ -83,6 +86,14 @@
         fn integerValue sourceContent fallbackNumber = (
             try (
                 return sourceContent as integer
+            ) catch (
+                return fallbackNumber
+            )
+        ),
+
+        fn floatValue sourceContent fallbackNumber = (
+            try (
+                return sourceContent as float
             ) catch (
                 return fallbackNumber
             )
@@ -256,6 +267,9 @@
             packageInfo.packageIconUrl = ini.readAny apiResponseFilePath iniSection #("PackageIconUrl", "packageIconUrl")
             packageInfo.coverImageUrl = ini.readAny apiResponseFilePath iniSection #("CoverImageUrl", "coverImageUrl")
             packageInfo.downloadUrl = ini.readAny apiResponseFilePath iniSection #("DownloadUrl", "downloadUrl")
+            packageInfo.rating = floatValue (ini.readAny apiResponseFilePath iniSection #("Rating", "rating") defaultValue: "0") 0.0
+            packageInfo.reviewCount = integerValue (ini.readAny apiResponseFilePath iniSection #("ReviewCount", "reviewCount") defaultValue: "0") 0
+            packageInfo.downloadCount = integerValue (ini.readAny apiResponseFilePath iniSection #("DownloadCount", "downloadCount") defaultValue: "0") 0
             packageInfo.detailsLoaded = detailsLoaded
             packageInfo.changelogEntries = readChangelog apiResponseFilePath (iniSection + ".changelog")
             if (packageInfo.changelogEntries.count == 0 and detailsLoaded) do packageInfo.changelogEntries = readChangelog apiResponseFilePath "changelog"
