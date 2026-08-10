@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
 
-set "REPOSITORY=maxpkg-dev/runtime"
+set "REPOSITORY=maxpkg-dev/MaxPkg-Runtime-Manager"
 set "WORKFLOW=publish-runtime.yml"
 set "RELEASE_BRANCH=main"
 set "PROJECT_ROOT=%~dp0"

@@ -22,8 +22,8 @@
         logger,
         utils,
         http,
-        latestVersionUrl = "https://raw.githubusercontent.com/maxpkg-dev/runtime/main/version.ini",
-        runtimeArchiveUrl = "https://github.com/maxpkg-dev/runtime/archive/refs/heads/main.zip",
+        latestVersionUrl = "https://raw.githubusercontent.com/maxpkg-dev/MaxPkg-Runtime-Manager/main/version.ini",
+        runtimeArchiveUrl = "https://github.com/maxpkg-dev/MaxPkg-Runtime-Manager/archive/refs/heads/main.zip",
         autoUpdateWorker = undefined,
         autoUpdateResult = undefined,
 

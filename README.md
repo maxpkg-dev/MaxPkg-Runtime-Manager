@@ -31,7 +31,7 @@ not installed yet, it is installed automatically at the same time.
 If you prefer to install MaxPkg before choosing a script:
 
 1. Download `MaxPkg-Runtime-Manager.mzp` from the
-   [latest release](https://github.com/maxpkg-dev/runtime/releases/latest).
+   [latest release](https://github.com/maxpkg-dev/MaxPkg-Runtime-Manager/releases/latest).
 2. Drag the downloaded file into a 3ds Max viewport.
 
 MaxPkg will start automatically the next time you open 3ds Max.

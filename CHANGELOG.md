@@ -9,6 +9,7 @@
 - Fixed: Light Studio buttons and MaxPkg logos now remain easy to read on light backgrounds.
 - Changed: Installation and removal windows now follow the selected Manager theme.
 - Changed: Runtime installation and updates include built-in themes while preserving additional user themes.
+
 ## 1.0.9
 
 - Added: Automatic CURL fallback keeps online features working when 3ds Max network access through .NET is blocked by a firewall.
