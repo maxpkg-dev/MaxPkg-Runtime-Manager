@@ -1352,14 +1352,14 @@
 
 .context-menu a.context-danger {
     background: {{dangerSurface}};
-    color: {{warning}};
+    color: {{iconDanger}};
     font-weight: bold;
 }
 
 .context-menu a.context-danger:hover,
 .context-menu a.context-danger:focus {
     background: {{dangerBorder}};
-    color: {{textStrong}};
+    color: {{iconDanger}};
     outline: none;
 }
 
