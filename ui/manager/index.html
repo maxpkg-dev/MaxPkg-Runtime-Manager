@@ -132,6 +132,7 @@
                     <button class="settings-nav-button is-active" type="button" data-settings-page="general">General</button>
                     <button class="settings-nav-button" type="button" data-settings-page="updates">Updates</button>
                     <button class="settings-nav-button" type="button" data-settings-page="toolbar">Toolbar</button>
+                    <button class="settings-nav-button" type="button" data-settings-page="themes">Themes</button>
                     <button class="settings-nav-button" type="button" data-settings-page="developer">Developer</button>
                     <button id="endpointSettingsNavigation" class="settings-nav-button is-hidden" type="button" data-settings-page="endpoint">Endpoint</button>
                     <button class="settings-nav-button" type="button" data-settings-page="about">About</button>
@@ -149,18 +150,6 @@
                                 </button>
                                 <div class="html-select-menu is-hidden" data-dropdown-width="source">
                                     <button type="button" data-dropdown-option="English">English</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <span id="managerThemeLabel" class="field-label">Manager theme</span>
-                            <div id="managerThemeSelect" class="html-select html-select-wide" data-value="default">
-                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="managerThemeLabel" data-dropdown-trigger="true">
-                                    <span data-select-label="managerThemeSelect">Default</span>
-                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
-                                </button>
-                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
-                                    <button type="button" data-dropdown-option="default">Default</button>
                                 </div>
                             </div>
                         </div>
@@ -195,18 +184,6 @@
                     <div class="settings-page is-hidden" data-settings-panel="toolbar">
                         <h3>Toolbar</h3>
                         <label class="check-row"><input id="toolbarVisibleCheck" type="checkbox">Show MaxPkg toolbar</label>
-                        <div class="field">
-                            <span id="toolbarThemeLabel" class="field-label">Toolbar theme</span>
-                            <div id="toolbarThemeSelect" class="html-select html-select-wide" data-value="default">
-                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarThemeLabel" data-dropdown-trigger="true">
-                                    <span data-select-label="toolbarThemeSelect">Default</span>
-                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
-                                </button>
-                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
-                                    <button type="button" data-dropdown-option="default">Default</button>
-                                </div>
-                            </div>
-                        </div>
                         <div class="field">
                             <span id="toolbarDockPositionLabel" class="field-label">Toolbar position</span>
                             <div id="toolbarDockPositionSelect" class="html-select html-select-wide" data-value="top">
@@ -264,6 +241,34 @@
                         </div>
                         <p class="text-muted">Package buttons can be shown or hidden from each Installed card.</p>
                         <a class="button" href="maxpkg://manager/reset-toolbar-order">Reset package order</a>
+                    </div>
+                    <div class="settings-page is-hidden" data-settings-panel="themes">
+                        <h3>Themes</h3>
+                        <p class="text-muted">Choose independent themes for the Manager and the docked toolbar.</p>
+                        <div class="field">
+                            <span id="managerThemeLabel" class="field-label">Manager theme</span>
+                            <div id="managerThemeSelect" class="html-select html-select-wide" data-value="default">
+                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="managerThemeLabel" data-dropdown-trigger="true">
+                                    <span data-select-label="managerThemeSelect">Default</span>
+                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
+                                </button>
+                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                    <button type="button" data-dropdown-option="default">Default</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <span id="toolbarThemeLabel" class="field-label">Toolbar theme</span>
+                            <div id="toolbarThemeSelect" class="html-select html-select-wide" data-value="default">
+                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarThemeLabel" data-dropdown-trigger="true">
+                                    <span data-select-label="toolbarThemeSelect">Default</span>
+                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
+                                </button>
+                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                    <button type="button" data-dropdown-option="default">Default</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="settings-page is-hidden" data-settings-panel="developer">
                         <h3>Developer</h3>

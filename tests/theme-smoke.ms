@@ -31,15 +31,25 @@
     if ((themesModule.resolveThemeId "manager" "missing-theme") != "default") do throw "Missing Manager theme did not fall back to default."
     if ((themesModule.resolveThemeId "toolbar" "missing-theme") != "default") do throw "Missing Toolbar theme did not fall back to default."
 
-    local managerCss = themesModule.renderManagerCss "default"
-    local toolbarCss = themesModule.renderToolbarCss "default"
+    for managerThemeInfo in managerThemes do (
+        local managerCss = themesModule.renderManagerCss managerThemeInfo.themeId
+        if (managerCss == "") do throw ("Manager theme CSS is empty: " + managerThemeInfo.themeId)
+        if ((findString managerCss "{{") != undefined) do throw ("Manager theme contains unresolved tokens: " + managerThemeInfo.themeId)
+        if (not (themesModule.prepareManagerAssets managerThemeInfo.themeId)) do throw ("Manager theme assets could not be generated: " + managerThemeInfo.themeId)
+    )
+    for toolbarThemeInfo in toolbarThemes do (
+        local toolbarCss = themesModule.renderToolbarCss toolbarThemeInfo.themeId
+        if (toolbarCss == "") do throw ("Toolbar theme CSS is empty: " + toolbarThemeInfo.themeId)
+        if ((findString toolbarCss "{{") != undefined) do throw ("Toolbar theme contains unresolved tokens: " + toolbarThemeInfo.themeId)
+        if (not (themesModule.prepareToolbarAssets toolbarThemeInfo.themeId)) do throw ("Toolbar theme assets could not be generated: " + toolbarThemeInfo.themeId)
+    )
+    local selectedManagerTheme = iniModule.read (runtimeRoot + "settings.ini") "General" "ManagerTheme" defaultValue: "default"
+    local selectedToolbarTheme = iniModule.read (runtimeRoot + "settings.ini") "Toolbar" "Theme" defaultValue: "default"
+    if (not (themesModule.prepareManagerAssets (themesModule.resolveThemeId "manager" selectedManagerTheme))) do throw "Selected Manager theme could not be restored after testing."
+    if (not (themesModule.prepareToolbarAssets (themesModule.resolveThemeId "toolbar" selectedToolbarTheme))) do throw "Selected Toolbar theme could not be restored after testing."
     local resultDialogCss = themesModule.renderResultDialogCss "default"
-    if (managerCss == "" or toolbarCss == "" or resultDialogCss == "") do throw "Theme CSS rendering returned empty content."
-    if ((findString managerCss "{{") != undefined) do throw "Manager CSS contains unresolved theme tokens."
-    if ((findString toolbarCss "{{") != undefined) do throw "Toolbar CSS contains unresolved theme tokens."
+    if (resultDialogCss == "") do throw "Result dialog theme CSS is empty."
     if ((findString resultDialogCss "{{") != undefined) do throw "Result dialog CSS contains unresolved theme tokens."
-    if (not (themesModule.prepareManagerAssets "default")) do throw "Manager theme assets could not be generated."
-    if (not (themesModule.prepareToolbarAssets "default")) do throw "Toolbar theme assets could not be generated."
 
     format "MAXPKG_THEME_SMOKE_OK\n"
     quitMax #noPrompt
