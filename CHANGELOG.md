@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.9
+
+- Added: Automatic CURL fallback keeps online features working when 3ds Max network access through .NET is blocked by a firewall.
+- Added: Discover cards now show download counts, ratings, review counts, and the purchase action selected by the package developer.
+- Added: Manager footer now includes a direct link to maxpkg.dev.
+- Fixed: Image cache cleanup no longer reports DateTime comparison errors and keeps its disk usage bounded.
+- Fixed: Discover cards now keep equal spacing along the left and right sides of the catalog.
+- Changed: Catalog images now download through a small background CURL queue so the Manager remains responsive.
+- Changed: CURL mode remains active for the current 3ds Max session and is clearly identified as a slower fallback in the status bar.
+- Changed: Runtime logs are cleaned between 3ds Max sessions and limited in size.
+
 ## 1.0.8
 
 - Fixed: Removing a package now also cleans up its generated actions, Quad Menu commands, and Quad Menu startup file.
