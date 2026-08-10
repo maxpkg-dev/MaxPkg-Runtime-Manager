@@ -21,60 +21,30 @@
         runtimeRoot,
         logger,
         utils,
+        http,
         latestVersionUrl = "https://raw.githubusercontent.com/maxpkg-dev/runtime/main/version.ini",
         runtimeArchiveUrl = "https://github.com/maxpkg-dev/runtime/archive/refs/heads/main.zip",
         autoUpdateWorker = undefined,
         autoUpdateResult = undefined,
 
-        fn enableTls12 = (
-            try (
-                local servicePointManagerClass = dotNetClass "System.Net.ServicePointManager"
-                local securityProtocolClass = dotNetClass "System.Net.SecurityProtocolType"
-                servicePointManagerClass.SecurityProtocol = securityProtocolClass.Tls12
-                return true
-            ) catch (
-                return false
-            )
-        ),
-
-        fn clientWithHeaders = (
-            enableTls12()
-            local webClient = dotNetObject "System.Net.WebClient"
-            webClient.Headers.Add "User-Agent" "MaxPkg-Runtime/1.0"
-            return webClient
-        ),
-
         fn downloadString sourceUrl = (
-            local webClient = undefined
             try (
-                webClient = clientWithHeaders()
-                local sourceContent = webClient.DownloadString sourceUrl
-                webClient.Dispose()
+                if (http == undefined) do return ""
+                local sourceContent = http.getString sourceUrl
+                if (sourceContent == undefined) do return ""
                 return sourceContent
             ) catch (
                 logger.logWarning "self-updater" ("Could not download " + sourceUrl + ": " + getCurrentException())
-                try (
-                    if (webClient != undefined) do webClient.Dispose()
-                ) catch (
-                )
                 return ""
             )
         ),
 
         fn downloadFile sourceUrl targetFilePath = (
-            local webClient = undefined
             try (
-                makeDir (getFilenamePath targetFilePath) all: true
-                webClient = clientWithHeaders()
-                webClient.DownloadFile sourceUrl targetFilePath
-                webClient.Dispose()
-                return doesFileExist targetFilePath
+                if (http == undefined) do return false
+                return http.download sourceUrl targetFilePath
             ) catch (
                 logger.logError "self-updater" ("Could not download " + sourceUrl + ": " + getCurrentException())
-                try (
-                    if (webClient != undefined) do webClient.Dispose()
-                ) catch (
-                )
                 return false
             )
         ),

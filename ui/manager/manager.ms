@@ -51,6 +51,8 @@
         owner,
         utils,
         logger,
+        http,
+        imageCache,
         runtimeRoot,
         rolloutRef,
         dialogOpen = false,
@@ -209,12 +211,19 @@
             return "[" + (utils.join changelogContent separator: ",") + "]"
         ),
 
+        fn cachedImageUrl sourceUrl fallbackUrl: "" = (
+            if (imageCache == undefined) do return sourceUrl
+            return imageCache.localImageUrl sourceUrl fallbackUrl: fallbackUrl
+        ),
+
         fn screenshotsJson screenshotEntries = (
             local screenshotContent = #()
             for screenshotEntry in screenshotEntries do (
+                local fullImageUrl = cachedImageUrl screenshotEntry.imageUrl
+                local thumbnailImageUrl = cachedImageUrl screenshotEntry.thumbnailUrl fallbackUrl: screenshotEntry.imageUrl
                 local entryContent = "{"
-                entryContent += "\"url\":" + (utils.jsonString screenshotEntry.imageUrl) + ","
-                entryContent += "\"thumbnailUrl\":" + (utils.jsonString screenshotEntry.thumbnailUrl) + ","
+                entryContent += "\"url\":" + (utils.jsonString fullImageUrl) + ","
+                entryContent += "\"thumbnailUrl\":" + (utils.jsonString thumbnailImageUrl) + ","
                 entryContent += "\"title\":" + (utils.jsonString screenshotEntry.titleContent) + ","
                 entryContent += "\"caption\":" + (utils.jsonString screenshotEntry.captionContent) + ","
                 entryContent += "\"sortOrder\":" + (screenshotEntry.sortOrder as string)
@@ -245,6 +254,13 @@
             local screenshotEntries = if (isProperty packageInfo #screenshotEntries) then packageInfo.screenshotEntries else #()
             local packagePageUrl = utils.packagePageUrl owner.settings.apiEndpoint packageInfo.slug
             if (iconUrl == "" and packageInfo.iconFile != "" and doesFileExist packageInfo.iconFile) do iconUrl = utils.fileUrl packageInfo.iconFile
+            if (packageIconUrl != "") then (
+                packageIconUrl = cachedImageUrl packageIconUrl
+            ) else if (iconUrl != "") then (
+                iconUrl = cachedImageUrl iconUrl
+            ) else if (coverImageUrl != "") do (
+                coverImageUrl = cachedImageUrl coverImageUrl
+            )
             local packageContent = "{"
             packageContent += "\"guid\":" + (utils.jsonString packageInfo.guid) + ","
             packageContent += "\"slug\":" + (utils.jsonString packageInfo.slug) + ","
@@ -361,11 +377,12 @@
             for packageInfo in owner.packages where packageInfo.updateAvailable do updateCount += 1
             local isRepositoryConfigured = (utils.resolveApiEndpoint owner.settings.apiEndpoint) != ""
             local isRepositoryOnline = owner.catalogState != undefined and owner.catalogState.success
+            local connectionState = if (isRepositoryOnline and http != undefined and http.shouldUseCurl()) then "online-curl" else if (isRepositoryOnline) then "online" else if (isRepositoryConfigured) then "configured" else "offline"
             local stateContent = "{"
             stateContent += "\"runtimeVersion\":" + (utils.jsonString owner.version) + ","
             stateContent += "\"packages\":" + packagesJson() + ","
             stateContent += "\"updateCount\":" + (updateCount as string) + ","
-            stateContent += "\"connection\":" + (utils.jsonString (if (isRepositoryOnline) then "online" else if (isRepositoryConfigured) then "configured" else "offline")) + ","
+            stateContent += "\"connection\":" + (utils.jsonString connectionState) + ","
             stateContent += "\"settings\":" + settingsJson() + ","
             stateContent += "\"discover\":" + discoverJson() + ","
             stateContent += "\"remoteDetails\":" + remoteDetailsJson()

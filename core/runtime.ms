@@ -59,6 +59,12 @@
     operationModule.logger = loggerModule
     local httpModule = fileIn (coreRoot + @"http.ms")
     httpModule.logger = loggerModule
+    httpModule.utils = utilsModule
+    local imageCacheModule = fileIn (coreRoot + @"image-cache.ms")
+    imageCacheModule.http = httpModule
+    imageCacheModule.utils = utilsModule
+    imageCacheModule.logger = loggerModule
+    imageCacheModule.initialize()
     local apiModule = fileIn (coreRoot + @"api.ms")
     local repositoryModule = fileIn (coreRoot + @"repository.ms")
     local toolbarModule = fileIn (coreRoot + @"toolbar.ms")
@@ -472,6 +478,8 @@
     toolbarModule.initialize MaxPkg runtimeRoot utilsModule loggerModule toolbarModule
     managerModule.initialize MaxPkg runtimeRoot utilsModule managerModule
     managerModule.logger = loggerModule
+    managerModule.http = httpModule
+    managerModule.imageCache = imageCacheModule
     operationModule.owner = MaxPkg
     repositoryModule.owner = MaxPkg
     repositoryModule.runtimeRoot = runtimeRoot
@@ -507,6 +515,7 @@
     selfUpdaterModule.runtimeRoot = runtimeRoot
     selfUpdaterModule.logger = loggerModule
     selfUpdaterModule.utils = utilsModule
+    selfUpdaterModule.http = httpModule
 
     MaxPkg
 )

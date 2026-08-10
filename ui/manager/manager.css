@@ -1271,6 +1271,36 @@
     margin-left: 18px;
 }
 
+.status-bar .connection-status-curl {
+    position: relative;
+    cursor: help;
+}
+
+.status-bar .connection-status-curl:after {
+    display: none;
+    position: absolute;
+    z-index: 50;
+    right: 0;
+    bottom: 20px;
+    width: 310px;
+    padding: 10px 12px;
+    border: 1px solid #59616d;
+    border-radius: 4px;
+    background: #343942;
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.35);
+    color: #e2e6eb;
+    content: attr(data-tooltip);
+    font-size: 12px;
+    line-height: 17px;
+    text-align: left;
+    white-space: normal;
+}
+
+.status-bar .connection-status-curl:hover:after,
+.status-bar .connection-status-curl:focus:after {
+    display: block;
+}
+
 .context-menu {
     width: 190px;
 }

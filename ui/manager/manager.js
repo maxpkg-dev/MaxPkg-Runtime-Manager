@@ -118,7 +118,7 @@
         }, 0);
     }
 
-    function safeHttpImageUrl(sourceUrl) {
+    function safeHttpUrl(sourceUrl) {
         var normalizedUrl = String(sourceUrl || "").replace(/^\s+|\s+$/g, "");
         if (/^https?:\/\//i.test(normalizedUrl)) {
             return normalizedUrl;
@@ -126,8 +126,16 @@
         return "";
     }
 
+    function safeImageUrl(sourceUrl) {
+        var normalizedUrl = String(sourceUrl || "").replace(/^\s+|\s+$/g, "");
+        if (safeHttpUrl(normalizedUrl) || /^file:\/\/\//i.test(normalizedUrl)) {
+            return normalizedUrl;
+        }
+        return "";
+    }
+
     function safeThumbnailImageUrl(sourceUrl, fallbackUrl) {
-        var normalizedUrl = safeHttpImageUrl(sourceUrl);
+        var normalizedUrl = safeImageUrl(sourceUrl);
         if (!normalizedUrl || /\.(webp|avif)(?:[?#]|$)/i.test(normalizedUrl)) {
             return fallbackUrl;
         }
@@ -200,17 +208,17 @@
 
     function safePackageImageUrl(packageInfo, includeCover) {
         var discoverPackage = discoverPackageForGuid(packageInfo.guid);
-        var packageIconUrl = safeHttpImageUrl(packageInfo.packageIconUrl);
-        var iconUrl = safeHttpImageUrl(packageInfo.iconUrl);
-        var coverImageUrl = includeCover ? safeHttpImageUrl(packageInfo.coverImageUrl) : "";
+        var packageIconUrl = safeImageUrl(packageInfo.packageIconUrl);
+        var iconUrl = safeImageUrl(packageInfo.iconUrl);
+        var coverImageUrl = includeCover ? safeImageUrl(packageInfo.coverImageUrl) : "";
         if (!packageIconUrl && discoverPackage) {
-            packageIconUrl = safeHttpImageUrl(discoverPackage.packageIconUrl);
+            packageIconUrl = safeImageUrl(discoverPackage.packageIconUrl);
         }
         if (!iconUrl && discoverPackage) {
-            iconUrl = safeHttpImageUrl(discoverPackage.iconUrl);
+            iconUrl = safeImageUrl(discoverPackage.iconUrl);
         }
         if (!coverImageUrl && includeCover && discoverPackage) {
-            coverImageUrl = safeHttpImageUrl(discoverPackage.coverImageUrl);
+            coverImageUrl = safeImageUrl(discoverPackage.coverImageUrl);
         }
         if (packageIconUrl) {
             return packageIconUrl;
@@ -800,7 +808,7 @@
 
         while ((linkMatch = linkExpression.exec(rawContent)) !== null) {
             outputParts.push(markdownInlineTextHtml(rawContent.substring(lastIndex, linkMatch.index)));
-            linkUrl = safeHttpImageUrl(linkMatch[2]);
+            linkUrl = safeHttpUrl(linkMatch[2]);
             linkLabel = markdownInlineTextHtml(linkMatch[1]);
             if (linkUrl) {
                 outputParts.push("<a href='" + Common.escapeHtml(linkUrl) + "' target='_blank'>" + linkLabel + "</a>");
@@ -937,7 +945,7 @@
 
         for (screenshotIndex = 0; screenshotIndex < screenshots.length; screenshotIndex += 1) {
             screenshotInfo = screenshots[screenshotIndex] || {};
-            fullImageUrl = safeHttpImageUrl(screenshotInfo.url);
+            fullImageUrl = safeImageUrl(screenshotInfo.url);
             thumbnailUrl = safeThumbnailImageUrl(screenshotInfo.thumbnailUrl, fullImageUrl);
             if (fullImageUrl && thumbnailUrl) {
                 validItems.push({
@@ -1142,8 +1150,17 @@
         Common.byId("updatesTabCount").innerHTML = currentState.updateCount;
         Common.byId("packageStatus").innerHTML = currentState.packages.length + packageLabel;
         Common.byId("updateStatus").innerHTML = currentState.updateCount + updateLabel;
-        Common.byId("connectionStatus").innerHTML = currentState.connection === "online" ? "Online" : (currentState.connection === "configured" ? "Endpoint configured" : "Offline");
-        Common.byId("connectionStatus").className = "connection-status " + (currentState.connection === "online" ? "text-success" : "text-warning");
+        var connectionStatus = Common.byId("connectionStatus");
+        var isCurlConnection = currentState.connection === "online-curl";
+        connectionStatus.innerHTML = isCurlConnection ? "Online (CURL, slow)" : (currentState.connection === "online" ? "Online" : (currentState.connection === "configured" ? "Endpoint configured" : "Offline"));
+        connectionStatus.className = "connection-status " + (currentState.connection === "online" || isCurlConnection ? "text-success" : "text-warning") + (isCurlConnection ? " connection-status-curl" : "");
+        if (isCurlConnection) {
+            connectionStatus.setAttribute("data-tooltip", "3ds Max could not connect through .NET, usually because its network access is blocked by a firewall. MaxPkg is using CURL as a workaround. CURL runs as a separate process, so network actions may be slower.");
+            connectionStatus.setAttribute("tabindex", "0");
+        } else {
+            connectionStatus.removeAttribute("data-tooltip");
+            connectionStatus.removeAttribute("tabindex");
+        }
         Common.toggleClass(Common.byId("updateAllButton"), "is-hidden", currentState.updateCount < 1);
     }
 

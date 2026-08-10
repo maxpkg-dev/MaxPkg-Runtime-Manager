@@ -15,6 +15,8 @@
     local scannerModule = fileIn (runtimeRoot + @"core\scanner.ms")
     local installerModule = fileIn (runtimeRoot + @"core\installer.ms")
     local loggerModule = fileIn (runtimeRoot + @"core\logger.ms")
+    local httpModule = fileIn (runtimeRoot + @"core\http.ms")
+    local imageCacheModule = fileIn (runtimeRoot + @"core\image-cache.ms")
     local notifierModule = fileIn (runtimeRoot + @"core\notifier.ms")
     local selfUpdaterModule = fileIn (runtimeRoot + @"core\self-updater.ms")
     if (resultDialogModule == undefined) do throw "Reusable Runtime result dialog module is unavailable."
@@ -52,12 +54,52 @@
     if (not (utilsModule.writeText updateCopyTargetFilePath "Previous Runtime")) do throw "Could not create the Runtime update target file."
     setFileAttribute updateCopyTargetFilePath #readOnly true
     loggerModule.initialize deleteTestRoot
+    if (not (isProperty loggerModule #clearLogForNewSession) or not (isProperty loggerModule #trimOversizedLog)) do throw "Runtime log cleanup API is unavailable."
+    local environmentClass = dotNetClass "System.Environment"
+    environmentClass.SetEnvironmentVariable loggerModule.sessionEnvironmentName "maxpkg-smoke-previous-session"
+    if (not (utilsModule.writeText loggerModule.logFile "Previous session")) do throw "Could not create the previous-session log test file."
+    setFileAttribute loggerModule.logFile #readOnly true
+    if (not (loggerModule.clearLogForNewSession()) or doesFileExist loggerModule.logFile) do throw "Previous-session Runtime log was not removed."
+    if (not (utilsModule.writeText loggerModule.logFile "Oversized log")) do throw "Could not create the oversized log test file."
+    loggerModule.maxLogBytes = 1
+    if (not (loggerModule.trimOversizedLog()) or doesFileExist loggerModule.logFile) do throw "Oversized Runtime log was not removed."
+    loggerModule.maxLogBytes = 5242880
+    httpModule.logger = loggerModule
+    httpModule.utils = utilsModule
+    if (not (isProperty httpModule #curlAvailable) or not (isProperty httpModule #getString) or not (isProperty httpModule #shouldUseCurl) or not (isProperty httpModule #activateCurlFallback)) do throw "HTTP fallback API is unavailable."
+    if (httpModule.curlAvailable()) do (
+        if (not (httpModule.activateCurlFallback()) or not (httpModule.shouldUseCurl())) do throw "CURL transport did not remain active for the current session."
+        local reloadedHttpModule = fileIn (runtimeRoot + @"core\http.ms")
+        reloadedHttpModule.logger = loggerModule
+        reloadedHttpModule.utils = utilsModule
+        if (not (reloadedHttpModule.shouldUseCurl())) do throw "CURL transport did not survive a Runtime module reload."
+    )
+    imageCacheModule.http = httpModule
+    imageCacheModule.utils = utilsModule
+    imageCacheModule.logger = loggerModule
+    imageCacheModule.cacheRoot = deleteTestRoot + @"image-cache\"
+    imageCacheModule.maxCacheBytes = 10
+    imageCacheModule.maxCacheFiles = 1
+    if (not (imageCacheModule.initialize())) do throw "Manager image cache could not be initialized."
+    if (not (isProperty imageCacheModule #localImageUrl) or not (isProperty imageCacheModule #pruneCache)) do throw "Manager image cache API is unavailable."
+    local firstCachedImagePath = imageCacheModule.cacheRoot + "first.png"
+    local secondCachedImagePath = imageCacheModule.cacheRoot + "second.png"
+    if (not (utilsModule.writeText firstCachedImagePath "123456")) do throw "Could not create the first image cache test file."
+    if (not (utilsModule.writeText secondCachedImagePath "123456")) do throw "Could not create the second image cache test file."
+    local fileClass = dotNetClass "System.IO.File"
+    local dateTimeClass = dotNetClass "System.DateTime"
+    fileClass.SetLastWriteTimeUtc firstCachedImagePath (dateTimeClass.UtcNow.AddMinutes -2)
+    fileClass.SetLastWriteTimeUtc secondCachedImagePath (dateTimeClass.UtcNow.AddMinutes -1)
+    if (not (imageCacheModule.pruneCache())) do throw "Manager image cache cleanup failed."
+    local directoryClass = dotNetClass "System.IO.Directory"
+    if ((directoryClass.GetFiles imageCacheModule.cacheRoot).count > 1) do throw "Manager image cache exceeded its file limit."
     notifierModule.logger = loggerModule
     if (not (notifierModule.initialize())) do throw "Runtime notifier could not be initialized."
     if (notifierModule.notificationIcon == undefined or notifierModule.notificationIcon.Icon == undefined) do throw "The notification information icon could not be loaded."
     if (not (notifierModule.shutdown())) do throw "Runtime notifier could not be released."
     selfUpdaterModule.utils = utilsModule
     selfUpdaterModule.logger = loggerModule
+    selfUpdaterModule.http = httpModule
     if (not (selfUpdaterModule.copyRuntimeTree updateCopySourceRoot updateCopyTargetRoot)) do throw "Runtime update could not overwrite an existing file."
     if ((utilsModule.readText updateCopyTargetFilePath) != "Updated Runtime") do throw "Runtime update produced unexpected file content."
     deleteTestStream = createFile deleteTestFilePath
