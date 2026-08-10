@@ -171,6 +171,7 @@
         fn shutdown = (
             local isManagerClosed = managerModule.shutdownManager()
             local isToolbarClosed = toolbarModule.shutdownToolbar()
+            imageCacheModule.shutdown()
             notifierModule.shutdown()
             started = false
             packages = #()

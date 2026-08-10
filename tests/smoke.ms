@@ -81,7 +81,9 @@
     imageCacheModule.maxCacheBytes = 10
     imageCacheModule.maxCacheFiles = 1
     if (not (imageCacheModule.initialize())) do throw "Manager image cache could not be initialized."
-    if (not (isProperty imageCacheModule #localImageUrl) or not (isProperty imageCacheModule #pruneCache)) do throw "Manager image cache API is unavailable."
+    if (not (isProperty imageCacheModule #localImageUrl) or not (isProperty imageCacheModule #pruneCache) or not (isProperty imageCacheModule #pollDownloads) or not (isProperty imageCacheModule #cancelDownloads)) do throw "Manager image cache API is unavailable."
+    if (imageCacheModule.maxConcurrentDownloads != 3) do throw "The image download queue has an unexpected concurrency limit."
+    if (not (imageCacheModule.cancelDownloads())) do throw "The empty image download queue could not be cancelled."
     local firstCachedImagePath = imageCacheModule.cacheRoot + "first.png"
     local secondCachedImagePath = imageCacheModule.cacheRoot + "second.png"
     if (not (utilsModule.writeText firstCachedImagePath "123456")) do throw "Could not create the first image cache test file."

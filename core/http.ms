@@ -120,42 +120,65 @@
             )
         ),
 
-        fn runCurlToFile sourceUrl targetFilePath requestMethod requestBodyFilePath: "" = (
+        fn curlArguments sourceUrl targetFilePath requestMethod requestBodyFilePath: "" = (
             if (not (isHttpUrl sourceUrl) or targetFilePath == undefined or targetFilePath == "") do return false
-            local curlFilePath = resolveCurlExecutable()
-            if (curlFilePath == "") do return false
             local quotedUrl = quoteCurlArgument sourceUrl
             local quotedTargetFilePath = quoteCurlArgument targetFilePath
-            if (quotedUrl == "" or quotedTargetFilePath == "") do return false
+            if (quotedUrl == "" or quotedTargetFilePath == "") do return ""
 
-            local curlArguments = "--silent --show-error --location --fail --connect-timeout 12 --max-time 90 --user-agent \"MaxPkg-Runtime/1.0\" --output " + quotedTargetFilePath
-            curlArguments += " --request " + requestMethod
-            curlArguments += " --header \"Accept: */*\" --header \"Cache-Control: no-cache, no-store, max-age=0\" --header \"Pragma: no-cache\""
+            local argumentContent = "--silent --show-error --location --fail --connect-timeout 12 --max-time 90 --user-agent \"MaxPkg-Runtime/1.0\" --output " + quotedTargetFilePath
+            argumentContent += " --request " + requestMethod
+            argumentContent += " --header \"Accept: */*\" --header \"Cache-Control: no-cache, no-store, max-age=0\" --header \"Pragma: no-cache\""
             if (requestBodyFilePath != "") do (
                 local quotedBodyFilePath = quoteCurlArgument ("@" + requestBodyFilePath)
-                if (quotedBodyFilePath == "") do return false
-                curlArguments += " --header \"Content-Type: application/x-www-form-urlencoded\" --data-binary " + quotedBodyFilePath
+                if (quotedBodyFilePath == "") do return ""
+                argumentContent += " --header \"Content-Type: application/x-www-form-urlencoded\" --data-binary " + quotedBodyFilePath
             )
-            curlArguments += " " + quotedUrl
+            argumentContent += " " + quotedUrl
+            return argumentContent
+        ),
+
+        fn startCurlToFile sourceUrl targetFilePath requestMethod requestBodyFilePath: "" = (
+            if (not (isHttpUrl sourceUrl) or targetFilePath == undefined or targetFilePath == "") do return undefined
+            local curlFilePath = resolveCurlExecutable()
+            if (curlFilePath == "") do return undefined
+            local argumentContent = curlArguments sourceUrl targetFilePath requestMethod requestBodyFilePath: requestBodyFilePath
+            if (argumentContent == "") do return undefined
 
             local curlProcess = undefined
             try (
                 removeFile targetFilePath
                 makeDir (getFilenamePath targetFilePath) all: true
                 local processStartInfo = dotNetObject "System.Diagnostics.ProcessStartInfo"
+                local processWindowStyle = dotNetClass "System.Diagnostics.ProcessWindowStyle"
                 processStartInfo.FileName = curlFilePath
-                processStartInfo.Arguments = curlArguments
+                processStartInfo.Arguments = argumentContent
                 processStartInfo.UseShellExecute = false
                 processStartInfo.CreateNoWindow = true
+                processStartInfo.WindowStyle = processWindowStyle.Hidden
                 processStartInfo.RedirectStandardError = true
                 curlProcess = dotNetObject "System.Diagnostics.Process"
                 curlProcess.StartInfo = processStartInfo
                 if (not (curlProcess.Start())) do throw "curl.exe could not be started."
+                return curlProcess
+            ) catch (
+                logger.logWarning "http" ("Could not start curl: " + getCurrentException())
+                try (
+                    if (curlProcess != undefined) do curlProcess.Dispose()
+                ) catch (
+                )
+                removeFile targetFilePath
+                return undefined
+            )
+        ),
+
+        fn finishCurlToFile curlProcess sourceUrl targetFilePath requestMethod = (
+            if (curlProcess == undefined) do return false
+            try (
+                if (not curlProcess.HasExited) do return false
                 local standardErrorContent = curlProcess.StandardError.ReadToEnd()
-                curlProcess.WaitForExit()
                 local exitCode = curlProcess.ExitCode
                 curlProcess.Dispose()
-                curlProcess = undefined
                 if (exitCode != 0) do (
                     removeFile targetFilePath
                     logger.logWarning "http" ("curl failed with exit code " + (exitCode as string) + ": " + standardErrorContent)
@@ -168,12 +191,39 @@
                 logger.logInfo "http" ("curl fallback completed: " + requestMethod + " " + sourceUrl)
                 return true
             ) catch (
-                logger.logWarning "http" ("curl fallback failed: " + getCurrentException())
-                try (
-                    if (curlProcess != undefined) do curlProcess.Dispose()
-                ) catch (
-                )
+                logger.logWarning "http" ("Could not finish curl request: " + getCurrentException())
+                try (curlProcess.Dispose()) catch ()
                 removeFile targetFilePath
+                return false
+            )
+        ),
+
+        fn cancelCurlProcess curlProcess targetFilePath = (
+            try (
+                if (curlProcess != undefined) do (
+                    if (not curlProcess.HasExited) do curlProcess.Kill()
+                    curlProcess.Dispose()
+                )
+            ) catch (
+            )
+            removeFile targetFilePath
+            return true
+        ),
+
+        fn runCurlToFile sourceUrl targetFilePath requestMethod requestBodyFilePath: "" = (
+            local curlProcess = startCurlToFile sourceUrl targetFilePath requestMethod requestBodyFilePath: requestBodyFilePath
+            if (curlProcess == undefined) do return false
+            try (
+                local didCurlExit = curlProcess.WaitForExit 95000
+                if (not didCurlExit) do (
+                    cancelCurlProcess curlProcess targetFilePath
+                    logger.logWarning "http" ("curl timed out: " + requestMethod + " " + sourceUrl)
+                    return false
+                )
+                return finishCurlToFile curlProcess sourceUrl targetFilePath requestMethod
+            ) catch (
+                logger.logWarning "http" ("curl fallback failed: " + getCurrentException())
+                cancelCurlProcess curlProcess targetFilePath
                 return false
             )
         ),

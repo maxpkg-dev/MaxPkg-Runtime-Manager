@@ -58,6 +58,7 @@
         dialogOpen = false,
         browserReady = false,
         focusTimer = undefined,
+        imageDownloadTimer = undefined,
         runtimeUninstallTimer = undefined,
         runtimeUninstallFilePath = "",
         minimumDialogWidth = 720,
@@ -421,6 +422,41 @@
             return writeBrowserPayload "runtimePayload" (stateJson()) "setRuntimeState"
         ),
 
+        fn handleImageDownloadTimerTick eventSender eventArgs = (
+            if (imageCache == undefined) do return false
+            local completedDownloadCount = imageCache.pollDownloads()
+            if (completedDownloadCount > 0 and dialogOpen and browserReady) do refresh()
+            return true
+        ),
+
+        fn stopImageDownloadTimer = (
+            if (imageDownloadTimer == undefined) do return true
+            try (
+                imageDownloadTimer.Stop()
+                dotNet.removeEventHandler imageDownloadTimer "Tick" handleImageDownloadTimerTick
+                imageDownloadTimer.Dispose()
+            ) catch (
+                logger.logWarning "manager" ("Could not stop image download tracking: " + getCurrentException())
+            )
+            imageDownloadTimer = undefined
+            return true
+        ),
+
+        fn startImageDownloadTimer = (
+            stopImageDownloadTimer()
+            try (
+                imageDownloadTimer = dotNetObject "System.Windows.Forms.Timer"
+                imageDownloadTimer.Interval = 150
+                dotNet.addEventHandler imageDownloadTimer "Tick" handleImageDownloadTimerTick
+                imageDownloadTimer.Start()
+                return true
+            ) catch (
+                imageDownloadTimer = undefined
+                logger.logWarning "manager" ("Could not start image download tracking: " + getCurrentException())
+                return false
+            )
+        ),
+
         fn notify messageText notificationType: "info" = (
             if (not owner.settings.notifications) do return true
             return writeBrowserPayload "notificationPayload" (notificationType + "|" + messageText) "showRuntimeNotification"
@@ -698,6 +734,7 @@
             dialogOpen = true
             synchronizeBrowserSize browserControl
             startFocusTimer()
+            startImageDownloadTimer()
             return configureBrowser browserControl
         ),
 
@@ -729,6 +766,8 @@
 
         fn handleDialogClosed = (
             stopFocusTimer()
+            stopImageDownloadTimer()
+            if (imageCache != undefined) do imageCache.cancelDownloads()
             setManagerFocusState false
             dialogOpen = false
             browserReady = false
@@ -787,6 +826,8 @@
 
         fn shutdownManager = (
             stopRuntimeUninstallTimer()
+            stopImageDownloadTimer()
+            if (imageCache != undefined) do imageCache.cancelDownloads()
             local isClosed = destroyManagerDialog()
             if (isClosed) do managerOwner = undefined
             return isClosed
