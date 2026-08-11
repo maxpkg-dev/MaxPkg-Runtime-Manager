@@ -13,8 +13,8 @@
     left: 0;
     height: 68px;
     padding: 13px 15px;
-    border-bottom: 1px solid {{borderDefault}};
-    background: {{surfacePrimary}};
+    border-bottom: 1px solid {{borderSoft}};
+    background: transparent;
 }
 
 .header-layout {
@@ -37,7 +37,7 @@
     height: 40px;
     margin-right: 9px;
     border: 1px solid {{borderFocus}};
-    border-radius: 6px;
+    border-radius: 12px;
     background: {{accentActive}};
 }
 
@@ -107,8 +107,8 @@
     left: 0;
     height: 43px;
     padding-left: 15px;
-    border-bottom: 1px solid {{borderDefault}};
-    background: {{surfaceSecondary}};
+    border-bottom: 1px solid {{borderSoft}};
+    background: transparent;
 }
 
 .tab-button {
@@ -147,32 +147,43 @@
     height: 48px;
     padding: 8px 16px;
     border-bottom: 1px solid {{borderSoft}};
-    background: {{surfaceDisabled}};
+    background: transparent;
+}
+
+.details-navigation {
+    height: 40px;
+    padding: 8px 16px 0;
+    border-bottom: 0;
+}
+
+#detailsPage {
+    margin-top: -16px;
 }
 
 .details-back-link {
     display: inline-block;
     height: 30px;
-    margin-right: 15px;
-    color: {{accentText}};
-    font-weight: bold;
+    margin-right: 0;
+    color: {{textMuted}};
+    font-size: 12px;
+    font-weight: normal;
     line-height: 30px;
     text-decoration: none;
 }
 
 .details-back-icon {
     display: inline-block;
-    width: 16px;
-    height: 16px;
+    width: 13px;
+    height: 13px;
     margin-right: 5px;
-    vertical-align: -3px;
+    vertical-align: -2px;
 }
 
 .details-back-link:hover,
 .details-back-link:focus {
     color: {{textStrong}};
     outline: none;
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 .details-pathway {
@@ -182,19 +193,20 @@
     height: 30px;
     color: {{textMuted}};
     line-height: 30px;
+    font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
     vertical-align: top;
 }
 
 .details-pathway-separator {
-    margin: 0 8px;
+    margin: 0 9px;
     color: {{textDisabled}};
 }
 
 .details-pathway strong {
-    color: {{textPrimary}};
-    font-weight: normal;
+    color: {{textStrong}};
+    font-weight: bold;
 }
 
 .page-toolbar-layout {
@@ -282,7 +294,7 @@
 .toolbar-filter-control.has-active-filter .html-select-button,
 .sort-control.has-custom-sort .html-select-button {
     border-color: {{borderFocus}};
-    background: {{surfaceHover}};
+    background: {{surfaceGlassHover}};
     box-shadow: inset 0 0 0 1px {{borderStrong}};
 }
 
@@ -351,7 +363,7 @@
     width: 44px;
     height: 44px;
     margin-right: 10px;
-    border-radius: 6px;
+    border-radius: 10px;
 }
 
 .package-icon {
@@ -508,18 +520,36 @@
     display: table;
     box-sizing: border-box;
     width: 100%;
-    margin-top: 18px;
-    min-height: 70px;
-    padding: 14px 16px;
-    border: 1px solid {{successBorder}};
-    border-radius: 5px;
-    background: {{successSurface}};
+    margin-top: 12px;
+    min-height: 58px;
+    padding: 10px 12px;
+    border: 1px solid {{warningBorder}};
+    border-radius: 16px;
+    background: {{warningSurface}};
+}
+
+.purchase-notice-icon {
+    display: table-cell;
+    width: 34px;
+    vertical-align: middle;
+}
+
+.purchase-notice-icon .icon {
+    display: block;
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    padding: 7px;
+    border: 1px solid {{warningBorder}};
+    border-radius: 11px;
+    background: {{surfacePrimary}};
 }
 
 .purchase-notice-copy {
     display: table-cell;
     margin: 0;
-    color: {{textPrimary}};
+    padding: 0 12px;
+    color: {{textSecondary}};
     font-size: 12px;
     line-height: 18px;
     vertical-align: middle;
@@ -528,32 +558,30 @@
 .purchase-notice-action {
     display: table-cell;
     width: 1%;
-    padding-left: 24px;
     vertical-align: middle;
     white-space: nowrap;
 }
 
 .purchase-notice-button {
-    min-width: 100px;
+    min-width: 96px;
     margin: 0;
-    padding: 9px 18px;
-    font-size: 13px;
+    padding: 8px 15px;
+    font-size: 12px;
     text-align: center;
 }
 
 .button-purchase {
-    border-color: {{successHover}};
-    background: {{successBorder}};
-    color: {{textStrong}};
+    border-color: {{successBorder}};
+    background: {{successSurface}};
+    color: {{successText}};
 }
 
 .button-purchase:hover,
 .button-purchase:focus {
-    border-color: {{success}};
-    background: {{successHover}};
-    color: {{textStrong}};
+    border-color: {{successHover}};
+    background: {{successBorder}};
+    color: {{successText}};
 }
-
 .card-actions .button {
     min-height: 31px;
     padding: 5px 9px;
@@ -623,7 +651,7 @@
     padding: 28px;
     border: 1px solid {{borderDefault}};
     border-radius: 7px;
-    background: {{surfacePrimary}};
+    background: {{surfaceGlass}};
     text-align: center;
 }
 
@@ -639,86 +667,115 @@
     line-height: 19px;
 }
 
+.details-layout {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.details-main,
+.details-sidebar {
+    display: table-cell;
+    vertical-align: top;
+}
+
+.details-main {
+    padding-right: 16px;
+}
+
+.details-sidebar {
+    width: 300px;
+}
+
 .details-hero {
     position: relative;
-    min-height: 130px;
-    padding: 20px;
-    border: 1px solid {{surfaceActive}};
-    border-radius: 7px;
-    background: {{surfaceTertiary}};
+    min-height: 78px;
+    padding: 12px;
+    border: 1px solid {{borderSoft}};
+    border-radius: 16px;
+    background: {{surfaceGlass}};
 }
 
 .details-icon {
     float: left;
     display: block;
-    width: 88px;
-    height: 88px;
-    padding: 8px;
-    border: 1px solid {{borderStrong}};
-    background: {{surfaceDisabled}};
-    margin-right: 20px;
-    border-radius: 8px;
+    box-sizing: border-box;
+    width: 48px;
+    height: 48px;
+    padding: 5px;
+    border: 1px solid {{borderSoft}};
+    border-radius: 12px;
+    background: {{backgroundWindow}};
+    margin-right: 12px;
     object-fit: contain;
 }
 
 .details-icon.package-icon-fallback {
-    font-size: 28px;
-    line-height: 86px;
+    font-size: 18px;
+    line-height: 36px;
 }
 
 .details-copy {
-    min-height: 88px;
-    margin-right: 330px;
-    padding-top: 2px;
+    min-height: 48px;
+    margin-right: 286px;
+    padding-top: 1px;
 }
 
 .details-copy h1 {
-    margin: 0 0 5px;
+    margin: 0 0 4px;
+    color: {{textStrong}};
+    font-size: 18px;
+    line-height: 22px;
 }
 
 .details-copy p {
-    margin: 0 0 10px;
-    color: {{textSecondary}};
+    margin: 0 0 7px;
+    color: {{textMuted}};
+    font-size: 11px;
 }
 
 .details-badges .badge {
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .details-hero-actions {
     position: absolute;
     top: 50%;
-    right: 20px;
-    width: 310px;
-    margin-top: -18px;
+    right: 12px;
+    width: 278px;
+    margin-top: -17px;
     text-align: right;
     white-space: nowrap;
 }
 
 .details-action-button {
-    min-width: 118px;
-    min-height: 36px;
-    padding: 8px 13px;
-    font-size: 13px;
+    min-width: 0;
+    min-height: 34px;
+    padding: 7px 12px;
+    font-size: 12px;
 }
 
 .details-action-button .icon {
-    width: 17px;
-    height: 17px;
+    width: 15px;
+    height: 15px;
     margin-right: 6px;
-    vertical-align: -4px;
+    vertical-align: -3px;
 }
 
 .details-section {
-    margin-top: 18px;
-    padding: 16px;
-    border: 1px solid {{borderDefault}};
-    border-radius: 5px;
-    background: {{surfacePrimary}};
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid {{borderSoft}};
+    border-radius: 16px;
+    background: {{surfaceGlass}};
 }
 
 .details-section h3 {
     margin-top: 0;
+    color: {{textMuted}};
+    font-size: 11px;
+    letter-spacing: .7px;
+    text-transform: uppercase;
 }
 
 .details-section p {
@@ -728,15 +785,15 @@
 }
 
 .details-tabs {
-    height: 43px;
-    margin-top: 18px;
-    border-bottom: 1px solid {{borderDefault}};
+    height: 38px;
+    margin-top: 4px;
+    border-bottom: 1px solid {{borderSoft}};
 }
 
 .details-tab {
-    height: 43px;
-    margin-right: 15px;
-    padding: 0 4px;
+    height: 38px;
+    margin-right: 13px;
+    padding: 0 3px;
     border: 0;
     border-bottom: 2px solid transparent;
     background: transparent;
@@ -747,29 +804,100 @@
 .details-tab:hover,
 .details-tab:focus,
 .details-tab.is-active {
-    border-bottom-color: {{accentHover}};
+    border-bottom-color: {{accent}};
     color: {{textStrong}};
     outline: none;
 }
 
 .details-tab-count {
     display: inline-block;
-    min-width: 20px;
+    min-width: 18px;
     margin-left: 5px;
     padding: 1px 5px;
     border-radius: 8px;
-    background: {{borderDefault}};
+    background: {{surfaceTertiary}};
     font-size: 10px;
 }
 
 .details-tab-panel {
-    padding-bottom: 8px;
+    padding-bottom: 0;
+}
+
+.details-sidebar .details-section {
+    margin-top: 0;
+}
+
+.details-package-info {
+    padding: 12px;
+}
+
+.details-summary-table {
+    table-layout: fixed;
+}
+
+.details-summary-table th,
+.details-summary-table td {
+    padding: 8px 0;
+    border-bottom-color: {{borderSoft}};
+    font-size: 11px;
+}
+
+.details-summary-table th {
+    width: 42%;
+    color: {{textMuted}};
+    font-weight: normal;
+}
+
+.details-summary-table td {
+    overflow: hidden;
+    color: {{textPrimary}};
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.details-package-id-cell {
+    white-space: nowrap;
+}
+
+.details-package-id-copy {
+    float: right;
+    width: 24px;
+    height: 24px;
+    margin: -5px 0 -5px 8px;
+    padding: 4px;
+    border-radius: 7px;
+}
+
+.details-package-id-copy .icon {
+    width: 14px;
+    height: 14px;
+}
+
+.details-package-id-text {
+    display: block;
+    overflow: hidden;
+    height: 24px;
+    color: {{textPrimary}};
+    font-family: Consolas, "Courier New", monospace;
+    line-height: 24px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.details-summary-table tr:last-child th,
+.details-summary-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.details-mono-value {
+    font-family: Consolas, "Courier New", monospace;
+    letter-spacing: .2px;
 }
 
 .full-description-section {
-    padding: 18px;
+    padding: 12px;
 }
-
 .full-description-content {
     color: {{textSecondary}};
     line-height: 21px;
@@ -869,59 +997,22 @@
     margin-bottom: 0;
 }
 
-.details-table th {
-    width: 155px;
-    color: {{textSecondary}};
-}
-
-.details-table tr:last-child th,
-.details-table tr:last-child td {
-    border-bottom: 0;
-}
-
-.details-table-link {
-    color: {{accentHover}};
-    text-decoration: none;
-}
-
-.details-table-link:hover,
-.details-table-link:focus {
-    color: {{textStrong}};
-    text-decoration: underline;
-}
-
-.details-copy-link-button {
-    width: 28px;
-    height: 28px;
-    margin-right: 12px;
-    padding: 5px;
-}
-
 .details-link-actions {
     padding-top: 3px;
 }
 
-.details-bottom-actions {
-    margin-top: 18px;
-    padding: 0 0 10px;
-}
-
-.details-bottom-button {
-    min-width: 160px;
-}
-
 .details-uninstall-button {
-    border-color: {{dangerActive}};
-    background: {{dangerBorder}};
-    color: {{textStrong}};
+    border-color: {{dangerBorder}};
+    background: {{dangerSurface}};
+    color: {{dangerText}};
     font-weight: bold;
 }
 
 .details-uninstall-button:hover,
 .details-uninstall-button:focus {
     border-color: {{danger}};
-    background: {{dangerBorder}};
-    color: {{textStrong}};
+    background: {{dangerActive}};
+    color: {{dangerText}};
     outline: none;
 }
 
@@ -1127,7 +1218,7 @@
     padding: 0;
     border: 1px solid {{textDisabled}};
     border-radius: 4px;
-    background: {{surfacePrimary}};
+    background: {{surfaceGlass}};
     color: {{textStrong}};
     cursor: pointer;
     text-align: center;
@@ -1210,7 +1301,7 @@
 .changelog-list li {
     min-height: 27px;
     padding: 7px 0;
-    border-bottom: 1px solid {{borderDefault}};
+    border-bottom: 1px solid {{borderSoft}};
     color: {{textPrimary}};
     line-height: 20px;
 }
@@ -1274,8 +1365,8 @@
     left: 0;
     height: 28px;
     padding: 5px 14px;
-    border-top: 1px solid {{borderDefault}};
-    background: {{surfaceSecondary}};
+    border-top: 1px solid {{borderSoft}};
+    background: transparent;
     color: {{textMuted}};
     font-size: 11px;
 }
@@ -1358,7 +1449,7 @@
 
 .context-menu a.context-danger:hover,
 .context-menu a.context-danger:focus {
-    background: {{dangerBorder}};
+    background: {{dangerActive}};
     color: {{iconDanger}};
     outline: none;
 }
@@ -1471,15 +1562,15 @@
 }
 
 .runtime-uninstall-page .button-danger {
-    border-color: {{dangerActive}};
-    background: {{dangerBorder}};
+    border-color: {{dangerBorder}};
+    background: {{dangerSurface}};
     color: {{dangerText}};
 }
 
 .runtime-uninstall-page .button-danger:hover,
 .runtime-uninstall-page .button-danger:focus {
     border-color: {{danger}};
-    background: {{dangerBorder}};
+    background: {{dangerActive}};
 }
 
 .runtime-uninstall-confirmation {
@@ -1502,6 +1593,62 @@
     line-height: 19px;
 }
 
+@media screen and (max-width: 900px) {
+    .details-layout,
+    .details-main,
+    .details-sidebar {
+        display: block;
+        width: 100%;
+    }
+
+    .details-main {
+        padding-right: 0;
+    }
+
+    .details-sidebar {
+        margin-top: 12px;
+    }
+}
+
+@media screen and (max-width: 760px) {
+    .details-copy {
+        margin-right: 0;
+        padding-right: 0;
+    }
+
+    .details-hero-actions {
+        position: static;
+        clear: both;
+        width: auto;
+        margin: 12px 0 0;
+        padding-top: 10px;
+        border-top: 1px solid {{borderSoft}};
+        text-align: left;
+    }
+
+    .purchase-details-notice,
+    .purchase-notice-icon,
+    .purchase-notice-copy,
+    .purchase-notice-action {
+        display: block;
+        width: auto;
+    }
+
+    .purchase-notice-icon {
+        float: left;
+        margin-right: 10px;
+    }
+
+    .purchase-notice-copy {
+        min-height: 32px;
+        padding: 0;
+    }
+
+    .purchase-notice-action {
+        clear: both;
+        padding-top: 10px;
+    }
+}
 @media screen and (max-width: 720px) {
     .header-actions .button {
         width: 34px;

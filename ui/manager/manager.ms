@@ -684,6 +684,21 @@
                 if (not isSuccess) do notify "Toolbar order could not be saved." notificationType: "error"
             )
             if (matchPattern commandPath pattern: "open-folder/*" ignoreCase: true) do isSuccess = owner.openPackageFolder (commandArgument commandPath "open-folder/")
+            if (matchPattern commandPath pattern: "copy-package-id/*" ignoreCase: true) do (
+                local packageId = commandArgument commandPath "copy-package-id/"
+                if (packageId == "") then (
+                    isSuccess = false
+                ) else (
+                    try (
+                        setClipboardText packageId
+                        isSuccess = true
+                    ) catch (
+                        logger.logError "manager" ("Could not copy Package ID: " + getCurrentException())
+                        isSuccess = false
+                    )
+                )
+                notify (if (isSuccess) then "Package ID copied to clipboard." else "Package ID could not be copied.") notificationType: (if (isSuccess) then "success" else "error")
+            )
             if (matchPattern commandPath pattern: "copy-package-link/*" ignoreCase: true) do (
                 local packageSlug = commandArgument commandPath "copy-package-link/"
                 local packagePageUrl = utils.packagePageUrl owner.settings.apiEndpoint packageSlug

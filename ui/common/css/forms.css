@@ -3,8 +3,8 @@ input[type="number"],
 select,
 textarea {
     border: 1px solid {{borderStrong}};
-    border-radius: 4px;
-    background: {{backgroundWindow}};
+    border-radius: 10px;
+    background: {{surfaceGlass}};
     color: {{textPrimary}};
 }
 
@@ -13,6 +13,7 @@ input[type="number"]:focus,
 select:focus,
 textarea:focus {
     border-color: {{accentHover}};
+    background: {{surfaceGlassHover}};
     outline: none;
 }
 
@@ -62,8 +63,8 @@ textarea:focus {
     padding: 5px 32px 5px 9px;
     overflow: hidden;
     border: 1px solid {{borderStrong}};
-    border-radius: 4px;
-    background: {{backgroundWindow}};
+    border-radius: 10px;
+    background: {{surfaceGlass}};
     color: {{textPrimary}};
     text-align: left;
     white-space: nowrap;
@@ -74,7 +75,7 @@ textarea:focus {
 .html-select-button:focus,
 .html-select.is-open .html-select-button {
     border-color: {{accentHover}};
-    background: {{surfaceSecondary}};
+    background: {{surfaceGlassHover}};
     outline: none;
 }
 
@@ -92,7 +93,7 @@ textarea:focus {
     z-index: 1300;
     padding: 4px;
     border: 1px solid {{textDisabled}};
-    border-radius: 4px;
+    border-radius: 10px;
     background: {{surfaceTertiary}};
     box-shadow: 0 5px 18px {{backgroundDeep}};
 }
@@ -105,7 +106,7 @@ textarea:focus {
     min-height: 30px;
     padding: 5px 9px;
     border: 0;
-    border-radius: 3px;
+    border-radius: 7px;
     background: transparent;
     color: {{textPrimary}};
     text-align: left;

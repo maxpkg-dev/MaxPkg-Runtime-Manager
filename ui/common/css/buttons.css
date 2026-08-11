@@ -2,7 +2,7 @@
 .icon-button {
     display: inline-block;
     border: 1px solid {{textDisabled}};
-    border-radius: 4px;
+    border-radius: 12px;
     background: {{borderSoft}};
     color: {{textPrimary}};
     text-align: center;
@@ -47,7 +47,8 @@
 }
 
 .button-danger {
-    border-color: {{dangerActive}};
+    border-color: {{dangerBorder}};
+    background: {{dangerSurface}};
     color: {{dangerText}};
 }
 

@@ -258,6 +258,14 @@
             return isSuccess
         ),
 
+        fn renderManagerBackground requestedThemeId targetFilePath = (
+            local backgroundTemplatePath = runtimeRoot + @"ui\common\background.svg"
+            local backgroundTemplateContent = if (utils != undefined) then utils.readText backgroundTemplatePath else ""
+            if (backgroundTemplateContent == "") do return false
+            local paletteInfo = loadPalette "manager" requestedThemeId
+            return writeTextFile targetFilePath (applyPalette backgroundTemplateContent paletteInfo)
+        ),
+
         fn managerAssetRoot = (
             return runtimeRoot + @"data\themes\manager\"
         ),
@@ -271,7 +279,8 @@
             local renderedCss = renderManagerCss requestedThemeId
             local isCssWritten = writeTextFile (targetRoot + "theme.css") renderedCss
             local areIconsWritten = renderIconDirectory "manager" requestedThemeId (targetRoot + @"icons\")
-            return isCssWritten and areIconsWritten
+            local isBackgroundWritten = renderManagerBackground requestedThemeId (targetRoot + "background.svg")
+            return isCssWritten and areIconsWritten and isBackgroundWritten
         ),
 
         fn prepareToolbarAssets requestedThemeId = (
@@ -289,7 +298,8 @@
             local normalizedTargetRoot = utils.ensureSlash targetRoot
             local isCssWritten = writeTextFile (normalizedTargetRoot + "theme.css") (renderResultDialogCss requestedThemeId)
             local areIconsWritten = renderIconDirectory "manager" requestedThemeId (normalizedTargetRoot + @"icons\")
-            return isCssWritten and areIconsWritten
+            local isBackgroundWritten = renderManagerBackground requestedThemeId (normalizedTargetRoot + "background.svg")
+            return isCssWritten and areIconsWritten and isBackgroundWritten
         ),
 
         fn initialize runtimePath iniModule utilsModule loggerModule = (

@@ -1,12 +1,12 @@
 .badge {
     display: inline-block;
-    margin-right: 5px;
-    padding: 2px 6px;
-    border: 1px solid {{borderStrong}};
-    border-radius: 9px;
-    background: {{surfaceDisabled}};
+    margin-right: 6px;
+    padding: 3px 8px;
+    border: 1px solid {{borderSoft}};
+    border-radius: 11px;
+    background: {{surfaceGlassHover}};
     color: {{textSecondary}};
-    font-size: 10px;
+    font-size: 11px;
     line-height: 14px;
     vertical-align: middle;
 }

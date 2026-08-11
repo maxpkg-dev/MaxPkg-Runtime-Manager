@@ -1,7 +1,15 @@
 /* IE9 has no CSS custom properties. Theme values live in this shared file. */
-html,
+html {
+    background-color: {{backgroundWindow}};
+    color: {{textPrimary}};
+}
+
 body {
-    background: {{backgroundWindow}};
+    background-color: {{backgroundWindow}};
+    background-image: url("background.svg");
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: cover;
     color: {{textPrimary}};
 }
 
