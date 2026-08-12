@@ -28,7 +28,7 @@
     var activeScreenshotIndex = 0;
     var detailsListScrollTop = 0;
     var settingsSaveTimer = null;
-    var descriptionResizeTimer = null;
+
     var draggedToolbarCard = null;
     var draggedToolbarGrid = null;
     var toolbarDropPlaceholder = null;
@@ -43,79 +43,23 @@
     }
 
     function packageDescriptionPreview(descriptionText) {
-        var maxLength = 315;
+        var maxLength = 280;
         var normalizedText = (descriptionText || "No description provided.").replace(/\s+/g, " ");
-        if (normalizedText.length <= maxLength) {
+        var truncatedText;
+        var lastSpaceIndex;
+        if (normalizedText.length < maxLength) {
             return normalizedText;
         }
-        return normalizedText.substring(0, maxLength - 3).replace(/\s+$/g, "") + "...";
+        truncatedText = normalizedText.substring(0, maxLength - 3).replace(/\s+$/g, "");
+        lastSpaceIndex = truncatedText.lastIndexOf(" ");
+        if (lastSpaceIndex > 0) {
+            truncatedText = truncatedText.substring(0, lastSpaceIndex);
+        }
+        return truncatedText + "...";
     }
 
     function packageDescriptionHtml(descriptionText) {
-        var previewText = packageDescriptionPreview(descriptionText);
-        var escapedPreviewText = Common.escapeHtml(previewText);
-        return "<p class='package-description' data-preview-text='" + escapedPreviewText + "'>" + escapedPreviewText + "</p>";
-    }
-
-    function fittedDescriptionText(sourceText, characterCount) {
-        var fittedText = sourceText.substring(0, characterCount).replace(/\s+$/g, "");
-        return fittedText + "...";
-    }
-
-    function truncatePackageDescription(descriptionElement) {
-        var previewText = descriptionElement.getAttribute("data-preview-text") || "";
-        var sourceText;
-        var lowerBound;
-        var upperBound;
-        var middleIndex;
-        var fittedLength = 0;
-        var fittedText;
-        var lastSpaceIndex;
-        descriptionElement.innerText = previewText;
-        if (descriptionElement.clientHeight <= 0 || descriptionElement.scrollHeight <= descriptionElement.clientHeight) {
-            return;
-        }
-
-        sourceText = previewText.replace(/\.\.\.$/, "");
-        lowerBound = 0;
-        upperBound = sourceText.length;
-        while (lowerBound <= upperBound) {
-            middleIndex = Math.floor((lowerBound + upperBound) / 2);
-            descriptionElement.innerText = fittedDescriptionText(sourceText, middleIndex);
-            if (descriptionElement.scrollHeight <= descriptionElement.clientHeight) {
-                fittedLength = middleIndex;
-                lowerBound = middleIndex + 1;
-            } else {
-                upperBound = middleIndex - 1;
-            }
-        }
-
-        fittedText = sourceText.substring(0, fittedLength).replace(/\s+$/g, "");
-        lastSpaceIndex = fittedText.lastIndexOf(" ");
-        if (fittedLength < sourceText.length && fittedLength > 0 &&
-                sourceText.charAt(fittedLength) !== " " && sourceText.charAt(fittedLength - 1) !== " " &&
-                lastSpaceIndex > 0) {
-            fittedText = fittedText.substring(0, lastSpaceIndex).replace(/\s+$/g, "");
-        }
-        descriptionElement.innerText = fittedText + "...";
-    }
-
-    function truncatePackageDescriptions() {
-        var descriptionElements = document.querySelectorAll(".package-description");
-        var descriptionIndex;
-        for (descriptionIndex = 0; descriptionIndex < descriptionElements.length; descriptionIndex += 1) {
-            truncatePackageDescription(descriptionElements[descriptionIndex]);
-        }
-    }
-
-    function schedulePackageDescriptionTruncation() {
-        if (descriptionResizeTimer !== null) {
-            window.clearTimeout(descriptionResizeTimer);
-        }
-        descriptionResizeTimer = window.setTimeout(function () {
-            descriptionResizeTimer = null;
-            truncatePackageDescriptions();
-        }, 0);
+        return "<p class='package-description'>" + Common.escapeHtml(packageDescriptionPreview(descriptionText)) + "</p>";
     }
 
     function safeHttpUrl(sourceUrl) {
@@ -485,7 +429,7 @@
         var packageDetailsContent = "";
         var updateAction = "";
         var dragHandle = "";
-        var cardClass = isFullCard ? "card" : "card card-compact";
+        var cardClass = isFullCard ? "card card-full" : "card card-compact";
         if (toolbarSortingEnabled()) {
             cardClass += " toolbar-sort-card";
             dragHandle = "<span class='toolbar-drag-handle' role='button' draggable='true' data-toolbar-drag='true' title='Drag to change Toolbar order'>" +
@@ -534,7 +478,7 @@
             packageCards.push(packageCard(packages[packageIndex]));
         }
         Common.byId("installedPage").innerHTML = packageCards.length ? "<div class='card-grid'>" + packageCards.join("") + "</div>" : emptyInstalledState();
-        schedulePackageDescriptionTruncation();
+
     }
 
     function ancestorWithClass(sourceElement, className) {
@@ -735,7 +679,7 @@
         }
         Common.byId("discoverPage").innerHTML = packageCards.length ? "<div class='catalog-summary'>" + discoverState.total + " packages</div><div class='card-grid'>" + packageCards.join("") + "</div>" + pagination :
             "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/search.svg' alt=''><h2>No packages found</h2><p>Try a different search phrase.</p></div>";
-        schedulePackageDescriptionTruncation();
+
     }
 
     function remotePackageCard(packageInfo) {
@@ -747,7 +691,7 @@
             installAction = "<button class='button' type='button' disabled='disabled'>" + icon("check") + "Installed</button>";
             toolbarIndicator = toolbarHiddenIndicator(resolvedPackage);
         }
-        return "<div class='card' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
+        return "<div class='card card-full' data-package-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" +
             "<div class='card-content clearfix'>" +
                 "<button class='package-summary clearfix' type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "' title='Open package details'>" +
                     packageIcon(packageInfo, "package-icon", true) +
@@ -822,17 +766,46 @@
 
     function changelogHtml(packageInfo) {
         var changelogEntries = packageInfo.changelogEntries || [];
-        var changelogItems = [];
+        var changelogGroups = [];
         var changelogIndex;
+        var changelogEntry;
         var changeType;
+        var versionContent;
+        var releaseDateContent;
+        var groupKey;
+        var currentGroup;
+        var groupIndex;
+        var groupMarkup = [];
+        var dateMarkup;
         for (changelogIndex = 0; changelogIndex < changelogEntries.length; changelogIndex += 1) {
-            changeType = changelogEntries[changelogIndex].changeType || "Changed";
-            changelogItems.push("<li><span class='badge changelog-badge " + changelogBadgeClass(changeType) + "'>" + Common.escapeHtml(changeType) + "</span><span>" + Common.escapeHtml(changelogEntries[changelogIndex].messageContent) + "</span></li>");
+            changelogEntry = changelogEntries[changelogIndex];
+            changeType = changelogEntry.changeType || "Changed";
+            versionContent = changelogEntry.versionContent || packageInfo.version || "Unknown";
+            releaseDateContent = changelogEntry.releaseDateContent || packageInfo.releaseDate || "";
+            groupKey = versionContent + "|" + releaseDateContent;
+            currentGroup = changelogGroups.length ? changelogGroups[changelogGroups.length - 1] : null;
+            if (!currentGroup || currentGroup.groupKey !== groupKey) {
+                currentGroup = {
+                    groupKey: groupKey,
+                    versionContent: versionContent,
+                    releaseDateContent: releaseDateContent,
+                    items: []
+                };
+                changelogGroups.push(currentGroup);
+            }
+            currentGroup.items.push("<li><span class='badge changelog-badge " + changelogBadgeClass(changeType) + "'>" + Common.escapeHtml(changeType) + "</span><span>" + Common.escapeHtml(changelogEntry.messageContent) + "</span></li>");
         }
-        if (!changelogItems.length) {
+        if (!changelogGroups.length) {
             return "<div class='details-section'><h3>Full changelog</h3><p class='text-muted'>No changelog entries were provided with this package.</p></div>";
         }
-        return "<div class='details-section'><h3>Full changelog</h3><ul class='changelog-list'>" + changelogItems.join("") + "</ul></div>";
+        for (groupIndex = 0; groupIndex < changelogGroups.length; groupIndex += 1) {
+            currentGroup = changelogGroups[groupIndex];
+            dateMarkup = currentGroup.releaseDateContent ? "<span class='changelog-version-date'>" + Common.escapeHtml(currentGroup.releaseDateContent) + "</span>" : "";
+            groupMarkup.push("<div class='changelog-version-group'>" +
+                "<div class='changelog-version-header'><strong>" + Common.escapeHtml(currentGroup.versionContent) + "</strong>" + dateMarkup + "</div>" +
+                "<ul class='changelog-list'>" + currentGroup.items.join("") + "</ul></div>");
+        }
+        return "<div class='details-section changelog-section'><h3>Full changelog</h3>" + groupMarkup.join("") + "</div>";
     }
 
     function normalizedFullDescription(sourceContent) {
@@ -1183,8 +1156,8 @@
         Common.byId("detailsPage").innerHTML = "<div class='details-layout'>" +
             "<div class='details-main'>" +
                 "<div class='details-hero clearfix'>" + packageIcon(packageInfo, "details-icon", false) +
-                    "<div class='details-hero-actions'>" + actionMarkup + "</div>" +
                     "<div class='details-copy'><h1>" + Common.escapeHtml(packageInfo.name) + "</h1><p>Version " + Common.escapeHtml(packageInfo.version) + " by " + Common.escapeHtml(packageInfo.developer || "Unknown developer") + "</p><div class='details-badges'>" + releaseBadges + "</div></div>" +
+                    "<div class='details-hero-actions'>" + actionMarkup + "</div>" +
                 "</div>" +
                 purchaseNotice(packageInfo) +
                 "<div class='details-tabs' role='tablist'><button class='details-tab' type='button' data-action='details-tab' data-details-tab='description'>Description</button>" +
@@ -1256,7 +1229,7 @@
         Common.addClass(Common.byId("detailsNavigation"), "is-hidden");
         updateInstalledToolsState();
         updateSearchPlaceholder();
-        schedulePackageDescriptionTruncation();
+
     }
 
     function showDetails(packageGuid) {
@@ -1690,7 +1663,7 @@
                 showNotification("Runtime info copied.", "info");
             }
         });
-        Common.on(window, "resize", schedulePackageDescriptionTruncation);
+
         window.location.href = "maxpkg://manager/ready";
     }
 

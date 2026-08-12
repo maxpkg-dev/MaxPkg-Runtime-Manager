@@ -206,7 +206,9 @@
             for changelogEntry in changelogEntries do (
                 local entryContent = "{"
                 entryContent += "\"changeType\":" + (utils.jsonString changelogEntry.changeType) + ","
-                entryContent += "\"messageContent\":" + (utils.jsonString changelogEntry.messageContent)
+                entryContent += "\"messageContent\":" + (utils.jsonString changelogEntry.messageContent) + ","
+                entryContent += "\"versionContent\":" + (utils.jsonString changelogEntry.versionContent) + ","
+                entryContent += "\"releaseDateContent\":" + (utils.jsonString changelogEntry.releaseDateContent)
                 entryContent += "}"
                 append changelogContent entryContent
             )

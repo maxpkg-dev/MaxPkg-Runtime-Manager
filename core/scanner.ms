@@ -6,7 +6,9 @@
 (
     struct MaxPkgChangelogEntryData (
         changeType = "",
-        messageContent = ""
+        messageContent = "",
+        versionContent = "",
+        releaseDateContent = ""
     )
 
     struct MaxPkgPackageData (
@@ -58,14 +60,14 @@
             return packageSlug
         ),
 
-        fn changelogFromManifest manifestPath = (
+        fn changelogFromManifest manifestPath versionContent releaseDateContent = (
             local changelogEntries = #()
             for changelogIndex in 1 to 100 do (
                 local keyPrefix = changelogIndex as string
                 local messageContent = ini.read manifestPath "changelog" (keyPrefix + "_text")
                 if (messageContent == "") do exit
                 local changeType = ini.read manifestPath "changelog" (keyPrefix + "_type") defaultValue: "Changed"
-                append changelogEntries (MaxPkgChangelogEntryData changeType: changeType messageContent: messageContent)
+                append changelogEntries (MaxPkgChangelogEntryData changeType: changeType messageContent: messageContent versionContent: versionContent releaseDateContent: releaseDateContent)
             )
             return changelogEntries
         ),
@@ -97,7 +99,7 @@
             package.manifestVersion = ini.readAny manifestPath iniSection #("manifestVersion", "ManifestVersion") defaultValue: ""
             package.packagerName = ini.readAny manifestPath iniSection #("packager", "Packager") defaultValue: ""
             package.packagerVersion = ini.readAny manifestPath iniSection #("packagerVersion", "PackagerVersion") defaultValue: ""
-            package.changelogEntries = changelogFromManifest manifestPath
+            package.changelogEntries = changelogFromManifest manifestPath package.version package.releaseDate
             package.entry = ini.readAny manifestPath iniSection #("entry", "Entry")
             package.runtime = ini.readAny manifestPath iniSection #("runtime", "Runtime")
             if (package.runtime == "") do (

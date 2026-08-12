@@ -6,7 +6,9 @@
 (
     struct MaxPkgApiChangelogEntryData (
         changeType = "",
-        messageContent = ""
+        messageContent = "",
+        versionContent = "",
+        releaseDateContent = ""
     )
 
     struct MaxPkgApiScreenshotData (
@@ -161,12 +163,12 @@
             return changelogEntries
         ),
 
-        fn readChangelogItem apiResponseFilePath itemSectionName = (
+        fn readChangelogItem apiResponseFilePath itemSectionName versionContent: "" releaseDateContent: "" = (
             local messageContent = ini.readAny apiResponseFilePath itemSectionName #("Text", "text", "Message", "message", "MessageContent", "messageContent")
             if (messageContent == "") do return undefined
 
             local changeType = ini.readAny apiResponseFilePath itemSectionName #("Type", "type", "ChangeType", "changeType") defaultValue: "Changed"
-            return MaxPkgApiChangelogEntryData changeType: changeType messageContent: messageContent
+            return MaxPkgApiChangelogEntryData changeType: changeType messageContent: messageContent versionContent: versionContent releaseDateContent: releaseDateContent
         ),
 
         fn readVersionedChangelog apiResponseFilePath = (
@@ -175,11 +177,13 @@
 
             for changelogIndex in 1 to changelogCount do (
                 local changelogSectionName = "changelog_" + (changelogIndex as string)
+                local versionContent = ini.readAny apiResponseFilePath changelogSectionName #("Version", "version")
+                local releaseDateContent = ini.readAny apiResponseFilePath changelogSectionName #("ReleaseDate", "releaseDate")
                 local changelogItemCount = integerValue (ini.read apiResponseFilePath changelogSectionName "Count" defaultValue: "0") 0
 
                 for changelogItemIndex in 1 to changelogItemCount do (
                     local changelogItemSectionName = changelogSectionName + "_item_" + (changelogItemIndex as string)
-                    local changelogEntry = readChangelogItem apiResponseFilePath changelogItemSectionName
+                    local changelogEntry = readChangelogItem apiResponseFilePath changelogItemSectionName versionContent: versionContent releaseDateContent: releaseDateContent
 
                     if (changelogEntry != undefined) do append changelogEntries changelogEntry
                 )
@@ -274,6 +278,10 @@
             packageInfo.changelogEntries = readChangelog apiResponseFilePath (iniSection + ".changelog")
             if (packageInfo.changelogEntries.count == 0 and detailsLoaded) do packageInfo.changelogEntries = readChangelog apiResponseFilePath "changelog"
             if (packageInfo.changelogEntries.count == 0 and detailsLoaded) do packageInfo.changelogEntries = readVersionedChangelog apiResponseFilePath
+            for changelogEntry in packageInfo.changelogEntries do (
+                if (changelogEntry.versionContent == "") do changelogEntry.versionContent = packageInfo.version
+                if (changelogEntry.releaseDateContent == "") do changelogEntry.releaseDateContent = packageInfo.releaseDate
+            )
             if (detailsLoaded) do packageInfo.screenshotEntries = readScreenshots apiResponseFilePath
             return packageInfo
         ),
