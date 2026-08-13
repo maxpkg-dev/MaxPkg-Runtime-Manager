@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.2
+
+- Added: Package changelogs are now grouped by version with release dates shown beside each group.
+- Fixed: Package cards keep a consistent height and shortened descriptions end with three dots.
+- Fixed: Details headers, pathways, action buttons, and link rows remain readable at smaller Manager widths.
+- Changed: Manager pages now use a cleaner translucent design with updated theme colors and background gradients.
+- Changed: Package Details now uses a clearer two-column layout with package information, purchase guidance, and related links organized into dedicated sections.
+
 ## 1.1.1
 
 - Fixed: Runtime self-updates and release links now use the renamed MaxPkg Runtime Manager GitHub repository.
