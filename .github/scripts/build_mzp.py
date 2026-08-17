@@ -115,7 +115,7 @@ def validate_archive_entries(archive_entries: set[str]) -> None:
 
 
 def read_runtime_version(version_path: Path) -> str:
-    version_content = version_path.read_text(encoding="utf-16")
+    version_content = version_path.read_text(encoding="utf-8-sig")
     version_match = re.search(r"(?m)^Version=(\d+\.\d+\.\d+)\s*$", version_content)
     if version_match is None:
         raise RuntimeError("Version was not found in version.ini.")
