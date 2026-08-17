@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.4
+
+- Added: Featured packages and curated collections now appear as quick filters in Discover.
+- Added: Discover categories can filter compatible packages and show current package counts.
+- Fixed: Release builds can read `version.ini` in both supported text encodings.
+- Changed: Discover hides collection and category controls when their data is unavailable, while the package catalog remains usable.
+
 ## 1.1.3
 
 - Added: The MaxPkg toolbar button now shows how many installed packages have updates available.
