@@ -37,6 +37,21 @@
         collections = #()
     )
 
+    struct MaxPkgApiCategoryData (
+        slug = "",
+        categoryName = "",
+        categoryDescription = "",
+        packageCount = 0
+    )
+
+    struct MaxPkgCategoriesResponseData (
+        success = false,
+        errorCode = "",
+        errorMessage = "",
+        requestId = "",
+        categories = #()
+    )
+
     struct MaxPkgApiPackageData (
         guid = "",
         slug = "",
@@ -94,7 +109,8 @@
         total = 0,
         totalPages = 0,
         featuredOnly = false,
-        collectionSlug = ""
+        collectionSlug = "",
+        categoryFilter = ""
     )
 
     struct MaxPkgRepositoryModule (
@@ -377,10 +393,37 @@
             return responseInfo
         ),
 
+        fn parseCategories apiResponseFilePath = (
+            local responseInfo = MaxPkgCategoriesResponseData()
+            if (apiResponseFilePath == "") do (
+                responseInfo.errorCode = "NETWORK_ERROR"
+                responseInfo.errorMessage = "The Runtime API could not be reached."
+                return responseInfo
+            )
+            if (errorFromResponse apiResponseFilePath responseInfo) do return responseInfo
+
+            local responseSections = ini.sections apiResponseFilePath
+            for categorySection in responseSections do (
+                local normalizedSection = toLower categorySection
+                if (matchPattern normalizedSection pattern: "category_*") do (
+                    local categoryInfo = MaxPkgApiCategoryData()
+                    categoryInfo.slug = ini.readAny apiResponseFilePath categorySection #("Slug", "slug")
+                    categoryInfo.categoryName = ini.readAny apiResponseFilePath categorySection #("Name", "name")
+                    categoryInfo.categoryDescription = ini.readAny apiResponseFilePath categorySection #("Description", "description")
+                    categoryInfo.packageCount = integerValue (ini.readAny apiResponseFilePath categorySection #("Count", "count") defaultValue: "0") 0
+                    if (categoryInfo.slug != "" and categoryInfo.categoryName != "" and categoryInfo.packageCount > 0) do append responseInfo.categories categoryInfo
+                )
+            )
+
+            responseInfo.success = true
+            return responseInfo
+        ),
+
         fn catalogFormFields queryText categoryFilter sortMode pageNumber pageSize channelName featuredOnly: false collectionSlug: "" = (
+            local resolvedCategoryFilter = if (featuredOnly or collectionSlug != "") then "" else categoryFilter
             local formFields = #(
                 utils.formField "query" queryText,
-                utils.formField "category" categoryFilter,
+                utils.formField "category" resolvedCategoryFilter,
                 utils.formField "sort" sortMode,
                 utils.formField "page" (pageNumber as string),
                 utils.formField "pageSize" (pageSize as string)
@@ -399,12 +442,18 @@
             local responseInfo = enforceMinimum3dsMax (parsePackages (request "catalog" formFields))
             responseInfo.featuredOnly = featuredOnly
             responseInfo.collectionSlug = if (featuredOnly) then "" else collectionSlug
+            responseInfo.categoryFilter = if (featuredOnly or collectionSlug != "") then "" else categoryFilter
             return responseInfo
         ),
 
         fn collections channelName: "stable" = (
             local formFields = commonFormFields channelName
             return parseCollections (request "collections" formFields)
+        ),
+
+        fn categories channelName: "stable" = (
+            local formFields = commonFormFields channelName
+            return parseCategories (request "categories" formFields)
         ),
 
         fn packageDetails packageReference channelName: "stable" = (

@@ -149,13 +149,26 @@
     if (parsedCollectionInfo.slug != "must-have" or parsedCollectionInfo.collectionName != "Must-Have" or parsedCollectionInfo.iconName != "sparkles") do throw "Runtime API collection identity parsing failed."
     if (parsedCollectionInfo.accentColor != "#e74b7a" or parsedCollectionInfo.packageCount != 3) do throw "Runtime API collection presentation parsing failed."
 
+    apiTestStream = createFile apiTestFilePath
+    if (apiTestStream == undefined) do throw "Could not create the Runtime categories API parser test file."
+    format "[category_1]\nSlug=utilities\nName=Utilities\nDescription=Helpful utilities for everyday work\nCount=12\n\n[category_2]\nSlug=empty\nName=Empty\nDescription=No compatible packages\nCount=0\n" to: apiTestStream
+    close apiTestStream
+    local parsedCategoriesResponse = repositoryModule.parseCategories apiTestFilePath
+    if (not parsedCategoriesResponse.success or parsedCategoriesResponse.categories.count != 1) do throw "Runtime API categories response parsing failed."
+    local parsedCategoryInfo = parsedCategoriesResponse.categories[1]
+    if (parsedCategoryInfo.slug != "utilities" or parsedCategoryInfo.categoryName != "Utilities" or parsedCategoryInfo.categoryDescription == "" or parsedCategoryInfo.packageCount != 12) do throw "Runtime API category parsing failed."
+
     struct MaxPkgRepositoryOwnerFixtureData (version = "9.8.7")
     repositoryModule.owner = MaxPkgRepositoryOwnerFixtureData()
-    local featuredFormContent = utilsModule.join (repositoryModule.catalogFormFields "" "" "popular" 1 24 "stable" featuredOnly: true collectionSlug: "must-have") separator: "&"
-    if ((findString featuredFormContent "featured=true") == undefined or (findString featuredFormContent "collection=") != undefined) do throw "Featured catalog fields are invalid."
-    local collectionFormContent = utilsModule.join (repositoryModule.catalogFormFields "" "" "popular" 1 24 "stable" collectionSlug: "must-have") separator: "&"
-    if ((findString collectionFormContent "collection=must-have") == undefined or (findString collectionFormContent "featured=true") != undefined) do throw "Curated collection catalog fields are invalid."
+    local featuredFormContent = utilsModule.join (repositoryModule.catalogFormFields "" "utilities" "popular" 1 24 "stable" featuredOnly: true collectionSlug: "must-have") separator: "&"
+    if ((findString featuredFormContent "featured=true") == undefined or (findString featuredFormContent "collection=") != undefined or (findString featuredFormContent "category=utilities") != undefined) do throw "Featured catalog fields are invalid."
+    local collectionFormContent = utilsModule.join (repositoryModule.catalogFormFields "" "utilities" "popular" 1 24 "stable" collectionSlug: "must-have") separator: "&"
+    if ((findString collectionFormContent "collection=must-have") == undefined or (findString collectionFormContent "featured=true") != undefined or (findString collectionFormContent "category=utilities") != undefined) do throw "Curated collection catalog fields are invalid."
     if ((findString collectionFormContent "max3dsMax=") == undefined or (findString collectionFormContent "runtimeVersion=9.8.7") == undefined or (findString collectionFormContent "channel=stable") == undefined) do throw "Collection compatibility fields are unavailable."
+    local categoryFormContent = utilsModule.join (repositoryModule.catalogFormFields "scene search" "utilities" "popular" 2 24 "stable") separator: "&"
+    if ((findString categoryFormContent "category=utilities") == undefined or (findString categoryFormContent "query=scene%20search") == undefined or (findString categoryFormContent "page=2") == undefined) do throw "Category catalog fields are invalid."
+    local categoryCompatibilityFields = utilsModule.join (repositoryModule.commonFormFields "stable") separator: "&"
+    if ((findString categoryCompatibilityFields "max3dsMax=") == undefined or (findString categoryCompatibilityFields "runtimeVersion=9.8.7") == undefined or (findString categoryCompatibilityFields "channel=stable") == undefined) do throw "Category compatibility fields are unavailable."
     utilsModule.forceDeleteFile apiTestFilePath
     local manifestTestFilePath = (utilsModule.ensureSlash (getDir #temp)) + "maxpkg-manifest-" + deleteTestId + ".ini"
     local manifestTestStream = createFile manifestTestFilePath

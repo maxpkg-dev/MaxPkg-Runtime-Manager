@@ -91,6 +91,7 @@
         packages = #(),
         catalogState = undefined,
         collectionsState = undefined,
+        categoriesState = undefined,
         remotePackageDetails = undefined,
         settings = undefined,
         operation = undefined,
@@ -181,6 +182,7 @@
             packages = #()
             catalogState = undefined
             collectionsState = undefined
+            categoriesState = undefined
             remotePackageDetails = undefined
             settings = undefined
             operation = undefined
@@ -268,6 +270,11 @@
         fn browseCollections = (
             collectionsState = repositoryModule.collections channelName: runtimeChannel
             return collectionsState
+        ),
+
+        fn browseCategories = (
+            categoriesState = repositoryModule.categories channelName: runtimeChannel
+            return categoriesState
         ),
 
         fn browsePackages queryText: "" categoryFilter: "" sortMode: "popular" pageNumber: 1 pageSize: 24 featuredOnly: false collectionSlug: "" = (

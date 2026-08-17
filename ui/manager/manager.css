@@ -347,6 +347,40 @@
     background: transparent;
 }
 
+.categories-bar {
+    margin: -2px 0 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.categories-label {
+    display: inline-block;
+    margin: 0 9px 8px 0;
+    color: {{textMuted}};
+    font-size: 11px;
+    line-height: 32px;
+    vertical-align: top;
+}
+
+.categories-bar.is-muted .collection-pill {
+    opacity: 0.62;
+}
+
+.categories-bar.is-muted .collection-pill:hover,
+.categories-bar.is-muted .collection-pill:focus {
+    opacity: 0.9;
+}
+
+.category-pill-all.is-active ~ .category-pill {
+    opacity: 0.62;
+}
+
+.category-pill-all.is-active ~ .category-pill:hover,
+.category-pill-all.is-active ~ .category-pill:focus {
+    opacity: 0.9;
+}
+
 .collection-pills {
     display: inline;
 }
@@ -416,26 +450,6 @@
 }
 
 
-.collections-feedback {
-    margin: 0 0 10px;
-    padding: 8px 10px;
-    border: 1px solid {{warningBorder}};
-    border-radius: 10px;
-    background: {{warningSurface}};
-    color: {{warningText}};
-    font-size: 11px;
-}
-
-.collections-feedback button {
-    margin-left: 9px;
-    padding: 0;
-    border: 0;
-    border-bottom: 1px solid {{warningText}};
-    background: transparent;
-    color: {{warningText}};
-    font-family: inherit;
-    cursor: pointer;
-}
 
 .catalog-summary {
     margin: 0 0 12px;

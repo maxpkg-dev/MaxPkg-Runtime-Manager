@@ -364,9 +364,35 @@
             return collectionsContent
         ),
 
+        fn categoryJson categoryInfo = (
+            local categoryContent = "{"
+            categoryContent += "\"slug\":" + (utils.jsonString categoryInfo.slug) + ","
+            categoryContent += "\"name\":" + (utils.jsonString categoryInfo.categoryName) + ","
+            categoryContent += "\"description\":" + (utils.jsonString categoryInfo.categoryDescription) + ","
+            categoryContent += "\"count\":" + (categoryInfo.packageCount as string)
+            categoryContent += "}"
+            return categoryContent
+        ),
+
+        fn categoriesJson = (
+            local responseInfo = owner.categoriesState
+            if (responseInfo == undefined) do return "{\"loaded\":false,\"available\":false,\"message\":\"\",\"items\":[]}"
+            local categoryEntries = #()
+            for categoryInfo in responseInfo.categories do append categoryEntries (categoryJson categoryInfo)
+            local categoriesContent = "{"
+            categoriesContent += "\"loaded\":true,"
+            categoriesContent += "\"available\":" + (boolJson responseInfo.success) + ","
+            categoriesContent += "\"message\":" + (utils.jsonString responseInfo.errorMessage) + ","
+            categoriesContent += "\"errorCode\":" + (utils.jsonString responseInfo.errorCode) + ","
+            categoriesContent += "\"requestId\":" + (utils.jsonString responseInfo.requestId) + ","
+            categoriesContent += "\"items\":[" + (utils.join categoryEntries separator: ",") + "]"
+            categoriesContent += "}"
+            return categoriesContent
+        ),
+
         fn discoverJson = (
             local responseInfo = owner.catalogState
-            if (responseInfo == undefined) do return "{\"available\":false,\"message\":\"Load the catalog to browse packages.\",\"packages\":[],\"page\":1,\"pageSize\":24,\"total\":0,\"totalPages\":0,\"featured\":false,\"collection\":\"\"}"
+            if (responseInfo == undefined) do return "{\"available\":false,\"message\":\"Load the catalog to browse packages.\",\"packages\":[],\"page\":1,\"pageSize\":24,\"total\":0,\"totalPages\":0,\"featured\":false,\"collection\":\"\",\"category\":\"\"}"
             local discoverContent = "{"
             discoverContent += "\"available\":" + (boolJson responseInfo.success) + ","
             discoverContent += "\"message\":" + (utils.jsonString responseInfo.errorMessage) + ","
@@ -378,7 +404,8 @@
             discoverContent += "\"total\":" + (responseInfo.total as string) + ","
             discoverContent += "\"totalPages\":" + (responseInfo.totalPages as string) + ","
             discoverContent += "\"featured\":" + (boolJson responseInfo.featuredOnly) + ","
-            discoverContent += "\"collection\":" + (utils.jsonString responseInfo.collectionSlug)
+            discoverContent += "\"collection\":" + (utils.jsonString responseInfo.collectionSlug) + ","
+            discoverContent += "\"category\":" + (utils.jsonString responseInfo.categoryFilter)
             discoverContent += "}"
             return discoverContent
         ),
@@ -449,6 +476,7 @@
             stateContent += "\"connection\":" + (utils.jsonString connectionState) + ","
             stateContent += "\"settings\":" + settingsJson() + ","
             stateContent += "\"collections\":" + collectionsJson() + ","
+            stateContent += "\"categories\":" + categoriesJson() + ","
             stateContent += "\"discover\":" + discoverJson() + ","
             stateContent += "\"remoteDetails\":" + remoteDetailsJson()
             stateContent += "}"
@@ -639,10 +667,15 @@
                 local collectionsResponse = owner.browseCollections()
                 isSuccess = collectionsResponse.success
             )
+            if (commandPath == "categories") do (
+                local categoriesResponse = owner.browseCategories()
+                isSuccess = categoriesResponse.success
+            )
             if (commandPath == "discover") do (
                 owner.settings.managerLastTab = "discover"
                 owner.saveSettings()
                 owner.browseCollections()
+                owner.browseCategories()
                 local discoverCatalogResponse = owner.browsePackages queryText: (queryParameter queryString "query") categoryFilter: "" sortMode: "popular" pageNumber: 1 pageSize: 24
                 isSuccess = discoverCatalogResponse.success
                 if (not isSuccess) do notify (if (discoverCatalogResponse.errorMessage != "") then discoverCatalogResponse.errorMessage else "Could not load the package catalog.") notificationType: "error"
