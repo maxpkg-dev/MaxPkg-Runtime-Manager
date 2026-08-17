@@ -19,6 +19,24 @@
         sortOrder = 0
     )
 
+    struct MaxPkgApiCollectionData (
+        slug = "",
+        collectionName = "",
+        collectionDescription = "",
+        iconName = "",
+        accentColor = "",
+        packageCount = 0
+    )
+
+    struct MaxPkgCollectionsResponseData (
+        success = false,
+        errorCode = "",
+        errorMessage = "",
+        requestId = "",
+        featuredCount = 0,
+        collections = #()
+    )
+
     struct MaxPkgApiPackageData (
         guid = "",
         slug = "",
@@ -74,7 +92,9 @@
         page = 1,
         pageSize = 24,
         total = 0,
-        totalPages = 0
+        totalPages = 0,
+        featuredOnly = false,
+        collectionSlug = ""
     )
 
     struct MaxPkgRepositoryModule (
@@ -108,6 +128,7 @@
 
         fn commonFormFields channelName = (
             return #(
+                utils.formField "max3dsMax" ((utils.current3dsMaxYear()) as string),
                 utils.formField "runtimeVersion" owner.version,
                 utils.formField "channel" channelName
             )
@@ -318,14 +339,45 @@
             if (metadataSection == "") do metadataSection = "catalog"
             responseInfo.page = integerValue (ini.read apiResponseFilePath metadataSection "Page" defaultValue: "1") 1
             responseInfo.pageSize = integerValue (ini.read apiResponseFilePath metadataSection "PageSize" defaultValue: "24") 24
-            responseInfo.total = integerValue (ini.read apiResponseFilePath metadataSection "Total" defaultValue: (responseInfo.packages.count as string)) responseInfo.packages.count
+            responseInfo.total = integerValue (ini.readAny apiResponseFilePath metadataSection #("Total", "TotalItems", "Count") defaultValue: (responseInfo.packages.count as string)) responseInfo.packages.count
             responseInfo.totalPages = integerValue (ini.read apiResponseFilePath metadataSection "TotalPages" defaultValue: "0") 0
             if (responseInfo.packages.count > 0) do responseInfo.packageInfo = responseInfo.packages[1]
             responseInfo.success = true
             return responseInfo
         ),
 
-        fn catalog queryText: "" categoryFilter: "" sortMode: "popular" pageNumber: 1 pageSize: 24 channelName: "stable" = (
+        fn parseCollections apiResponseFilePath = (
+            local responseInfo = MaxPkgCollectionsResponseData()
+            if (apiResponseFilePath == "") do (
+                responseInfo.errorCode = "NETWORK_ERROR"
+                responseInfo.errorMessage = "The Runtime API could not be reached."
+                return responseInfo
+            )
+            if (errorFromResponse apiResponseFilePath responseInfo) do return responseInfo
+
+            local responseSections = ini.sections apiResponseFilePath
+            local metadataSection = findSection responseSections "meta"
+            if (metadataSection == "") do metadataSection = "meta"
+            responseInfo.featuredCount = integerValue (ini.read apiResponseFilePath metadataSection "FeaturedCount" defaultValue: "0") 0
+            local collectionCount = integerValue (ini.read apiResponseFilePath metadataSection "Count" defaultValue: "0") 0
+
+            for collectionIndex in 1 to collectionCount do (
+                local collectionSection = "collection_" + (collectionIndex as string)
+                local collectionInfo = MaxPkgApiCollectionData()
+                collectionInfo.slug = ini.readAny apiResponseFilePath collectionSection #("Slug", "slug")
+                collectionInfo.collectionName = ini.readAny apiResponseFilePath collectionSection #("Name", "name")
+                collectionInfo.collectionDescription = ini.readAny apiResponseFilePath collectionSection #("Description", "description")
+                collectionInfo.iconName = ini.readAny apiResponseFilePath collectionSection #("Icon", "icon")
+                collectionInfo.accentColor = ini.readAny apiResponseFilePath collectionSection #("AccentColor", "accentColor")
+                collectionInfo.packageCount = integerValue (ini.readAny apiResponseFilePath collectionSection #("Count", "count") defaultValue: "0") 0
+                if (collectionInfo.slug != "" and collectionInfo.collectionName != "") do append responseInfo.collections collectionInfo
+            )
+
+            responseInfo.success = true
+            return responseInfo
+        ),
+
+        fn catalogFormFields queryText categoryFilter sortMode pageNumber pageSize channelName featuredOnly: false collectionSlug: "" = (
             local formFields = #(
                 utils.formField "query" queryText,
                 utils.formField "category" categoryFilter,
@@ -333,8 +385,26 @@
                 utils.formField "page" (pageNumber as string),
                 utils.formField "pageSize" (pageSize as string)
             )
+            if (featuredOnly) then (
+                append formFields (utils.formField "featured" "true")
+            ) else if (collectionSlug != "") do (
+                append formFields (utils.formField "collection" collectionSlug)
+            )
             join formFields (commonFormFields channelName)
-            return enforceMinimum3dsMax (parsePackages (request "catalog" formFields))
+            return formFields
+        ),
+
+        fn catalog queryText: "" categoryFilter: "" sortMode: "popular" pageNumber: 1 pageSize: 24 channelName: "stable" featuredOnly: false collectionSlug: "" = (
+            local formFields = catalogFormFields queryText categoryFilter sortMode pageNumber pageSize channelName featuredOnly: featuredOnly collectionSlug: collectionSlug
+            local responseInfo = enforceMinimum3dsMax (parsePackages (request "catalog" formFields))
+            responseInfo.featuredOnly = featuredOnly
+            responseInfo.collectionSlug = if (featuredOnly) then "" else collectionSlug
+            return responseInfo
+        ),
+
+        fn collections channelName: "stable" = (
+            local formFields = commonFormFields channelName
+            return parseCollections (request "collections" formFields)
         ),
 
         fn packageDetails packageReference channelName: "stable" = (

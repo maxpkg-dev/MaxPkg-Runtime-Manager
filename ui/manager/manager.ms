@@ -335,9 +335,38 @@
             return "[" + (utils.join packageEntries separator: ",") + "]"
         ),
 
+        fn collectionJson collectionInfo = (
+            local collectionContent = "{"
+            collectionContent += "\"slug\":" + (utils.jsonString collectionInfo.slug) + ","
+            collectionContent += "\"name\":" + (utils.jsonString collectionInfo.collectionName) + ","
+            collectionContent += "\"description\":" + (utils.jsonString collectionInfo.collectionDescription) + ","
+            collectionContent += "\"icon\":" + (utils.jsonString collectionInfo.iconName) + ","
+            collectionContent += "\"accentColor\":" + (utils.jsonString collectionInfo.accentColor) + ","
+            collectionContent += "\"count\":" + (collectionInfo.packageCount as string)
+            collectionContent += "}"
+            return collectionContent
+        ),
+
+        fn collectionsJson = (
+            local responseInfo = owner.collectionsState
+            if (responseInfo == undefined) do return "{\"loaded\":false,\"available\":false,\"message\":\"\",\"featuredCount\":0,\"items\":[]}"
+            local collectionEntries = #()
+            for collectionInfo in responseInfo.collections do append collectionEntries (collectionJson collectionInfo)
+            local collectionsContent = "{"
+            collectionsContent += "\"loaded\":true,"
+            collectionsContent += "\"available\":" + (boolJson responseInfo.success) + ","
+            collectionsContent += "\"message\":" + (utils.jsonString responseInfo.errorMessage) + ","
+            collectionsContent += "\"errorCode\":" + (utils.jsonString responseInfo.errorCode) + ","
+            collectionsContent += "\"requestId\":" + (utils.jsonString responseInfo.requestId) + ","
+            collectionsContent += "\"featuredCount\":" + (responseInfo.featuredCount as string) + ","
+            collectionsContent += "\"items\":[" + (utils.join collectionEntries separator: ",") + "]"
+            collectionsContent += "}"
+            return collectionsContent
+        ),
+
         fn discoverJson = (
             local responseInfo = owner.catalogState
-            if (responseInfo == undefined) do return "{\"available\":false,\"message\":\"Load the catalog to browse packages.\",\"packages\":[],\"page\":1,\"pageSize\":24,\"total\":0,\"totalPages\":0}"
+            if (responseInfo == undefined) do return "{\"available\":false,\"message\":\"Load the catalog to browse packages.\",\"packages\":[],\"page\":1,\"pageSize\":24,\"total\":0,\"totalPages\":0,\"featured\":false,\"collection\":\"\"}"
             local discoverContent = "{"
             discoverContent += "\"available\":" + (boolJson responseInfo.success) + ","
             discoverContent += "\"message\":" + (utils.jsonString responseInfo.errorMessage) + ","
@@ -347,7 +376,9 @@
             discoverContent += "\"page\":" + (responseInfo.page as string) + ","
             discoverContent += "\"pageSize\":" + (responseInfo.pageSize as string) + ","
             discoverContent += "\"total\":" + (responseInfo.total as string) + ","
-            discoverContent += "\"totalPages\":" + (responseInfo.totalPages as string)
+            discoverContent += "\"totalPages\":" + (responseInfo.totalPages as string) + ","
+            discoverContent += "\"featured\":" + (boolJson responseInfo.featuredOnly) + ","
+            discoverContent += "\"collection\":" + (utils.jsonString responseInfo.collectionSlug)
             discoverContent += "}"
             return discoverContent
         ),
@@ -417,6 +448,7 @@
             stateContent += "\"updateCount\":" + (updateCount as string) + ","
             stateContent += "\"connection\":" + (utils.jsonString connectionState) + ","
             stateContent += "\"settings\":" + settingsJson() + ","
+            stateContent += "\"collections\":" + collectionsJson() + ","
             stateContent += "\"discover\":" + discoverJson() + ","
             stateContent += "\"remoteDetails\":" + remoteDetailsJson()
             stateContent += "}"
@@ -603,10 +635,22 @@
                 isSuccess = owner.checkUpdates()
                 if (not isSuccess) do notify "An update check is already running." notificationType: "info"
             )
+            if (commandPath == "collections") do (
+                local collectionsResponse = owner.browseCollections()
+                isSuccess = collectionsResponse.success
+            )
+            if (commandPath == "discover") do (
+                owner.settings.managerLastTab = "discover"
+                owner.saveSettings()
+                owner.browseCollections()
+                local discoverCatalogResponse = owner.browsePackages queryText: (queryParameter queryString "query") categoryFilter: "" sortMode: "popular" pageNumber: 1 pageSize: 24
+                isSuccess = discoverCatalogResponse.success
+                if (not isSuccess) do notify (if (discoverCatalogResponse.errorMessage != "") then discoverCatalogResponse.errorMessage else "Could not load the package catalog.") notificationType: "error"
+            )
             if (commandPath == "catalog") do (
                 owner.settings.managerLastTab = "discover"
                 owner.saveSettings()
-                local catalogResponse = owner.browsePackages queryText: (queryParameter queryString "query") categoryFilter: (queryParameter queryString "category") sortMode: (queryParameter queryString "sort" defaultContent: "popular") pageNumber: (integerParameter queryString "page" 1) pageSize: (integerParameter queryString "pageSize" 24)
+                local catalogResponse = owner.browsePackages queryText: (queryParameter queryString "query") categoryFilter: (queryParameter queryString "category") sortMode: (queryParameter queryString "sort" defaultContent: "popular") pageNumber: (integerParameter queryString "page" 1) pageSize: (integerParameter queryString "pageSize" 24) featuredOnly: (boolParameter queryString "featured" defaultState: false) collectionSlug: (queryParameter queryString "collection")
                 isSuccess = catalogResponse.success
                 if (not isSuccess) do notify (if (catalogResponse.errorMessage != "") then catalogResponse.errorMessage else "Could not load the package catalog.") notificationType: "error"
             )

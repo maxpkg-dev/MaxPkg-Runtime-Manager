@@ -15,6 +15,7 @@
         updateCount: 0,
         connection: "offline",
         settings: {},
+        collections: { loaded: false, available: false, featuredCount: 0, items: [] },
         discover: { available: false, message: "Repository is unavailable.", packages: [] },
         remoteDetails: null
     };
@@ -23,6 +24,11 @@
     var toolbarVisibilityFilter = "all";
     var activeSort = "toolbar";
     var searchText = "";
+    var observedSearchContent = "";
+    var activeDiscoverKind = "";
+    var activeCollectionSlug = "";
+    var discoverCategory = "";
+    var discoverSort = "popular";
     var detailsGuid = "";
     var detailsTab = "description";
     var activeScreenshotIndex = 0;
@@ -40,6 +46,92 @@
 
     function boolText(isEnabled) {
         return isEnabled ? "true" : "false";
+    }
+
+    function safeCollectionAccent(accentColor) {
+        var normalizedColor = String(accentColor || "").replace(/^\s+|\s+$/g, "");
+        return /^#[0-9a-f]{6}$/i.test(normalizedColor) ? normalizedColor : "";
+    }
+
+    function safeCollectionIcon(iconName) {
+        var normalizedIcon = String(iconName || "").toLowerCase().replace(/^\s+|\s+$/g, "");
+        return /^[a-z0-9-]+$/.test(normalizedIcon) ? normalizedIcon : "package";
+    }
+
+    function collectionIcon(iconName) {
+        var normalizedIcon = safeCollectionIcon(iconName);
+        var iconPaths = {
+            crown: "<path d='m3 5 4 4 5-6 5 6 4-4-2 14H5Z'></path><path d='M5 19h14'></path>",
+            sparkles: "<path d='m12 3-1.1 4.1L7 8.2l3.9 1.1L12 13l1.1-3.7L17 8.2l-3.9-1.1Z'></path><path d='m19 13-.7 2.3L16 16l2.3.7L19 19l.7-2.3L22 16l-2.3-.7Z'></path><path d='m5 15-.6 1.7L3 17.3l1.4.5L5 19.5l.6-1.7 1.4-.5-1.4-.6Z'></path>",
+            heart: "<path d='M19.5 12.6 12 20l-7.5-7.4a5 5 0 0 1 7.1-7.1l.4.4.4-.4a5 5 0 0 1 7.1 7.1Z'></path>",
+            rocket: "<path d='M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z'></path><path d='m12 15-3-3a22 22 0 0 1 2-3.5A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6.5 11a22.41 22.41 0 0 1-3.5 2Z'></path><path d='M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0'></path><path d='M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5'></path>",
+            medal: "<circle cx='12' cy='8' r='6'></circle><path d='M15.477 12.89 17 22l-5-3-5 3 1.523-9.11'></path>",
+            package: "<path d='M16.5 9.4 7.5 4.2'></path><path d='M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'></path><path d='m3.3 7 8.7 5 8.7-5'></path><path d='M12 22V12'></path>"
+        };
+        return "<svg class='collection-icon' viewBox='0 0 24 24' aria-hidden='true' fill='none' stroke='#ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>" + (iconPaths[normalizedIcon] || iconPaths.package) + "</svg>";
+    }
+
+    function collectionAccentBackground(accentColor, opacityValue) {
+        var safeAccent = safeCollectionAccent(accentColor);
+        var redValue;
+        var greenValue;
+        var blueValue;
+        if (!safeAccent) {
+            return "";
+        }
+        redValue = parseInt(safeAccent.substring(1, 3), 16);
+        greenValue = parseInt(safeAccent.substring(3, 5), 16);
+        blueValue = parseInt(safeAccent.substring(5, 7), 16);
+        return "rgba(" + redValue + "," + greenValue + "," + blueValue + "," + opacityValue + ")";
+    }
+
+    function readDiscoverSelection() {
+        var discoverState = currentState.discover || {};
+        activeDiscoverKind = discoverState.featured ? "featured" : (discoverState.collection ? "collection" : "");
+        activeCollectionSlug = activeDiscoverKind === "collection" ? discoverState.collection : "";
+    }
+
+    function resetDiscoverSelection() {
+        activeDiscoverKind = "";
+        activeCollectionSlug = "";
+    }
+
+    function collectionPillStyle(accentColor, isActive, hasActiveSelection) {
+        var safeAccent = safeCollectionAccent(accentColor);
+        var accentBackground = collectionAccentBackground(safeAccent, "0.30");
+        if (!safeAccent || (hasActiveSelection && !isActive)) {
+            return "";
+        }
+        return " style='border-color:" + safeAccent + ";background:" + accentBackground + ";color:#ffffff;" + (isActive ? "box-shadow:0 0 12px " + collectionAccentBackground(safeAccent, "0.42") + ";" : "") + "'";
+    }
+
+    function collectionsHtml() {
+        var collectionsState = currentState.collections || {};
+        var collectionItems = collectionsState.items || [];
+        var hasActiveSelection = activeDiscoverKind !== "";
+        var pills = [];
+        var collectionIndex;
+        var collectionInfo;
+        var isActive;
+        var accentStyle;
+        if (!collectionsState.loaded) {
+            return "";
+        }
+        pills.push("<button class='collection-pill collection-pill-all" + (!hasActiveSelection ? " is-active" : "") + "' type='button' data-action='discover-collection' data-kind='all' title='All packages'" + collectionPillStyle("#3280dd", !hasActiveSelection, hasActiveSelection) + ">" + collectionIcon("package") + "<span>All packages</span></button>");
+        if (!collectionsState.available) {
+            return "<div class='collections-bar'><div class='collection-pills'>" + pills.join("") + "</div></div><div class='collections-feedback'>Curated collections are temporarily unavailable. <button type='button' data-action='collections-retry'>Retry</button></div>";
+        }
+        pills.push("<button class='collection-pill collection-pill-featured" + (activeDiscoverKind === "featured" ? " is-active" : "") + "' type='button' data-action='discover-collection' data-kind='featured' title='Featured packages'" + collectionPillStyle("#eb8ccd", activeDiscoverKind === "featured", hasActiveSelection) + ">" + collectionIcon("crown") + "<span>Featured</span><strong>" + (parseInt(collectionsState.featuredCount, 10) || 0) + "</strong></button>");
+        for (collectionIndex = 0; collectionIndex < collectionItems.length; collectionIndex += 1) {
+            collectionInfo = collectionItems[collectionIndex];
+            isActive = activeDiscoverKind === "collection" && activeCollectionSlug === collectionInfo.slug;
+            accentStyle = collectionPillStyle(collectionInfo.accentColor, isActive, hasActiveSelection);
+            pills.push("<button class='collection-pill" + (isActive ? " is-active" : "") + "' type='button' data-action='discover-collection' data-kind='collection' data-slug='" + Common.escapeHtml(collectionInfo.slug) + "' title='" + Common.escapeHtml(collectionInfo.description || collectionInfo.name) + "'" + accentStyle + ">" + collectionIcon(collectionInfo.icon) + "<span>" + Common.escapeHtml(collectionInfo.name) + "</span><strong>" + (parseInt(collectionInfo.count, 10) || 0) + "</strong></button>");
+        }
+        if (!pills.length) {
+            return "";
+        }
+        return "<div class='collections-bar'><div class='collection-pills'>" + pills.join("") + "</div></div>";
     }
 
     function packageDescriptionPreview(descriptionText) {
@@ -657,14 +749,32 @@
         }
     }
 
+    function activeCollectionName() {
+        var collectionsState = currentState.collections || {};
+        var collectionItems = collectionsState.items || [];
+        var collectionIndex;
+        if (activeDiscoverKind === "featured") {
+            return "Featured";
+        }
+        for (collectionIndex = 0; collectionIndex < collectionItems.length; collectionIndex += 1) {
+            if (collectionItems[collectionIndex].slug === activeCollectionSlug) {
+                return collectionItems[collectionIndex].name;
+            }
+        }
+        return "";
+    }
+
     function renderDiscover() {
         var discoverState = currentState.discover || {};
         var remotePackages = discoverState.packages || [];
         var packageCards = [];
         var packageIndex;
         var pagination = "";
+        var collectionsContent = collectionsHtml();
+        var selectionName = activeCollectionName();
+        var summarySuffix = selectionName ? " in " + Common.escapeHtml(selectionName) : "";
         if (!discoverState.available) {
-            Common.byId("discoverPage").innerHTML = "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/cloud-off.svg' alt=''><h2>Catalog unavailable</h2>" +
+            Common.byId("discoverPage").innerHTML = collectionsContent + "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/cloud-off.svg' alt=''><h2>Catalog unavailable</h2>" +
                 "<p>" + Common.escapeHtml(discoverState.message || "Load the catalog to browse packages.") + "</p><button class='button' type='button' data-action='catalog-retry'>" + icon("refresh-cw") + "Retry</button></div>";
             return;
         }
@@ -677,9 +787,8 @@
                 "<span>Page " + discoverState.page + " of " + discoverState.totalPages + "</span>" +
                 "<button class='button' type='button' data-action='discover-page' data-page='" + (discoverState.page + 1) + "'" + (discoverState.page >= discoverState.totalPages ? " disabled='disabled'" : "") + ">Next</button></div>";
         }
-        Common.byId("discoverPage").innerHTML = packageCards.length ? "<div class='catalog-summary'>" + discoverState.total + " packages</div><div class='card-grid'>" + packageCards.join("") + "</div>" + pagination :
-            "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/search.svg' alt=''><h2>No packages found</h2><p>Try a different search phrase.</p></div>";
-
+        Common.byId("discoverPage").innerHTML = collectionsContent + (packageCards.length ? "<div class='catalog-summary'>" + discoverState.total + " packages" + summarySuffix + "</div><div class='card-grid'>" + packageCards.join("") + "</div>" + pagination :
+            "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/search.svg' alt=''><h2>No packages found</h2><p>" + (selectionName ? "This collection has no compatible packages." : "Try a different search phrase.") + "</p></div>");
     }
 
     function remotePackageCard(packageInfo) {
@@ -705,11 +814,32 @@
         "</div>";
     }
 
+    function requestDiscover() {
+        resetDiscoverSelection();
+        discoverCategory = "";
+        discoverSort = "popular";
+        Common.byId("busyMessage").innerHTML = "Loading Discover...";
+        Common.removeClass(Common.byId("busyShade"), "is-hidden");
+        window.location.href = "maxpkg://manager/discover?query=" + Common.encode(searchText);
+    }
+
+    function requestCollections() {
+        Common.byId("busyMessage").innerHTML = "Loading curated collections...";
+        Common.removeClass(Common.byId("busyShade"), "is-hidden");
+        window.location.href = "maxpkg://manager/collections";
+    }
+
     function requestCatalog(pageNumber) {
         var normalizedPage = pageNumber > 0 ? pageNumber : 1;
+        var selectionQuery = "";
+        if (activeDiscoverKind === "featured") {
+            selectionQuery = "&featured=true";
+        } else if (activeDiscoverKind === "collection" && activeCollectionSlug) {
+            selectionQuery = "&collection=" + Common.encode(activeCollectionSlug);
+        }
         Common.byId("busyMessage").innerHTML = "Loading package catalog...";
         Common.removeClass(Common.byId("busyShade"), "is-hidden");
-        window.location.href = "maxpkg://manager/catalog?query=" + Common.encode(searchText) + "&category=&sort=popular&page=" + normalizedPage + "&pageSize=24";
+        window.location.href = "maxpkg://manager/catalog?query=" + Common.encode(searchText) + "&category=" + Common.encode(discoverCategory) + "&sort=" + Common.encode(discoverSort) + "&page=" + normalizedPage + "&pageSize=24" + selectionQuery;
     }
 
     function detailRow(rowLabel, fieldContent, cssClass) {
@@ -1276,13 +1406,14 @@
         var sourceText = payloadElement.innerText || payloadElement.textContent || "";
         try {
             currentState = JSON.parse(sourceText);
+            readDiscoverSelection();
             activeTab = currentState.settings.managerLastTab || activeTab;
             readManagerFilter(currentState.settings.managerFilter || "all");
             activeSort = currentState.settings.managerSort || activeSort;
             window.MaxPkgDropdown.setSelectValue(Common.byId("sortSelect"), activeSort);
             renderAll();
-            if (activeTab === "discover" && !currentState.discover.available && !currentState.discover.errorCode) {
-                requestCatalog(1);
+            if (activeTab === "discover" && (!(currentState.collections || {}).loaded || (!currentState.discover.available && !currentState.discover.errorCode))) {
+                requestDiscover();
             }
         } catch (parseError) {
             showNotification("Manager could not read Runtime state.", "error");
@@ -1506,7 +1637,11 @@
         if (tabElement) {
             showTab(tabElement.getAttribute("data-tab"), tabElement.getAttribute("data-filter"));
             if (activeTab === "discover") {
-                requestCatalog(1);
+                if (!(currentState.collections || {}).loaded) {
+                    requestDiscover();
+                } else {
+                    requestCatalog(1);
+                }
             } else {
                 renderInstalled();
                 saveManagerView();
@@ -1534,9 +1669,32 @@
         } else if (actionName === "details-tab") {
             Common.preventDefault(eventObject);
             showDetailsTab(actionElement.getAttribute("data-details-tab"));
+        } else if (actionName === "discover-collection") {
+            Common.preventDefault(eventObject);
+            var requestedKind = actionElement.getAttribute("data-kind") || "";
+            var requestedSlug = actionElement.getAttribute("data-slug") || "";
+            var isRequestedSelectionActive = (requestedKind === "all" && !activeDiscoverKind) || (activeDiscoverKind === requestedKind && (requestedKind !== "collection" || activeCollectionSlug === requestedSlug));
+            if (isRequestedSelectionActive) {
+                return;
+            }
+            if (requestedKind === "all") {
+                resetDiscoverSelection();
+            } else {
+                activeDiscoverKind = requestedKind === "featured" ? "featured" : "collection";
+                activeCollectionSlug = activeDiscoverKind === "collection" ? requestedSlug : "";
+            }
+            discoverCategory = "";
+            requestCatalog(1);
+        } else if (actionName === "collections-retry") {
+            Common.preventDefault(eventObject);
+            requestCollections();
         } else if (actionName === "catalog-retry") {
             Common.preventDefault(eventObject);
-            requestCatalog(1);
+            if ((currentState.collections || {}).loaded) {
+                requestCatalog(parseInt((currentState.discover || {}).page, 10) || 1);
+            } else {
+                requestDiscover();
+            }
         } else if (actionName === "discover-page") {
             Common.preventDefault(eventObject);
             requestCatalog(parseInt(actionElement.getAttribute("data-page"), 10) || 1);
@@ -1587,7 +1745,7 @@
 
     function initialize() {
         var searchInput = Common.byId("searchInput");
-        var observedSearchContent = searchInput.value;
+        observedSearchContent = searchInput.value;
         var debouncedSearch = window.MaxPkgSearch.debounce(function () {
             searchText = searchInput.value.toLowerCase().replace(/^\s+|\s+$/g, "");
             if (activeTab === "discover") {

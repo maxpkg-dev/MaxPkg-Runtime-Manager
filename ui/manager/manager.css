@@ -340,6 +340,103 @@
     font-size: 0;
 }
 
+.collections-bar {
+    margin: 0 0 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.collection-pills {
+    display: inline;
+}
+
+.collection-pill {
+    display: inline-block;
+    height: 32px;
+    margin: 0 4px 8px 0;
+    padding: 0 10px;
+    border: 1px solid {{borderStrong}};
+    border-radius: 16px;
+    background: {{surfaceRaised}};
+    color: {{textMuted}};
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 30px;
+    vertical-align: top;
+    cursor: pointer;
+}
+
+.collection-pill:hover,
+.collection-pill:focus {
+    border-color: {{borderFocus}};
+    color: {{textStrong}};
+}
+
+.collection-pill,
+.collection-pill:hover,
+.collection-pill:focus,
+.collection-pill.is-active {
+    color: #ffffff;
+}
+
+.collection-pill-all.is-active ~ .collection-pill {
+    opacity: 0.6;
+}
+
+.collection-pill-all.is-active ~ .collection-pill:hover,
+.collection-pill-all.is-active ~ .collection-pill:focus {
+    opacity: 0.9;
+}
+
+.collection-pill .collection-icon {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin: 0 5px 0 0;
+    vertical-align: -3px;
+}
+
+.collection-pill strong {
+    position: relative;
+    top: -1px;
+    display: inline-block;
+    min-width: 18px;
+    margin-left: 6px;
+    padding: 2px 5px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: normal;
+    line-height: 12px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+
+.collections-feedback {
+    margin: 0 0 10px;
+    padding: 8px 10px;
+    border: 1px solid {{warningBorder}};
+    border-radius: 10px;
+    background: {{warningSurface}};
+    color: {{warningText}};
+    font-size: 11px;
+}
+
+.collections-feedback button {
+    margin-left: 9px;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid {{warningText}};
+    background: transparent;
+    color: {{warningText}};
+    font-family: inherit;
+    cursor: pointer;
+}
+
 .catalog-summary {
     margin: 0 0 12px;
     color: {{textMuted}};

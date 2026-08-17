@@ -90,6 +90,7 @@
         runtimeChannel = "stable",
         packages = #(),
         catalogState = undefined,
+        collectionsState = undefined,
         remotePackageDetails = undefined,
         settings = undefined,
         operation = undefined,
@@ -179,6 +180,7 @@
             started = false
             packages = #()
             catalogState = undefined
+            collectionsState = undefined
             remotePackageDetails = undefined
             settings = undefined
             operation = undefined
@@ -263,8 +265,13 @@
             return apiModule.resolve packages packageReference
         ),
 
-        fn browsePackages queryText: "" categoryFilter: "" sortMode: "popular" pageNumber: 1 pageSize: 24 = (
-            catalogState = repositoryModule.catalog queryText: queryText categoryFilter: categoryFilter sortMode: sortMode pageNumber: pageNumber pageSize: pageSize channelName: runtimeChannel
+        fn browseCollections = (
+            collectionsState = repositoryModule.collections channelName: runtimeChannel
+            return collectionsState
+        ),
+
+        fn browsePackages queryText: "" categoryFilter: "" sortMode: "popular" pageNumber: 1 pageSize: 24 featuredOnly: false collectionSlug: "" = (
+            catalogState = repositoryModule.catalog queryText: queryText categoryFilter: categoryFilter sortMode: sortMode pageNumber: pageNumber pageSize: pageSize channelName: runtimeChannel featuredOnly: featuredOnly collectionSlug: collectionSlug
             return catalogState
         ),
 

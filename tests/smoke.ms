@@ -124,7 +124,7 @@
     local apiTestFilePath = (utilsModule.ensureSlash (getDir #temp)) + "maxpkg-api-response-" + deleteTestId + ".ini"
     local apiTestStream = createFile apiTestFilePath
     if (apiTestStream == undefined) do throw "Could not create the Runtime API parser test file."
-    format "[Catalog]\nPage=1\nPageSize=24\nTotal=1\nTotalPages=1\n\n[test-package-guid]\nGuid=test-package-guid\nSlug=test-package\nName=Test Package\nVersion=1.2.3\nDescription=Line one\\nLine two\nMin3dsMax=2012\nMax3dsMax=2026\nPurchaseUrl=https://developer.example/buy\nPurchaseButtonLabel=Get license\nRating=4.8\nReviewCount=12\nDownloadCount=3456\nDownloadUrl=https://maxpkg.dev/api/runtime/v1/download/package/test-package-guid/1.2.3\n" to: apiTestStream
+    format "[Catalog]\nPage=1\nPageSize=24\nTotalItems=1\nTotalPages=1\n\n[test-package-guid]\nGuid=test-package-guid\nSlug=test-package\nName=Test Package\nVersion=1.2.3\nDescription=Line one\\nLine two\nMin3dsMax=2012\nMax3dsMax=2026\nPurchaseUrl=https://developer.example/buy\nPurchaseButtonLabel=Get license\nRating=4.8\nReviewCount=12\nDownloadCount=3456\nDownloadUrl=https://maxpkg.dev/api/runtime/v1/download/package/test-package-guid/1.2.3\n" to: apiTestStream
     close apiTestStream
     repositoryModule.ini = iniModule
     repositoryModule.utils = utilsModule
@@ -138,6 +138,24 @@
     if (parsedApiResponse.packageInfo.downloadUrl == "") do throw "Runtime API DownloadUrl parsing failed."
     local compatibleApiResponse = repositoryModule.enforceMinimum3dsMax parsedApiResponse requireCompatiblePackage: true
     if (not compatibleApiResponse.success or compatibleApiResponse.packages.count != 1) do throw "Maximum 3ds Max version incorrectly restricted package compatibility."
+
+    apiTestStream = createFile apiTestFilePath
+    if (apiTestStream == undefined) do throw "Could not create the Runtime collections API parser test file."
+    format "[meta]\nFeaturedCount=2\nCount=1\n\n[collection_1]\nSlug=must-have\nName=Must-Have\nDescription=Essential tools for everyday work.\nIcon=sparkles\nAccentColor=#e74b7a\nCount=3\n" to: apiTestStream
+    close apiTestStream
+    local parsedCollectionsResponse = repositoryModule.parseCollections apiTestFilePath
+    if (not parsedCollectionsResponse.success or parsedCollectionsResponse.featuredCount != 2 or parsedCollectionsResponse.collections.count != 1) do throw "Runtime API collections response parsing failed."
+    local parsedCollectionInfo = parsedCollectionsResponse.collections[1]
+    if (parsedCollectionInfo.slug != "must-have" or parsedCollectionInfo.collectionName != "Must-Have" or parsedCollectionInfo.iconName != "sparkles") do throw "Runtime API collection identity parsing failed."
+    if (parsedCollectionInfo.accentColor != "#e74b7a" or parsedCollectionInfo.packageCount != 3) do throw "Runtime API collection presentation parsing failed."
+
+    struct MaxPkgRepositoryOwnerFixtureData (version = "9.8.7")
+    repositoryModule.owner = MaxPkgRepositoryOwnerFixtureData()
+    local featuredFormContent = utilsModule.join (repositoryModule.catalogFormFields "" "" "popular" 1 24 "stable" featuredOnly: true collectionSlug: "must-have") separator: "&"
+    if ((findString featuredFormContent "featured=true") == undefined or (findString featuredFormContent "collection=") != undefined) do throw "Featured catalog fields are invalid."
+    local collectionFormContent = utilsModule.join (repositoryModule.catalogFormFields "" "" "popular" 1 24 "stable" collectionSlug: "must-have") separator: "&"
+    if ((findString collectionFormContent "collection=must-have") == undefined or (findString collectionFormContent "featured=true") != undefined) do throw "Curated collection catalog fields are invalid."
+    if ((findString collectionFormContent "max3dsMax=") == undefined or (findString collectionFormContent "runtimeVersion=9.8.7") == undefined or (findString collectionFormContent "channel=stable") == undefined) do throw "Collection compatibility fields are unavailable."
     utilsModule.forceDeleteFile apiTestFilePath
     local manifestTestFilePath = (utilsModule.ensureSlash (getDir #temp)) + "maxpkg-manifest-" + deleteTestId + ".ini"
     local manifestTestStream = createFile manifestTestFilePath
