@@ -164,6 +164,9 @@
     if (not (isProperty MaxPkg.settings #managerTheme)) do throw "Manager theme setting is unavailable."
     if (not (isProperty MaxPkg.settings #managerFirstOpenCompleted)) do throw "Manager first-open state is unavailable."
     if (not (isProperty MaxPkg.settings #managerFullCards)) do throw "Manager full-card setting is unavailable."
+    if (not (isProperty MaxPkg.settings #lastPackageUpdateCheck)) do throw "Package update check timestamp is unavailable."
+    if (not (isProperty MaxPkg.settings #packageUpdateCache)) do throw "Package update cache is unavailable."
+    if ((classOf MaxPkg.settings.packageUpdateCache) != Array) do throw "Package update cache is not an array."
     if (MaxPkg.settings.toolbarDockPosition != "top" and MaxPkg.settings.toolbarDockPosition != "bottom") do throw "Toolbar dock position is invalid."
     if (not (isProperty MaxPkg.settings #apiEndpoint)) do throw "API endpoint setting is unavailable."
     MaxPkg.settings.toolbarOrder = #()
@@ -172,6 +175,16 @@
     local runtimeStatus = MaxPkg.getStatus()
     if (runtimeStatus.connection != "configured") do throw "Default API endpoint fallback is unavailable."
     if ((classOf (MaxPkg.getPackages())) != Array) do throw "MaxPkg.getPackages() did not return an array."
+    if ((MaxPkg.getPackages()).count > 0) do (
+        local cachedUpdateTestPackage = (MaxPkg.getPackages())[1]
+        local previousPackageUpdateCache = #()
+        for cacheEntry in MaxPkg.settings.packageUpdateCache do append previousPackageUpdateCache cacheEntry
+        MaxPkg.settings.packageUpdateCache = #(cachedUpdateTestPackage.guid + "@999.0.0")
+        MaxPkg.scan()
+        if (MaxPkg.getStatus().updateCount < 1) do throw "Cached package update was not applied."
+        MaxPkg.settings.packageUpdateCache = previousPackageUpdateCache
+        MaxPkg.scan()
+    )
     if (MaxPkg.getSettings() == undefined) do throw "MaxPkg.getSettings() is unavailable."
     if (MaxPkg.getStatus() == undefined) do throw "MaxPkg.getStatus() is unavailable."
     if ((MaxPkg.getPackage "__maxpkg_missing_package__") != undefined) do throw "MaxPkg.getPackage() resolved a missing package."

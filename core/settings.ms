@@ -20,6 +20,8 @@
         autoCheckPackages = true,
         autoCheckRuntime = true,
         downloadUpdatesAutomatically = false,
+        lastPackageUpdateCheck = "",
+        packageUpdateCache = #(),
         managerLastSelection = "",
         managerLastTab = "installed",
         managerFirstOpenCompleted = false,
@@ -174,6 +176,8 @@
             settingsData.autoCheckPackages = utils.boolValue (ini.read settingsData.filePath "Updates" "AutoCheckPackages" defaultValue: "true") defaultValue: true
             settingsData.autoCheckRuntime = utils.boolValue (ini.read settingsData.filePath "Updates" "AutoCheckRuntime" defaultValue: "true") defaultValue: true
             settingsData.downloadUpdatesAutomatically = utils.boolValue (ini.read settingsData.filePath "Updates" "DownloadAutomatically" defaultValue: "false") defaultValue: false
+            settingsData.lastPackageUpdateCheck = ini.read settingsData.filePath "Updates" "LastPackageCheckUtc"
+            settingsData.packageUpdateCache = splitList (ini.read settingsData.filePath "Updates" "PackageCache")
             settingsData.managerLastSelection = ini.read settingsData.filePath "Manager" "LastSelection"
             settingsData.managerLastTab = ini.read settingsData.filePath "Manager" "LastTab" defaultValue: "installed"
             settingsData.managerFirstOpenCompleted = utils.boolValue (ini.read settingsData.filePath "Manager" "FirstOpenCompleted" defaultValue: "false") defaultValue: false
@@ -236,6 +240,8 @@
             if (not (ini.write settingsData.filePath "Updates" "AutoCheckPackages" (if (settingsData.autoCheckPackages) then "true" else "false"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "AutoCheckRuntime" (if (settingsData.autoCheckRuntime) then "true" else "false"))) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "DownloadAutomatically" (if (settingsData.downloadUpdatesAutomatically) then "true" else "false"))) do isSaved = false
+            if (not (ini.write settingsData.filePath "Updates" "LastPackageCheckUtc" settingsData.lastPackageUpdateCheck)) do isSaved = false
+            if (not (ini.write settingsData.filePath "Updates" "PackageCache" (utils.join settingsData.packageUpdateCache separator: "|"))) do isSaved = false
             if (not (saveEndpointSetting())) do isSaved = false
             if (not (removeLegacyEndpointSettings())) do isSaved = false
             if (not (ini.write settingsData.filePath "Manager" "LastSelection" settingsData.managerLastSelection)) do isSaved = false

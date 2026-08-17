@@ -113,6 +113,12 @@
             return "<a class='toolBtn " + buttonSizeClass + "' href='maxpkg://run/" + packageInfo.guid + "' title='" + (utils.htmlEscape packageInfo.packageName) + "'>" + iconHtml + "<span class='" + labelContainerClass + "'><span class='name'>" + buttonLabel + "</span>" + subtitleHtml + "</span></a>"
         ),
 
+        fn availableUpdateCount = (
+            local updateCount = 0
+            for packageInfo in owner.packages where packageInfo.updateAvailable do updateCount += 1
+            return updateCount
+        ),
+
         fn assetContent relativePath = (
             local assetPath = runtimeRoot + relativePath
             local sourceContent = utils.readText assetPath
@@ -125,10 +131,13 @@
             local brandIconFilePath = runtimeRoot + @"data\themes\toolbar\icons\maxpkg-logo.svg"
             local brandIconUrl = utils.htmlEscape (utils.fileUrl brandIconFilePath)
             local themeCss = if (themes != undefined) then themes.renderToolbarCss owner.settings.toolbarTheme else ""
+            local updateCount = availableUpdateCount()
+            local updateBadgeHtml = if (updateCount > 0) then "<span class='brand-update-badge'>" + (updateCount as string) + "</span>" else ""
+            local brandTitle = if (updateCount > 0) then ((updateCount as string) + " package update(s) available. Open MaxPkg Manager") else "Open MaxPkg Manager"
             local html = "<!doctype html><html><head><meta http-equiv='X-UA-Compatible' content='IE=edge'><meta charset='utf-8'>"
             html += "<style>" + themeCss
             html += "</style></head><body>"
-            html += "<div class='wrap' id='wrap'><a class='brand' id='brand' href='maxpkg://ui/openManager' title='Open MaxPkg Manager'><img class='brand-icon' src='" + brandIconUrl + "' alt=''><span>maxpkg</span></a><a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><div class='viewport' id='viewport'><div class='strip' id='strip'>"
+            html += "<div class='wrap' id='wrap'><a class='brand' id='brand' href='maxpkg://ui/openManager' title='" + (utils.htmlEscape brandTitle) + "'><img class='brand-icon' src='" + brandIconUrl + "' alt=''><span>maxpkg</span>" + updateBadgeHtml + "</a><a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><div class='viewport' id='viewport'><div class='strip' id='strip'>"
             for package in orderedPackages() do html += packageButtonHtml package
             html += "</div></div><a class='arrow' id='rightArrow' href='maxpkg://ui/scrollRight'>&rsaquo;</a></div>"
             html += "<script>" + (assetContent @"ui\toolbar\toolbar.js") + "</script></body></html>"

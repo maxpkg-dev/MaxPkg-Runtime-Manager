@@ -600,8 +600,8 @@
                 notify "Package list refreshed." notificationType: "success"
             )
             if (commandPath == "check-updates") do (
-                local availableUpdates = owner.checkUpdates()
-                notify ((availableUpdates.count as string) + " update(s) available.")
+                isSuccess = owner.checkUpdates()
+                if (not isSuccess) do notify "An update check is already running." notificationType: "info"
             )
             if (commandPath == "catalog") do (
                 owner.settings.managerLastTab = "discover"

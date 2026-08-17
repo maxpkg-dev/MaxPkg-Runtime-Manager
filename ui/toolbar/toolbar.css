@@ -47,6 +47,24 @@ body {
     vertical-align: -5px;
 }
 
+.brand-update-badge {
+    position: absolute;
+    top: -5px;
+    right: -6px;
+    z-index: 2;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border: 1px solid {{updateBadgeBorder}};
+    border-radius: 9px;
+    background: {{updateBadgeBackground}};
+    color: {{updateBadgeText}};
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 16px;
+    text-align: center;
+}
+
 .brand:hover,
 .arrow:hover,
 .toolBtn:hover {

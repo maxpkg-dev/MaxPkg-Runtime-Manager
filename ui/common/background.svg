@@ -1,19 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1400" viewBox="0 0 2400 1400" preserveAspectRatio="xMidYMid slice">
   <defs>
-    <linearGradient id="panelGradient" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="panelGradient" x1="0" y1="0" x2="1" y2="1" color-interpolation="sRGB">
       <stop offset="0" stop-color="{{backgroundGradientTop}}"/>
+      <stop offset="0.48" stop-color="{{surfaceSecondary}}"/>
       <stop offset="1" stop-color="{{backgroundGradientBottom}}"/>
     </linearGradient>
-    <radialGradient id="accentGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(250 120) rotate(28) scale(1320 860)">
-      <stop offset="0" stop-color="{{backgroundGlowPrimary}}" stop-opacity="0.040"/>
-      <stop offset="1" stop-color="{{backgroundGlowPrimary}}" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="focusGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(2200 80) rotate(150) scale(1180 760)">
-      <stop offset="0" stop-color="{{backgroundGlowSecondary}}" stop-opacity="0.030"/>
-      <stop offset="1" stop-color="{{backgroundGlowSecondary}}" stop-opacity="0"/>
-    </radialGradient>
   </defs>
   <rect width="2400" height="1400" fill="url(#panelGradient)"/>
-  <rect width="2400" height="1400" fill="url(#accentGlow)"/>
-  <rect width="2400" height="1400" fill="url(#focusGlow)"/>
 </svg>

@@ -171,6 +171,7 @@
         public
 
         fn shutdown = (
+            updaterModule.shutdown()
             local isManagerClosed = managerModule.shutdownManager()
             local isToolbarClosed = toolbarModule.shutdownToolbar()
             imageCacheModule.shutdown()
@@ -206,6 +207,11 @@
             ) catch (
                 loggerModule.logError "runtime" ("Toolbar order synchronization failed: " + getCurrentException())
             )
+            try (
+                updaterModule.applyCachedUpdates()
+            ) catch (
+                loggerModule.logWarning "runtime" ("Cached package updates could not be applied: " + getCurrentException())
+            )
             return packages
         ),
 
@@ -224,6 +230,13 @@
                 if (settings.toolbarVisible and not (toolbarModule.build())) do loggerModule.logWarning "startup" "Toolbar could not be created."
                 if (settings.openManagerOnStartup) do managerModule.showManager()
                 loggerModule.logInfo "startup" ("MaxPkg Runtime " + version + " is ready")
+                if (settings.autoCheckPackages) do (
+                    try (
+                        updaterModule.startAutomaticCheck()
+                    ) catch (
+                        loggerModule.logWarning "startup" ("Package background update check could not start: " + getCurrentException())
+                    )
+                )
                 if (settings.autoCheckRuntime) do (
                     try (
                         selfUpdaterModule.startAutoUpdateCheck currentVersion: version currentChannel: runtimeChannel
@@ -318,9 +331,7 @@
         ),
 
         fn checkUpdates = (
-            local availableUpdates = updaterModule.checkUpdates()
-            refreshManager "check-updates"
-            return availableUpdates
+            return updaterModule.startManualCheck()
         ),
 
         fn updateAll = (
@@ -330,7 +341,8 @@
         fn updatePackage packageReference = (
             local resolvedPackage = apiModule.resolve packages packageReference
             if (resolvedPackage == undefined) do return installerModule.failureStatus "PACKAGE_NOT_FOUND" "The installed package was not found."
-            if (not resolvedPackage.updateAvailable or resolvedPackage.downloadUrl == "") do return installerModule.failureStatus "VERSION_NOT_FOUND" "No compatible package update is available." packageGuid: resolvedPackage.guid
+            if (not resolvedPackage.updateAvailable) do return installerModule.failureStatus "VERSION_NOT_FOUND" "No compatible package update is available." packageGuid: resolvedPackage.guid
+            if (resolvedPackage.downloadUrl == "") do return installerModule.install resolvedPackage.guid
             return installerModule.install resolvedPackage.downloadUrl
         ),
 
@@ -518,6 +530,7 @@
     updaterModule.installer = installerModule
     updaterModule.api = apiModule
     updaterModule.repository = repositoryModule
+    updaterModule.settingsManager = settingsModule
     selfUpdaterModule.owner = MaxPkg
     selfUpdaterModule.operations = operationModule
     selfUpdaterModule.installer = installerModule
