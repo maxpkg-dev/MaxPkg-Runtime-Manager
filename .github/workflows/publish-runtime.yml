@@ -44,13 +44,16 @@ jobs:
           RELEASE_TAG="v${RELEASE_VERSION}"
 
           if gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
-            echo "GitHub Release ${RELEASE_TAG} already exists."
-            exit 1
+            echo "GitHub Release ${RELEASE_TAG} already exists; publication will resume."
           fi
 
           if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
-            echo "Git tag ${RELEASE_TAG} already exists."
-            exit 1
+            TAG_COMMIT="$(git rev-list -n 1 "${RELEASE_TAG}")"
+            if [[ "${TAG_COMMIT}" != "${GITHUB_SHA}" ]]; then
+              echo "Git tag ${RELEASE_TAG} points to ${TAG_COMMIT}, not ${GITHUB_SHA}."
+              exit 1
+            fi
+            echo "Git tag ${RELEASE_TAG} already points to this release commit; publication will resume."
           fi
 
       - name: Build and validate MZP
@@ -72,11 +75,51 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
-          gh release create "v${RELEASE_VERSION}" \
-            dist/MaxPkg-Runtime-Manager.mzp \
-            dist/MaxPkg-Runtime-Manager.sha256 \
-            --repo "${GITHUB_REPOSITORY}" \
-            --target "${GITHUB_SHA}" \
-            --title "MaxPkg Runtime Manager ${RELEASE_VERSION}" \
-            --notes-file dist/release-notes.md \
-            --latest
+          set -u
+
+          RELEASE_TAG="v${RELEASE_VERSION}"
+          MAX_ATTEMPTS=5
+
+          for ATTEMPT in $(seq 1 "${MAX_ATTEMPTS}"); do
+            if gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+              echo "GitHub Release ${RELEASE_TAG} already exists; continuing with asset upload."
+              break
+            fi
+
+            if gh release create "${RELEASE_TAG}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --target "${GITHUB_SHA}" \
+              --title "MaxPkg Runtime Manager ${RELEASE_VERSION}" \
+              --notes-file dist/release-notes.md \
+              --latest; then
+              break
+            fi
+
+            if [[ "${ATTEMPT}" -eq "${MAX_ATTEMPTS}" ]]; then
+              echo "Could not create GitHub Release ${RELEASE_TAG} after ${MAX_ATTEMPTS} attempts."
+              exit 1
+            fi
+
+            RETRY_DELAY=$((ATTEMPT * 15))
+            echo "GitHub API request failed. Retrying release creation in ${RETRY_DELAY} seconds..."
+            sleep "${RETRY_DELAY}"
+          done
+
+          for ATTEMPT in $(seq 1 "${MAX_ATTEMPTS}"); do
+            if gh release upload "${RELEASE_TAG}" \
+              dist/MaxPkg-Runtime-Manager.mzp \
+              dist/MaxPkg-Runtime-Manager.sha256 \
+              --repo "${GITHUB_REPOSITORY}" \
+              --clobber; then
+              exit 0
+            fi
+
+            if [[ "${ATTEMPT}" -eq "${MAX_ATTEMPTS}" ]]; then
+              echo "Could not upload release assets after ${MAX_ATTEMPTS} attempts."
+              exit 1
+            fi
+
+            RETRY_DELAY=$((ATTEMPT * 15))
+            echo "GitHub API request failed. Retrying asset upload in ${RETRY_DELAY} seconds..."
+            sleep "${RETRY_DELAY}"
+          done
