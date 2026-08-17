@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.3
+
+- Added: The MaxPkg toolbar button now shows how many installed packages have updates available.
+- Added: Package updates are checked in the background without requiring the Manager to be opened, and the last known count is restored between 3ds Max sessions.
+- Changed: Manual package update checks now run in the background and refresh the Manager and toolbar when complete.
+- Changed: Manager themes now use a simpler linear background gradient for more consistent rendering in older 3ds Max versions.
+
 ## 1.1.2
 
 - Added: Package changelogs are now grouped by version with release dates shown beside each group.
