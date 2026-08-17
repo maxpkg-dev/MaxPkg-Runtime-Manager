@@ -24,7 +24,7 @@ for /f "delims=" %%I in ('git rev-parse HEAD') do set "LOCAL_COMMIT=%%I"
 for /f "delims=" %%I in ('git rev-parse origin/%RELEASE_BRANCH%') do set "REMOTE_COMMIT=%%I"
 if not "%LOCAL_COMMIT%"=="%REMOTE_COMMIT%" goto :not_pushed
 
-for /f "usebackq delims=" %%V in (`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$content = [System.IO.File]::ReadAllText('version.ini', [System.Text.Encoding]::Unicode); $match = [regex]::Match($content, '(?m)^Version=(\d+\.\d+\.\d+)\s*$'); if (-not $match.Success) { exit 1 }; $match.Groups[1].Value"`) do set "RUNTIME_VERSION=%%V"
+for /f "usebackq delims=" %%V in (`powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$content = [System.IO.File]::ReadAllText('version.ini'); $match = [regex]::Match($content, '(?m)^Version=(\d+\.\d+\.\d+)\s*$'); if (-not $match.Success) { exit 1 }; $match.Groups[1].Value"`) do set "RUNTIME_VERSION=%%V"
 if not defined RUNTIME_VERSION goto :version_failed
 
 set "RELEASE_TAG=v%RUNTIME_VERSION%"
