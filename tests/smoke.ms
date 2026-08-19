@@ -20,6 +20,10 @@
     local imageCacheModule = fileIn (runtimeRoot + @"core\image-cache.ms")
     local notifierModule = fileIn (runtimeRoot + @"core\notifier.ms")
     local selfUpdaterModule = fileIn (runtimeRoot + @"core\self-updater.ms")
+    local updaterModule = fileIn (runtimeRoot + @"core\updater.ms")
+    local updateTimestamp = updaterModule.updateCheckTimestamp()
+    local elapsedUpdateHours = updaterModule.elapsedHoursSince updateTimestamp
+    if (elapsedUpdateHours == undefined or (abs elapsedUpdateHours) > 0.1) do throw "Package update timestamp interval calculation failed."
     themesModule.initialize runtimeRoot iniModule utilsModule undefined
     resultDialogModule.configureTheme themesModule "default"
     if ((themesModule.listThemes "manager").count < 1) do throw "Manager themes are unavailable."
@@ -77,7 +81,10 @@
     loggerModule.maxLogBytes = 5242880
     httpModule.logger = loggerModule
     httpModule.utils = utilsModule
-    if (not (isProperty httpModule #curlAvailable) or not (isProperty httpModule #getString) or not (isProperty httpModule #shouldUseCurl) or not (isProperty httpModule #activateCurlFallback)) do throw "HTTP fallback API is unavailable."
+    if (not (isProperty httpModule #curlAvailable) or not (isProperty httpModule #getString) or not (isProperty httpModule #shouldUseCurl) or not (isProperty httpModule #activateCurlFallback) or not (isProperty httpModule #httpStatusCodeFromException) or not (isProperty httpModule #dotNetStringAttempt) or not (isProperty httpModule #dotNetDownloadAttempt)) do throw "HTTP fallback API is unavailable."
+    if ((httpModule.httpStatusCodeFromException "The remote server returned an error: (404) Not Found.") != 404) do throw "HTTP 404 classification failed."
+    if ((httpModule.httpStatusCodeFromException "The remote server returned an error: (500) Internal Server Error.") != 500) do throw "HTTP 500 classification failed."
+    if ((httpModule.httpStatusCodeFromException "The request was aborted: Could not create SSL/TLS secure channel.") != 0) do throw "HTTP transport failure classification failed."
     if (httpModule.curlAvailable()) do (
         if (not (httpModule.activateCurlFallback()) or not (httpModule.shouldUseCurl())) do throw "CURL transport did not remain active for the current session."
         local reloadedHttpModule = fileIn (runtimeRoot + @"core\http.ms")

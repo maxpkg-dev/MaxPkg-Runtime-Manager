@@ -86,6 +86,17 @@
             return dateTimeClass.UtcNow.ToString "o" cultureClass.InvariantCulture
         ),
 
+        fn elapsedHoursSince timestampContent = (
+            if (timestampContent == undefined or timestampContent == "") do return undefined
+            local dateTimeClass = dotNetClass "System.DateTime"
+            local cultureClass = dotNetClass "System.Globalization.CultureInfo"
+            local dateTimeStylesClass = dotNetClass "System.Globalization.DateTimeStyles"
+            local previousCheckTime = dateTimeClass.Parse timestampContent cultureClass.InvariantCulture dateTimeStylesClass.RoundtripKind
+            local currentCheckTime = dateTimeClass.UtcNow
+            local ticksPerHour = 36000000000.0
+            return ((currentCheckTime.Ticks as float) - (previousCheckTime.Ticks as float)) / ticksPerHour
+        ),
+
         fn saveUpdateCache availableUpdates = (
             if (owner == undefined or owner.settings == undefined or settingsManager == undefined) do return false
             local cacheEntries = #()
@@ -102,11 +113,8 @@
             if (not owner.settings.autoCheckPackages or owner.packages.count == 0) do return false
             if (owner.settings.lastPackageUpdateCheck == "") do return true
             try (
-                local dateTimeClass = dotNetClass "System.DateTime"
-                local cultureClass = dotNetClass "System.Globalization.CultureInfo"
-                local dateTimeStylesClass = dotNetClass "System.Globalization.DateTimeStyles"
-                local previousCheckTime = dateTimeClass.Parse owner.settings.lastPackageUpdateCheck cultureClass.InvariantCulture dateTimeStylesClass.RoundtripKind
-                local elapsedHours = dateTimeClass.UtcNow.Subtract(previousCheckTime).TotalHours as float
+                local elapsedHours = elapsedHoursSince owner.settings.lastPackageUpdateCheck
+                if (elapsedHours == undefined) do throw "The package update timestamp is unavailable."
                 return elapsedHours >= owner.settings.updateFrequencyHours
             ) catch (
                 logger.logWarning "updater" ("Invalid package update timestamp; checking now: " + getCurrentException())
@@ -168,6 +176,7 @@
 
         fn backgroundCheckCompleted eventSender eventArgs = (
             local completedCheckInfo = backgroundCheckInfo
+            local isCompleted = true
             backgroundWorker = undefined
             backgroundCheckInfo = undefined
             if (isStopping) do return false
@@ -195,10 +204,16 @@
                 )
             ) catch (
                 logger.logError "updater" ("Background package update completion failed: " + getCurrentException())
-                return false
+                isCompleted = false
             )
             showCompletionNotification = false
-            return true
+            try (
+                owner.startPendingRuntimeUpdateCheck()
+            ) catch (
+                logger.logWarning "updater" ("Pending Runtime update check could not start: " + getCurrentException())
+                isCompleted = false
+            )
+            return isCompleted
         ),
 
         fn startBackgroundCheck forceCheck: false notifyWhenComplete: false = (

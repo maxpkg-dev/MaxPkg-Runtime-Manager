@@ -97,6 +97,7 @@
         operation = undefined,
         private
         started = false,
+        runtimeAutoUpdatePending = false,
 
         fn packageRoots = (
             local rootPaths = #((getDir #temp), runtimeRoot + @"data\packages")
@@ -172,7 +173,19 @@
 
         public
 
+        fn startPendingRuntimeUpdateCheck = (
+            if (not runtimeAutoUpdatePending or not started or settings == undefined) do return false
+            runtimeAutoUpdatePending = false
+            try (
+                return selfUpdaterModule.startAutoUpdateCheck currentVersion: version currentChannel: runtimeChannel
+            ) catch (
+                loggerModule.logWarning "startup" ("Runtime background update check could not start: " + getCurrentException())
+                return false
+            )
+        ),
+
         fn shutdown = (
+            runtimeAutoUpdatePending = false
             updaterModule.shutdown()
             local isManagerClosed = managerModule.shutdownManager()
             local isToolbarClosed = toolbarModule.shutdownToolbar()
@@ -234,20 +247,16 @@
                 if (settings.toolbarVisible and not (toolbarModule.build())) do loggerModule.logWarning "startup" "Toolbar could not be created."
                 if (settings.openManagerOnStartup) do managerModule.showManager()
                 loggerModule.logInfo "startup" ("MaxPkg Runtime " + version + " is ready")
+                runtimeAutoUpdatePending = settings.autoCheckRuntime
+                local packageCheckStarted = false
                 if (settings.autoCheckPackages) do (
                     try (
-                        updaterModule.startAutomaticCheck()
+                        packageCheckStarted = updaterModule.startAutomaticCheck()
                     ) catch (
                         loggerModule.logWarning "startup" ("Package background update check could not start: " + getCurrentException())
                     )
                 )
-                if (settings.autoCheckRuntime) do (
-                    try (
-                        selfUpdaterModule.startAutoUpdateCheck currentVersion: version currentChannel: runtimeChannel
-                    ) catch (
-                        loggerModule.logWarning "startup" ("Runtime background update check could not start: " + getCurrentException())
-                    )
-                )
+                if (not packageCheckStarted) do startPendingRuntimeUpdateCheck()
                 return true
             ) catch (
                 loggerModule.logError "startup" (getCurrentException())

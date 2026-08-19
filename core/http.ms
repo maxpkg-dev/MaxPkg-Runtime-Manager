@@ -4,6 +4,13 @@
 -- Developed by https://3dground.net (3DGROUND)
 
 (
+    struct MaxPkgHttpAttemptData (
+        isSuccess = false,
+        responseBody = undefined,
+        errorMessage = "",
+        statusCode = 0
+    )
+
     struct MaxPkgHttpModule (
         logger,
         utils,
@@ -87,7 +94,21 @@
             return sessionUsesCurl() and curlAvailable()
         ),
 
-        fn activateCurlFallback = (
+        fn httpStatusCodeFromException exceptionMessage = (
+            if (exceptionMessage == undefined or exceptionMessage == "") do return 0
+            for statusCode in 400 to 599 do (
+                if ((findString exceptionMessage ("(" + (statusCode as string) + ")")) != undefined) do return statusCode
+            )
+            return 0
+        ),
+
+        fn logHttpResponseFailure requestMethod sourceUrl statusCode = (
+            local failureKind = if (statusCode >= 500) then "server error" else "request error"
+            logger.logWarning "http" (requestMethod + " " + sourceUrl + " returned HTTP " + (statusCode as string) + " (" + failureKind + "); CURL fallback was not activated.")
+            return true
+        ),
+
+        fn activateCurlFallback sourceUrl: "" = (
             if (curlFallbackActive) do return true
             if (not (curlAvailable())) do return false
             curlFallbackActive = true
@@ -97,7 +118,9 @@
             ) catch (
                 logger.logWarning "http" ("Could not preserve CURL transport for the current session: " + getCurrentException())
             )
-            logger.logInfo "http" "Switched HTTP transport to curl for the current 3ds Max session."
+            local switchMessage = "Switched HTTP transport to curl for the current 3ds Max session."
+            if (sourceUrl != "") do switchMessage += " Trigger: " + sourceUrl
+            logger.logInfo "http" switchMessage
             return true
         ),
 
@@ -228,9 +251,8 @@
             )
         ),
 
-        fn download sourceUrl targetFilePath = (
-            if (not (isHttpUrl sourceUrl) or targetFilePath == undefined or targetFilePath == "") do return false
-            if (shouldUseCurl()) do return runCurlToFile sourceUrl targetFilePath "GET"
+        fn dotNetDownloadAttempt sourceUrl targetFilePath = (
+            local attemptInfo = MaxPkgHttpAttemptData()
             local webClient = undefined
             try (
                 enableTls12()
@@ -240,22 +262,77 @@
                 webClient.DownloadFile sourceUrl targetFilePath
                 webClient.Dispose()
                 webClient = undefined
-                local isDownloaded = doesFileExist targetFilePath
-                if (not isDownloaded) do logger.logError "http" ("Download completed without a file: " + targetFilePath)
-                return isDownloaded
+                attemptInfo.isSuccess = doesFileExist targetFilePath
+                if (not attemptInfo.isSuccess) do attemptInfo.errorMessage = "Download completed without a file."
             ) catch (
-                logger.logWarning "http" (".NET download failed; trying curl: " + getCurrentException())
+                attemptInfo.errorMessage = getCurrentException()
+                attemptInfo.statusCode = httpStatusCodeFromException attemptInfo.errorMessage
                 try (
                     if (webClient != undefined) do webClient.Dispose()
                 ) catch (
                 )
-                removeFile targetFilePath
-                if (activateCurlFallback() and runCurlToFile sourceUrl targetFilePath "GET") do return true
-                logger.logError "http" ("Download failed with all available transports: " + sourceUrl)
-                return false
             )
+            return attemptInfo
         ),
 
+        fn dotNetStringAttempt sourceUrl requestMethod requestBody = (
+            local attemptInfo = MaxPkgHttpAttemptData()
+            local webClient = undefined
+            try (
+                enableTls12()
+                webClient = dotNetObject "System.Net.WebClient"
+                local encodingClass = dotNetClass "System.Text.Encoding"
+                webClient.Encoding = encodingClass.UTF8
+                webClient.Headers.Add "User-Agent" "MaxPkg-Runtime/1.0"
+                webClient.Headers.Add "Accept" "text/plain"
+                webClient.Headers.Add "Cache-Control" "no-cache, no-store, max-age=0"
+                webClient.Headers.Add "Pragma" "no-cache"
+                if (requestMethod == "POST") then (
+                    webClient.Headers.Add "Content-Type" "application/x-www-form-urlencoded"
+                    attemptInfo.responseBody = webClient.UploadString sourceUrl requestBody
+                ) else (
+                    attemptInfo.responseBody = webClient.DownloadString sourceUrl
+                )
+                webClient.Dispose()
+                webClient = undefined
+                attemptInfo.isSuccess = true
+            ) catch (
+                attemptInfo.errorMessage = getCurrentException()
+                attemptInfo.statusCode = httpStatusCodeFromException attemptInfo.errorMessage
+                try (
+                    if (webClient != undefined) do webClient.Dispose()
+                ) catch (
+                )
+            )
+            return attemptInfo
+        ),
+
+        fn download sourceUrl targetFilePath = (
+            if (not (isHttpUrl sourceUrl) or targetFilePath == undefined or targetFilePath == "") do return false
+            if (shouldUseCurl()) do return runCurlToFile sourceUrl targetFilePath "GET"
+            local firstAttempt = dotNetDownloadAttempt sourceUrl targetFilePath
+            if (firstAttempt.isSuccess) do return true
+            removeFile targetFilePath
+            if (firstAttempt.statusCode > 0) do (
+                logHttpResponseFailure "GET" sourceUrl firstAttempt.statusCode
+                return false
+            )
+            logger.logWarning "http" (".NET download transport attempt 1 failed; retrying: " + firstAttempt.errorMessage)
+            local retryAttempt = dotNetDownloadAttempt sourceUrl targetFilePath
+            if (retryAttempt.isSuccess) do (
+                logger.logInfo "http" (".NET download recovered on retry: " + sourceUrl)
+                return true
+            )
+            removeFile targetFilePath
+            if (retryAttempt.statusCode > 0) do (
+                logHttpResponseFailure "GET" sourceUrl retryAttempt.statusCode
+                return false
+            )
+            logger.logWarning "http" (".NET download transport attempt 2 failed; trying curl: " + retryAttempt.errorMessage)
+            if ((activateCurlFallback sourceUrl: sourceUrl) and (runCurlToFile sourceUrl targetFilePath "GET")) do return true
+            logger.logError "http" ("Download failed with all available transports: " + sourceUrl)
+            return false
+        ),
         fn requestStringWithCurl sourceUrl requestMethod requestBody = (
             local guidClass = dotNetClass "System.Guid"
             local requestId = (guidClass.NewGuid()).ToString()
@@ -282,57 +359,49 @@
         fn getString sourceUrl = (
             if (not (isHttpUrl sourceUrl)) do return undefined
             if (shouldUseCurl()) do return requestStringWithCurl sourceUrl "GET" ""
-            local webClient = undefined
-            try (
-                enableTls12()
-                webClient = dotNetObject "System.Net.WebClient"
-                local encodingClass = dotNetClass "System.Text.Encoding"
-                webClient.Encoding = encodingClass.UTF8
-                webClient.Headers.Add "User-Agent" "MaxPkg-Runtime/1.0"
-                webClient.Headers.Add "Accept" "text/plain"
-                webClient.Headers.Add "Cache-Control" "no-cache, no-store, max-age=0"
-                webClient.Headers.Add "Pragma" "no-cache"
-                local responseBody = webClient.DownloadString sourceUrl
-                webClient.Dispose()
-                return responseBody
-            ) catch (
-                logger.logWarning "http" (".NET request failed; trying curl: " + getCurrentException())
-                try (
-                    if (webClient != undefined) do webClient.Dispose()
-                ) catch (
-                )
-                if (not (activateCurlFallback())) do return undefined
-                return requestStringWithCurl sourceUrl "GET" ""
+            local firstAttempt = dotNetStringAttempt sourceUrl "GET" ""
+            if (firstAttempt.isSuccess) do return firstAttempt.responseBody
+            if (firstAttempt.statusCode > 0) do (
+                logHttpResponseFailure "GET" sourceUrl firstAttempt.statusCode
+                return undefined
             )
+            logger.logWarning "http" (".NET GET transport attempt 1 failed; retrying: " + firstAttempt.errorMessage)
+            local retryAttempt = dotNetStringAttempt sourceUrl "GET" ""
+            if (retryAttempt.isSuccess) do (
+                logger.logInfo "http" (".NET GET recovered on retry: " + sourceUrl)
+                return retryAttempt.responseBody
+            )
+            if (retryAttempt.statusCode > 0) do (
+                logHttpResponseFailure "GET" sourceUrl retryAttempt.statusCode
+                return undefined
+            )
+            logger.logWarning "http" (".NET GET transport attempt 2 failed; trying curl: " + retryAttempt.errorMessage)
+            if (not (activateCurlFallback sourceUrl: sourceUrl)) do return undefined
+            return requestStringWithCurl sourceUrl "GET" ""
         ),
-
         fn post sourceUrl requestBody = (
             if (not (isHttpUrl sourceUrl)) do return undefined
             if (requestBody == undefined) do requestBody = ""
             if (shouldUseCurl()) do return requestStringWithCurl sourceUrl "POST" requestBody
-            local webClient = undefined
-            try (
-                enableTls12()
-                webClient = dotNetObject "System.Net.WebClient"
-                local encodingClass = dotNetClass "System.Text.Encoding"
-                webClient.Encoding = encodingClass.UTF8
-                webClient.Headers.Add "User-Agent" "MaxPkg-Runtime/1.0"
-                webClient.Headers.Add "Content-Type" "application/x-www-form-urlencoded"
-                webClient.Headers.Add "Accept" "text/plain"
-                webClient.Headers.Add "Cache-Control" "no-cache, no-store, max-age=0"
-                webClient.Headers.Add "Pragma" "no-cache"
-                local responseBody = webClient.UploadString sourceUrl requestBody
-                webClient.Dispose()
-                return responseBody
-            ) catch (
-                logger.logWarning "http" (".NET request failed; trying curl: " + getCurrentException())
-                try (
-                    if (webClient != undefined) do webClient.Dispose()
-                ) catch (
-                )
-                if (not (activateCurlFallback())) do return undefined
-                return requestStringWithCurl sourceUrl "POST" requestBody
+            local firstAttempt = dotNetStringAttempt sourceUrl "POST" requestBody
+            if (firstAttempt.isSuccess) do return firstAttempt.responseBody
+            if (firstAttempt.statusCode > 0) do (
+                logHttpResponseFailure "POST" sourceUrl firstAttempt.statusCode
+                return undefined
             )
+            logger.logWarning "http" (".NET POST transport attempt 1 failed; retrying: " + firstAttempt.errorMessage)
+            local retryAttempt = dotNetStringAttempt sourceUrl "POST" requestBody
+            if (retryAttempt.isSuccess) do (
+                logger.logInfo "http" (".NET POST recovered on retry: " + sourceUrl)
+                return retryAttempt.responseBody
+            )
+            if (retryAttempt.statusCode > 0) do (
+                logHttpResponseFailure "POST" sourceUrl retryAttempt.statusCode
+                return undefined
+            )
+            logger.logWarning "http" (".NET POST transport attempt 2 failed; trying curl: " + retryAttempt.errorMessage)
+            if (not (activateCurlFallback sourceUrl: sourceUrl)) do return undefined
+            return requestStringWithCurl sourceUrl "POST" requestBody
         )
     )
 
