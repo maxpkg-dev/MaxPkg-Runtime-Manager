@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.5
+
+- Fixed: Accidentally switch to CURL method on script start.
+
 ## 1.1.4
 
 - Added: Featured packages and curated collections now appear as quick filters in Discover.
