@@ -219,7 +219,7 @@
         for cacheEntry in MaxPkg.settings.packageUpdateCache do append previousPackageUpdateCache cacheEntry
         MaxPkg.settings.packageUpdateCache = #(cachedUpdateTestPackage.guid + "@999.0.0")
         MaxPkg.scan()
-        if (MaxPkg.getStatus().updateCount < 1) do throw "Cached package update was not applied."
+        if ((MaxPkg.getStatus()).updateCount < 1) do throw "Cached package update was not applied."
         MaxPkg.settings.packageUpdateCache = previousPackageUpdateCache
         MaxPkg.scan()
     )
