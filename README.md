@@ -44,6 +44,10 @@ Use `Discover` to search the catalog and add new tools. Use `Installed` to see
 everything you already have, run a script, open its information, update it, or
 remove it.
 
+Discover also helps you browse Featured scripts and curated collections, narrow
+the catalog by category, and sort the results. Categories stay in a handy side
+panel when there is enough room and move beside search in smaller windows.
+
 Installed tools use clean compact cards by default. If you prefer to see their
 descriptions and badges in the list, enable full package cards in Settings.
 

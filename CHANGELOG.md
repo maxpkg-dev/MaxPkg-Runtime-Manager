@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.6
+
+- Added: Discover now shows package categories in a dedicated sidebar on wide Manager windows and automatically switches to a compact dropdown on smaller windows.
+- Changed: Discover package sorting now offers Popular, Newest, Rating, Downloads, and Name beside search, with active category and sorting choices highlighted and easy to reset.
+
 ## 1.1.5
 
 - Fixed: Accidentally switch to CURL method on script start.
