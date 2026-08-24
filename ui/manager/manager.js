@@ -111,7 +111,7 @@
     function collectionsHtml() {
         var collectionsState = currentState.collections || {};
         var collectionItems = collectionsState.items || [];
-        var hasActiveSelection = activeDiscoverKind !== "" || discoverCategory !== "";
+        var hasActiveSelection = activeDiscoverKind !== "";
         var pills = [];
         var collectionIndex;
         var collectionInfo;
@@ -137,32 +137,40 @@
         return "<div class='collections-bar'><div class='collection-pills'>" + pills.join("") + "</div></div>";
     }
 
-    function categoriesHtml() {
+    function populateDiscoverCategoryOptions() {
         var categoriesState = currentState.categories || {};
         var categoryItems = categoriesState.items || [];
-        var pills = [];
+        var categoryMenu = Common.byId("discoverCategoryMenu");
+        var categoryOptions = ["<button type='button' data-dropdown-option=''>All Categories</button>"];
         var categoryIndex;
         var categoryInfo;
-        var isActive;
-        if (!categoriesState.loaded) {
-            return "";
-        }
-        pills.push("<button class='collection-pill category-pill category-pill-all" + (!discoverCategory && !activeDiscoverKind ? " is-active" : "") + "' type='button' data-action='discover-category' data-slug='' title='All categories'" + collectionPillStyle("#3280dd", !discoverCategory && !activeDiscoverKind, discoverCategory !== "" || activeDiscoverKind !== "") + ">" + collectionIcon("tag") + "<span>All Categories</span></button>");
-        if (!categoriesState.available) {
-            return "";
-        }
+        var hasCategories = false;
         for (categoryIndex = 0; categoryIndex < categoryItems.length; categoryIndex += 1) {
             categoryInfo = categoryItems[categoryIndex];
             if ((parseInt(categoryInfo.count, 10) || 0) <= 0) {
                 continue;
             }
-            isActive = discoverCategory === categoryInfo.slug && activeDiscoverKind === "";
-            pills.push("<button class='collection-pill category-pill" + (isActive ? " is-active" : "") + "' type='button' data-action='discover-category' data-slug='" + Common.escapeHtml(categoryInfo.slug) + "' title='" + Common.escapeHtml(categoryInfo.description || categoryInfo.name) + "'" + collectionPillStyle("#38b1e5", isActive, true) + ">" + collectionIcon("tag") + "<span>" + Common.escapeHtml(categoryInfo.name) + "</span><strong>" + (parseInt(categoryInfo.count, 10) || 0) + "</strong></button>");
+            hasCategories = true;
+            categoryOptions.push("<button type='button' data-dropdown-option='" + Common.escapeHtml(categoryInfo.slug) + "'>" + Common.escapeHtml(categoryInfo.name) + "</button>");
         }
-        if (!pills.length) {
-            return "";
+        categoryMenu.innerHTML = categoryOptions.join("");
+        if (!hasCategories) {
+            discoverCategory = "";
         }
-        return "<div class='categories-bar" + (activeDiscoverKind ? " is-muted" : "") + "'><span class='categories-label'>Categories</span><div class='collection-pills'>" + pills.join("") + "</div></div>";
+        Common.toggleClass(Common.byId("discoverCategoryControl"), "is-hidden", !categoriesState.loaded || !categoriesState.available || !hasCategories);
+        Common.toggleClass(Common.byId("discoverTools"), "has-single-tool", !categoriesState.loaded || !categoriesState.available || !hasCategories);
+        window.MaxPkgDropdown.setSelectValue(Common.byId("discoverCategorySelect"), discoverCategory);
+    }
+
+    function updateDiscoverToolsState() {
+        var hasActiveCategory = discoverCategory !== "";
+        var hasCustomSort = discoverSort !== "popular";
+        populateDiscoverCategoryOptions();
+        window.MaxPkgDropdown.setSelectValue(Common.byId("discoverSortSelect"), discoverSort);
+        Common.toggleClass(Common.byId("discoverCategoryControl"), "has-active-filter", hasActiveCategory);
+        Common.toggleClass(Common.byId("clearDiscoverCategoryButton"), "is-hidden", !hasActiveCategory);
+        Common.toggleClass(Common.byId("discoverSortControl"), "has-custom-sort", hasCustomSort);
+        Common.toggleClass(Common.byId("clearDiscoverSortButton"), "is-hidden", !hasCustomSort);
     }
 
     function packageDescriptionPreview(descriptionText) {
@@ -808,9 +816,10 @@
         var packageCards = [];
         var packageIndex;
         var pagination = "";
-        var filtersContent = collectionsHtml() + categoriesHtml();
+        var filtersContent = collectionsHtml();
         var selectionName = activeDiscoverFilterName();
         var summarySuffix = selectionName ? " in " + Common.escapeHtml(selectionName) : "";
+        updateDiscoverToolsState();
         if (!discoverState.available) {
             Common.byId("discoverPage").innerHTML = filtersContent + "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/cloud-off.svg' alt=''><h2>Catalog unavailable</h2>" +
                 "<p>" + Common.escapeHtml(discoverState.message || "Load the catalog to browse packages.") + "</p><button class='button' type='button' data-action='catalog-retry'>" + icon("refresh-cw") + "Retry</button></div>";
@@ -1387,6 +1396,7 @@
         Common.toggleClass(Common.byId("installedPage"), "is-hidden", activeTab !== "installed");
         Common.toggleClass(Common.byId("discoverPage"), "is-hidden", activeTab !== "discover");
         Common.addClass(Common.byId("detailsPage"), "is-hidden");
+        Common.toggleClass(Common.byId("discoverTools"), "is-hidden", activeTab !== "discover");
         Common.toggleClass(Common.byId("installedTools"), "is-hidden", activeTab !== "installed");
         Common.removeClass(Common.byId("pageToolbar"), "is-hidden");
         Common.addClass(Common.byId("detailsNavigation"), "is-hidden");
@@ -1706,7 +1716,7 @@
             Common.preventDefault(eventObject);
             var requestedKind = actionElement.getAttribute("data-kind") || "";
             var requestedSlug = actionElement.getAttribute("data-slug") || "";
-            var isRequestedSelectionActive = (requestedKind === "all" && !activeDiscoverKind && !discoverCategory) || (activeDiscoverKind === requestedKind && (requestedKind !== "collection" || activeCollectionSlug === requestedSlug));
+            var isRequestedSelectionActive = (requestedKind === "all" && !activeDiscoverKind) || (activeDiscoverKind === requestedKind && (requestedKind !== "collection" || activeCollectionSlug === requestedSlug));
             if (isRequestedSelectionActive) {
                 return;
             }
@@ -1718,16 +1728,18 @@
             }
             discoverCategory = "";
             requestCatalog(1);
-        } else if (actionName === "discover-category") {
+        } else if (actionName === "clear-discover-category") {
             Common.preventDefault(eventObject);
-            var requestedCategory = actionElement.getAttribute("data-slug") || "";
-            if (discoverCategory === requestedCategory && activeDiscoverKind === "") {
-                return;
-            }
-            resetDiscoverSelection();
-            discoverCategory = requestedCategory;
+            discoverCategory = "";
+            window.MaxPkgDropdown.close();
+            updateDiscoverToolsState();
             requestCatalog(1);
-
+        } else if (actionName === "clear-discover-sort") {
+            Common.preventDefault(eventObject);
+            discoverSort = "popular";
+            window.MaxPkgDropdown.close();
+            updateDiscoverToolsState();
+            requestCatalog(1);
         } else if (actionName === "catalog-retry") {
             Common.preventDefault(eventObject);
             if ((currentState.collections || {}).loaded && (currentState.categories || {}).loaded) {
@@ -1825,6 +1837,17 @@
             updateInstalledToolsState();
             renderInstalled();
             saveManagerView();
+        });
+        window.MaxPkgDropdown.bindSelect(Common.byId("discoverCategorySelect"), function (selectedValue) {
+            resetDiscoverSelection();
+            discoverCategory = selectedValue || "";
+            updateDiscoverToolsState();
+            requestCatalog(1);
+        });
+        window.MaxPkgDropdown.bindSelect(Common.byId("discoverSortSelect"), function (selectedValue) {
+            discoverSort = selectedValue || "popular";
+            updateDiscoverToolsState();
+            requestCatalog(1);
         });
         window.MaxPkgDropdown.bindSelect(Common.byId("languageSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("managerThemeSelect"), saveSettings);

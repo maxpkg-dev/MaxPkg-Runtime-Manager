@@ -25,10 +25,10 @@
                 </div>
                 <div id="headerActions" class="header-actions">
                     <a id="checkUpdatesButton" class="button" href="maxpkg://manager/check-updates" data-busy="Checking updates...">
-                        <img class="icon" src="../../data/themes/manager/icons/refresh-cw.svg" alt="">Check Updates
+                        <img class="icon" src="../../data/themes/manager/icons/refresh-cw.svg" alt=""><span class="header-button-label">Check Updates</span>
                     </a>
                     <a id="updateAllButton" class="button button-primary" href="maxpkg://manager/update-all" data-busy="Updating packages...">
-                        <img class="icon" src="../../data/themes/manager/icons/download.svg" alt="">Update All
+                        <img class="icon" src="../../data/themes/manager/icons/download.svg" alt=""><span class="header-button-label">Update All</span>
                     </a>
                     <button id="settingsButton" class="icon-button" type="button" title="Settings">
                         <img class="icon" src="../../data/themes/manager/icons/settings.svg" alt="Settings">
@@ -49,6 +49,40 @@
                     <div class="search-box">
                         <img class="search-icon" src="../../data/themes/manager/icons/search.svg" alt="">
                         <input id="searchInput" type="text" autocomplete="off" placeholder="Search Discover">
+                    </div>
+                </div>
+                <div id="discoverTools" class="page-tools-cell">
+                    <div id="discoverCategoryControl" class="toolbar-filter-control">
+                        <div id="discoverCategorySelect" class="html-select toolbar-filter-select" data-value="">
+                            <button class="html-select-button" type="button" title="Filter Discover by category" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger="true">
+                                <span data-select-label="discoverCategorySelect">All Categories</span>
+                                <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
+                            </button>
+                            <div id="discoverCategoryMenu" class="html-select-menu is-hidden" data-dropdown-width="source">
+                                <button type="button" data-dropdown-option="">All Categories</button>
+                            </div>
+                        </div>
+                        <button id="clearDiscoverCategoryButton" class="toolbar-filter-clear is-hidden" type="button" title="Clear category filter" data-action="clear-discover-category">
+                            <img src="../../data/themes/manager/icons/x.svg" alt="Clear category filter">
+                        </button>
+                    </div>
+                    <div id="discoverSortControl" class="sort-control">
+                        <div id="discoverSortSelect" class="html-select sort-select" data-value="popular">
+                            <button class="html-select-button" type="button" title="Sort Discover packages" aria-haspopup="true" aria-expanded="false" data-dropdown-trigger="true">
+                                <span data-select-label="discoverSortSelect">Popular</span>
+                                <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
+                            </button>
+                            <div class="html-select-menu is-hidden" data-dropdown-width="source">
+                                <button type="button" data-dropdown-option="popular">Popular</button>
+                                <button type="button" data-dropdown-option="newest">Newest</button>
+                                <button type="button" data-dropdown-option="rating">Rating</button>
+                                <button type="button" data-dropdown-option="downloads">Downloads</button>
+                                <button type="button" data-dropdown-option="name">Name</button>
+                            </div>
+                        </div>
+                        <button id="clearDiscoverSortButton" class="sort-clear is-hidden" type="button" title="Reset Discover sorting" data-action="clear-discover-sort">
+                            <img src="../../data/themes/manager/icons/x.svg" alt="Reset Discover sorting">
+                        </button>
                     </div>
                 </div>
                 <div id="installedTools" class="page-tools-cell is-hidden">
