@@ -173,6 +173,41 @@
         Common.toggleClass(Common.byId("clearDiscoverSortButton"), "is-hidden", !hasCustomSort);
     }
 
+    function categoriesSidebarHtml() {
+        var categoriesState = currentState.categories || {};
+        var categoryItems = categoriesState.items || [];
+        var categoryButtons = [];
+        var categoryIndex;
+        var categoryInfo;
+        var categoryCount;
+        var isActive;
+        if (!categoriesState.loaded || !categoriesState.available) {
+            return "";
+        }
+        categoryButtons.push("<button class='discover-category-option" + (!discoverCategory ? " is-active" : "") + "' type='button' data-action='discover-sidebar-category' data-slug='' title='Show all categories'><span class='discover-category-marker'><img src='../../data/themes/manager/icons/check.svg' alt=''></span><span class='discover-category-label'>All Categories</span></button>");
+        for (categoryIndex = 0; categoryIndex < categoryItems.length; categoryIndex += 1) {
+            categoryInfo = categoryItems[categoryIndex];
+            categoryCount = parseInt(categoryInfo.count, 10) || 0;
+            if (categoryCount <= 0) {
+                continue;
+            }
+            isActive = discoverCategory === categoryInfo.slug;
+            categoryButtons.push("<button class='discover-category-option" + (isActive ? " is-active" : "") + "' type='button' data-action='discover-sidebar-category' data-slug='" + Common.escapeHtml(categoryInfo.slug) + "' title='" + Common.escapeHtml(categoryInfo.description || categoryInfo.name) + "'><span class='discover-category-marker'><img src='../../data/themes/manager/icons/check.svg' alt=''></span><span class='discover-category-count'>" + categoryCount + "</span><span class='discover-category-label'>" + Common.escapeHtml(categoryInfo.name) + "</span></button>");
+        }
+        if (categoryButtons.length <= 1) {
+            return "";
+        }
+        return "<div class='discover-category-sidebar'><div class='discover-category-panel'><h3>Categories</h3><div class='discover-category-options'>" + categoryButtons.join("") + "</div></div></div>";
+    }
+
+    function discoverLayoutHtml(discoverContent) {
+        var sidebarContent = categoriesSidebarHtml();
+        if (!sidebarContent) {
+            return discoverContent;
+        }
+        return "<div class='discover-layout'>" + sidebarContent + "<div class='discover-results'>" + discoverContent + "</div></div>";
+    }
+
     function packageDescriptionPreview(descriptionText) {
         var maxLength = 280;
         var normalizedText = (descriptionText || "No description provided.").replace(/\s+/g, " ");
@@ -819,10 +854,12 @@
         var filtersContent = collectionsHtml();
         var selectionName = activeDiscoverFilterName();
         var summarySuffix = selectionName ? " in " + Common.escapeHtml(selectionName) : "";
+        var discoverContent;
         updateDiscoverToolsState();
         if (!discoverState.available) {
-            Common.byId("discoverPage").innerHTML = filtersContent + "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/cloud-off.svg' alt=''><h2>Catalog unavailable</h2>" +
+            discoverContent = filtersContent + "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/cloud-off.svg' alt=''><h2>Catalog unavailable</h2>" +
                 "<p>" + Common.escapeHtml(discoverState.message || "Load the catalog to browse packages.") + "</p><button class='button' type='button' data-action='catalog-retry'>" + icon("refresh-cw") + "Retry</button></div>";
+            Common.byId("discoverPage").innerHTML = discoverLayoutHtml(discoverContent);
             return;
         }
         for (packageIndex = 0; packageIndex < remotePackages.length; packageIndex += 1) {
@@ -834,8 +871,9 @@
                 "<span>Page " + discoverState.page + " of " + discoverState.totalPages + "</span>" +
                 "<button class='button' type='button' data-action='discover-page' data-page='" + (discoverState.page + 1) + "'" + (discoverState.page >= discoverState.totalPages ? " disabled='disabled'" : "") + ">Next</button></div>";
         }
-        Common.byId("discoverPage").innerHTML = filtersContent + (packageCards.length ? "<div class='catalog-summary'>" + discoverState.total + " packages" + summarySuffix + "</div><div class='card-grid'>" + packageCards.join("") + "</div>" + pagination :
+        discoverContent = filtersContent + (packageCards.length ? "<div class='catalog-summary'>" + discoverState.total + " packages" + summarySuffix + "</div><div class='card-grid'>" + packageCards.join("") + "</div>" + pagination :
             "<div class='state-panel'><img class='state-icon' src='../../data/themes/manager/icons/search.svg' alt=''><h2>No packages found</h2><p>" + (selectionName ? "This filter has no compatible packages." : "Try a different search phrase.") + "</p></div>");
+        Common.byId("discoverPage").innerHTML = discoverLayoutHtml(discoverContent);
     }
 
     function remotePackageCard(packageInfo) {
@@ -1727,6 +1765,16 @@
                 activeCollectionSlug = activeDiscoverKind === "collection" ? requestedSlug : "";
             }
             discoverCategory = "";
+            requestCatalog(1);
+        } else if (actionName === "discover-sidebar-category") {
+            Common.preventDefault(eventObject);
+            var requestedCategory = actionElement.getAttribute("data-slug") || "";
+            if (discoverCategory === requestedCategory && activeDiscoverKind === "") {
+                return;
+            }
+            resetDiscoverSelection();
+            discoverCategory = requestedCategory;
+            updateDiscoverToolsState();
             requestCatalog(1);
         } else if (actionName === "clear-discover-category") {
             Common.preventDefault(eventObject);

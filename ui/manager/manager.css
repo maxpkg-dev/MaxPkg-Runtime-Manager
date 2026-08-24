@@ -249,16 +249,24 @@
 }
 
 #discoverTools {
-    width: 465px;
+    width: 165px;
 }
 
 #discoverTools.has-single-tool {
-    width: 150px;
+    width: 165px;
 }
 
-#discoverCategoryControl,
+#discoverCategoryControl {
+    display: none;
+    width: 290px;
+}
+
 #discoverCategorySelect {
     width: 290px;
+}
+
+#discoverTools .sort-control {
+    margin-left: 0;
 }
 
 .toolbar-filter-control {
@@ -360,6 +368,127 @@
 
 .card-grid {
     font-size: 0;
+}
+
+.discover-layout {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.discover-category-sidebar,
+.discover-results {
+    display: table-cell;
+    vertical-align: top;
+}
+
+.discover-category-sidebar {
+    width: 330px;
+    padding-right: 16px;
+}
+
+.discover-category-panel {
+    padding: 14px 10px 12px;
+    border: 1px solid {{borderStrong}};
+    border-radius: 16px;
+    background: {{surfaceGlass}};
+    box-shadow: inset 0 1px {{borderSoft}};
+}
+
+.discover-category-panel h3 {
+    margin: 0 8px 10px;
+    color: {{accentText}};
+    font-size: 11px;
+    font-weight: normal;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+.discover-category-option {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-height: 34px;
+    margin: 0 0 3px;
+    padding: 7px 8px 7px 32px;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: {{textMuted}};
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 18px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.discover-category-option:last-child {
+    margin-bottom: 0;
+}
+
+.discover-category-option:hover,
+.discover-category-option:focus {
+    background: {{surfaceGlassHover}};
+    color: {{textStrong}};
+    outline: none;
+}
+
+.discover-category-option.is-active {
+    border-color: {{selectionBlue}};
+    background: {{selectionBlueSurface}};
+    color: {{selectionBlueText}};
+    box-shadow: 0 0 10px {{selectionBlueGlow}};
+}
+
+.discover-category-marker {
+    position: absolute;
+    top: 9px;
+    left: 9px;
+    display: block;
+    width: 14px;
+    height: 14px;
+    border: 1px solid {{borderStrong}};
+    border-radius: 4px;
+    background: {{surfaceDisabled}};
+}
+
+.discover-category-marker img {
+    display: none;
+    width: 10px;
+    height: 10px;
+    margin: 1px;
+}
+
+.discover-category-option.is-active .discover-category-marker {
+    border-color: {{selectionBlue}};
+    background: {{selectionBlue}};
+}
+
+.discover-category-option.is-active .discover-category-marker img {
+    display: block;
+}
+
+.discover-category-label {
+    display: block;
+    margin-right: 30px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.discover-category-count {
+    float: right;
+    min-width: 20px;
+    margin-left: 6px;
+    color: {{textMuted}};
+    font-size: 10px;
+    text-align: right;
+}
+
+.discover-category-option.is-active .discover-category-count {
+    color: {{selectionBlueText}};
 }
 
 .collections-bar {
@@ -1734,6 +1863,38 @@
     margin-bottom: 14px;
     color: {{textSecondary}};
     line-height: 19px;
+}
+
+@media screen and (max-width: 1199px) {
+    #discoverTools {
+        width: 465px;
+    }
+
+    #discoverTools.has-single-tool {
+        width: 165px;
+    }
+
+    #discoverCategoryControl {
+        display: inline-block;
+    }
+
+    #discoverTools .sort-control {
+        margin-left: 10px;
+    }
+
+    #discoverTools.has-single-tool .sort-control {
+        margin-left: 0;
+    }
+
+    .discover-layout,
+    .discover-results {
+        display: block;
+        width: 100%;
+    }
+
+    .discover-category-sidebar {
+        display: none;
+    }
 }
 
 @media screen and (max-width: 900px) {
