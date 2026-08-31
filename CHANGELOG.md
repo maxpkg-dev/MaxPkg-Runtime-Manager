@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.8
+
+- Added: Compact Top, Bottom, Left, and Right toolbar modes use space-saving icon-only buttons.
+- Added: Floating Horizontal and Floating Vertical toolbars can be moved freely and restore their saved positions.
+- Added: Setup Toolbar opens toolbar settings directly, while Reset Toolbar safely restores a lost or modified toolbar.
+- Fixed: Floating toolbars open in a visible centered position after reset and stay above 3ds Max without covering other applications.
+- Fixed: Vertical toolbar content now follows the docked panel size without being clipped.
+- Changed: The MaxPkg Manager button is always the first toolbar button, including every compact mode.
+
 ## 1.1.7
 
 - Fixed: Manager and toolbar now remain correctly sized and readable when Windows interface scaling is enabled.
