@@ -24,6 +24,9 @@
                     </div>
                 </div>
                 <div id="headerActions" class="header-actions">
+                    <button id="setupToolbarButton" class="button" type="button" title="Setup Toolbar">
+                        <img class="icon" src="../../data/themes/manager/icons/panel-top.svg" alt=""><span class="header-button-label">Setup Toolbar</span>
+                    </button>
                     <a id="checkUpdatesButton" class="button" href="maxpkg://manager/check-updates" data-busy="Checking updates...">
                         <img class="icon" src="../../data/themes/manager/icons/refresh-cw.svg" alt=""><span class="header-button-label">Check Updates</span>
                     </a>
@@ -229,10 +232,16 @@
                                 <div class="html-select-menu is-hidden" data-dropdown-width="source">
                                     <button type="button" data-dropdown-option="top">Top</button>
                                     <button type="button" data-dropdown-option="bottom">Bottom</button>
+                                    <button type="button" data-dropdown-option="topcompact">Top (Compact)</button>
+                                    <button type="button" data-dropdown-option="bottomcompact">Bottom (Compact)</button>
+                                    <button type="button" data-dropdown-option="left">Left (Compact)</button>
+                                    <button type="button" data-dropdown-option="right">Right (Compact)</button>
+                                    <button type="button" data-dropdown-option="floatinghorizontal">Floating Horizontal (Compact)</button>
+                                    <button type="button" data-dropdown-option="floatingvertical">Floating Vertical (Compact)</button>
                                 </div>
                             </div>
                         </div>
-                        <div class="field">
+                        <div id="toolbarTitleField" class="field">
                             <span id="toolbarTitleLabel" class="field-label">Button primary text</span>
                             <div id="toolbarTitleSelect" class="html-select html-select-wide" data-value="packageName">
                                 <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarTitleLabel" data-dropdown-trigger="true">
@@ -245,7 +254,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="field">
+                        <div id="toolbarButtonSizeField" class="field">
                             <span id="toolbarButtonSizeLabel" class="field-label">Button size</span>
                             <div id="toolbarButtonSizeSelect" class="html-select html-select-wide" data-value="medium">
                                 <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarButtonSizeLabel" data-dropdown-trigger="true">
@@ -260,7 +269,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="field">
+                        <div id="toolbarSubtitleField" class="field">
                             <span id="toolbarSubtitleLabel" class="field-label">Button secondary text</span>
                             <div id="toolbarSubtitleSelect" class="html-select html-select-wide" data-value="version">
                                 <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarSubtitleLabel" data-dropdown-trigger="true">
@@ -274,8 +283,12 @@
                                 </div>
                             </div>
                         </div>
+                        <p id="compactToolbarNote" class="text-muted is-hidden">This compact toolbar position uses icon-only buttons. Text and button-size preferences are preserved for Top and Bottom.</p>
                         <p class="text-muted">Package buttons can be shown or hidden from each Installed card.</p>
-                        <a class="button" href="maxpkg://manager/reset-toolbar-order">Reset package order</a>
+                        <div class="toolbar-reset-actions">
+                            <a class="button" href="maxpkg://manager/reset-toolbar-order">Reset package order</a>
+                            <a class="button" href="maxpkg://manager/reset-toolbar">Reset Toolbar</a>
+                        </div>
                     </div>
                     <div class="settings-page is-hidden" data-settings-panel="themes">
                         <h3>Themes</h3>

@@ -79,6 +79,18 @@
     margin-left: 15px;
 }
 
+.settings-toolbar-field-disabled {
+    opacity: .48;
+}
+
+.settings-toolbar-field-disabled .html-select-button {
+    cursor: default;
+}
+
+.toolbar-reset-actions .button {
+    margin: 0 12px 8px 0;
+}
+
 .search-box {
     position: relative;
     width: 100%;

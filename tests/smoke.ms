@@ -202,6 +202,10 @@
     if (not (isProperty MaxPkg.settings #toolbarSubtitleMode)) do throw "Toolbar subtitle mode is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarButtonSize)) do throw "Toolbar button size is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarDockPosition)) do throw "Toolbar dock position is unavailable."
+    if (not (isProperty MaxPkg.settings #floatingHorizontalX)) do throw "Floating Horizontal X position is unavailable."
+    if (not (isProperty MaxPkg.settings #floatingHorizontalY)) do throw "Floating Horizontal Y position is unavailable."
+    if (not (isProperty MaxPkg.settings #floatingVerticalX)) do throw "Floating Vertical X position is unavailable."
+    if (not (isProperty MaxPkg.settings #floatingVerticalY)) do throw "Floating Vertical Y position is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarTheme)) do throw "Toolbar theme setting is unavailable."
     if (not (isProperty MaxPkg.settings #managerTheme)) do throw "Manager theme setting is unavailable."
     if (not (isProperty MaxPkg.settings #managerFirstOpenCompleted)) do throw "Manager first-open state is unavailable."
@@ -209,7 +213,8 @@
     if (not (isProperty MaxPkg.settings #lastPackageUpdateCheck)) do throw "Package update check timestamp is unavailable."
     if (not (isProperty MaxPkg.settings #packageUpdateCache)) do throw "Package update cache is unavailable."
     if ((classOf MaxPkg.settings.packageUpdateCache) != Array) do throw "Package update cache is not an array."
-    if (MaxPkg.settings.toolbarDockPosition != "top" and MaxPkg.settings.toolbarDockPosition != "bottom") do throw "Toolbar dock position is invalid."
+    local supportedToolbarPositions = #("top", "bottom", "topcompact", "bottomcompact", "left", "right", "floatinghorizontal", "floatingvertical")
+    if ((findItem supportedToolbarPositions MaxPkg.settings.toolbarDockPosition) == 0) do throw "Toolbar dock position is invalid."
     if (not (isProperty MaxPkg.settings #apiEndpoint)) do throw "API endpoint setting is unavailable."
     MaxPkg.settings.toolbarOrder = #()
     if (not (MaxPkg.resetToolbarOrder())) do throw "Empty toolbar order could not be synchronized."

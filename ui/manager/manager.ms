@@ -597,6 +597,28 @@
             return owner.saveSettings()
         ),
 
+        fn resetToolbarPlacement = (
+            local previousToolbarVisibility = owner.settings.toolbarVisible
+            local previousHorizontalX = owner.settings.floatingHorizontalX
+            local previousHorizontalY = owner.settings.floatingHorizontalY
+            local previousVerticalX = owner.settings.floatingVerticalX
+            local previousVerticalY = owner.settings.floatingVerticalY
+            owner.settings.toolbarVisible = true
+            owner.settings.floatingHorizontalX = -1
+            owner.settings.floatingHorizontalY = -1
+            owner.settings.floatingVerticalX = -1
+            owner.settings.floatingVerticalY = -1
+            if (not (owner.saveSettings())) do (
+                owner.settings.toolbarVisible = previousToolbarVisibility
+                owner.settings.floatingHorizontalX = previousHorizontalX
+                owner.settings.floatingHorizontalY = previousHorizontalY
+                owner.settings.floatingVerticalX = previousVerticalX
+                owner.settings.floatingVerticalY = previousVerticalY
+                return false
+            )
+            return owner.rebuildToolbar()
+        ),
+
         fn saveSettings queryString = (
             local previousToolbarVisibility = owner.settings.toolbarVisible
             local previousToolbarTitleMode = owner.settings.toolbarTitleMode
@@ -704,6 +726,10 @@
             if (commandPath == "reset-toolbar-order") do (
                 isSuccess = owner.resetToolbarOrder()
                 notify (if (isSuccess) then "Toolbar order reset." else "Could not reset toolbar order.") notificationType: (if (isSuccess) then "success" else "error")
+            )
+            if (commandPath == "reset-toolbar") do (
+                isSuccess = resetToolbarPlacement()
+                notify (if (isSuccess) then "Toolbar restarted and its position was reset." else "Could not reset the Toolbar.") notificationType: (if (isSuccess) then "success" else "error")
             )
             if (commandPath == "save-settings") do (
                 isSuccess = saveSettings queryString

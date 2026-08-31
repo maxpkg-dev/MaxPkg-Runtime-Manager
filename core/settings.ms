@@ -14,6 +14,10 @@
         toolbarSubtitleMode = "version",
         toolbarButtonSize = "medium",
         toolbarDockPosition = "top",
+        floatingHorizontalX = -1,
+        floatingHorizontalY = -1,
+        floatingVerticalX = -1,
+        floatingVerticalY = -1,
         toolbarTheme = "default",
         updateFrequencyHours = 24,
         notifications = true,
@@ -92,7 +96,8 @@
 
         fn normalizeToolbarDockPosition requestedPosition = (
             local normalizedPosition = toLower (utils.trim requestedPosition)
-            if (normalizedPosition == "top" or normalizedPosition == "bottom") do return normalizedPosition
+            local supportedPositions = #("top", "bottom", "topcompact", "bottomcompact", "left", "right", "floatinghorizontal", "floatingvertical")
+            for supportedPosition in supportedPositions where (normalizedPosition == supportedPosition) do return normalizedPosition
             logger.logWarning "settings" ("Unsupported toolbar dock position: " + (requestedPosition as string) + "; using top")
             return "top"
         ),
@@ -170,6 +175,10 @@
             settingsData.toolbarSubtitleMode = normalizeToolbarSubtitleMode (ini.read settingsData.filePath "Toolbar" "SubtitleMode" defaultValue: "version")
             settingsData.toolbarButtonSize = normalizeToolbarButtonSize (ini.read settingsData.filePath "Toolbar" "ButtonSize" defaultValue: "medium")
             settingsData.toolbarDockPosition = normalizeToolbarDockPosition (ini.read settingsData.filePath "Toolbar" "DockPosition" defaultValue: "top")
+            settingsData.floatingHorizontalX = integerValue (ini.read settingsData.filePath "Toolbar" "FloatingHorizontalX" defaultValue: "-1") -1 "Toolbar.FloatingHorizontalX"
+            settingsData.floatingHorizontalY = integerValue (ini.read settingsData.filePath "Toolbar" "FloatingHorizontalY" defaultValue: "-1") -1 "Toolbar.FloatingHorizontalY"
+            settingsData.floatingVerticalX = integerValue (ini.read settingsData.filePath "Toolbar" "FloatingVerticalX" defaultValue: "-1") -1 "Toolbar.FloatingVerticalX"
+            settingsData.floatingVerticalY = integerValue (ini.read settingsData.filePath "Toolbar" "FloatingVerticalY" defaultValue: "-1") -1 "Toolbar.FloatingVerticalY"
             settingsData.toolbarTheme = ini.read settingsData.filePath "Toolbar" "Theme" defaultValue: "default"
             settingsData.updateFrequencyHours = normalizeUpdateFrequency (integerValue (ini.read settingsData.filePath "Updates" "FrequencyHours" defaultValue: "24") 24 "Updates.FrequencyHours")
             settingsData.notifications = utils.boolValue (ini.read settingsData.filePath "Updates" "Notifications" defaultValue: "true") defaultValue: true
@@ -234,6 +243,10 @@
             if (not (ini.write settingsData.filePath "Toolbar" "SubtitleMode" settingsData.toolbarSubtitleMode)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "ButtonSize" settingsData.toolbarButtonSize)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "DockPosition" settingsData.toolbarDockPosition)) do isSaved = false
+            if (not (ini.write settingsData.filePath "Toolbar" "FloatingHorizontalX" (settingsData.floatingHorizontalX as string))) do isSaved = false
+            if (not (ini.write settingsData.filePath "Toolbar" "FloatingHorizontalY" (settingsData.floatingHorizontalY as string))) do isSaved = false
+            if (not (ini.write settingsData.filePath "Toolbar" "FloatingVerticalX" (settingsData.floatingVerticalX as string))) do isSaved = false
+            if (not (ini.write settingsData.filePath "Toolbar" "FloatingVerticalY" (settingsData.floatingVerticalY as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "Theme" settingsData.toolbarTheme)) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "FrequencyHours" (settingsData.updateFrequencyHours as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "Updates" "Notifications" (if (settingsData.notifications) then "true" else "false"))) do isSaved = false

@@ -196,3 +196,196 @@ body {
 .size-icon .txt {
     display: none;
 }
+
+.wrap-compact {
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.viewport-compact {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.strip-compact {
+    top: 0;
+    left: 0;
+    height: 38px;
+}
+
+.wrap-compact .brand,
+.wrap-compact .toolBtn {
+    position: relative;
+    top: 0;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 3px 5px;
+}
+
+.wrap-compact .brand {
+    display: inline-block;
+    line-height: normal;
+    vertical-align: top;
+}
+
+.wrap-compact .brand-icon {
+    display: block;
+    width: 24px;
+    height: 24px;
+    margin: 3px auto 0;
+}
+
+.wrap-compact .brand-label {
+    display: none;
+}
+
+.wrap-compact .toolBtn + .toolBtn,
+.wrap-compact .brand + .toolBtn {
+    margin-left: 4px;
+}
+
+.toolbar-mode-left .strip-compact,
+.toolbar-mode-right .strip-compact,
+.toolbar-mode-floatingvertical .strip-compact {
+    width: 24px;
+    height: auto;
+    white-space: normal;
+}
+
+.toolbar-mode-left .wrap-compact .brand,
+.toolbar-mode-right .wrap-compact .brand,
+.toolbar-mode-floatingvertical .wrap-compact .brand,
+.toolbar-mode-left .wrap-compact .toolBtn,
+.toolbar-mode-right .wrap-compact .toolBtn,
+.toolbar-mode-floatingvertical .wrap-compact .toolBtn {
+    display: block;
+}
+
+.toolbar-mode-left .wrap-compact .toolBtn,
+.toolbar-mode-right .wrap-compact .toolBtn,
+.toolbar-mode-floatingvertical .wrap-compact .toolBtn,
+.toolbar-mode-left .wrap-compact .brand + .toolBtn,
+.toolbar-mode-right .wrap-compact .brand + .toolBtn,
+.toolbar-mode-floatingvertical .wrap-compact .brand + .toolBtn {
+    margin-left: 0;
+}
+
+.toolbar-mode-left .wrap-compact .toolBtn,
+.toolbar-mode-right .wrap-compact .toolBtn,
+.toolbar-mode-floatingvertical .wrap-compact .toolBtn {
+    margin-top: 4px;
+}
+
+.toolbar-mode-floatinghorizontal .wrap,
+.toolbar-mode-floatingvertical .wrap {
+    background: {{toolbarBackground}};
+}
+
+.toolbar-mode-topcompact .strip-compact,
+.toolbar-mode-bottomcompact .strip-compact,
+.toolbar-mode-floatinghorizontal .strip-compact {
+    height: 24px;
+}
+
+.toolbar-mode-topcompact .wrap-compact .brand,
+.toolbar-mode-bottomcompact .wrap-compact .brand,
+.toolbar-mode-floatinghorizontal .wrap-compact .brand,
+.toolbar-mode-topcompact .wrap-compact .toolBtn,
+.toolbar-mode-bottomcompact .wrap-compact .toolBtn,
+.toolbar-mode-floatinghorizontal .wrap-compact .toolBtn {
+    top: 1px;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    padding: 2px;
+    border-width: 1px;
+}
+
+.toolbar-mode-floatingvertical .strip-compact {
+    width: 24px;
+}
+
+.toolbar-mode-left .wrap-compact .brand,
+.toolbar-mode-right .wrap-compact .brand,
+.toolbar-mode-left .wrap-compact .toolBtn,
+.toolbar-mode-right .wrap-compact .toolBtn {
+    left: 1px;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    padding: 2px;
+    border-width: 1px;
+}
+
+.toolbar-mode-floatingvertical .wrap-compact .brand,
+.toolbar-mode-floatingvertical .wrap-compact .toolBtn {
+    left: 1px;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    padding: 2px;
+    border-width: 1px;
+}
+
+.toolbar-mode-topcompact .wrap-compact .brand-icon,
+.toolbar-mode-bottomcompact .wrap-compact .brand-icon,
+.toolbar-mode-floatinghorizontal .wrap-compact .brand-icon,
+.toolbar-mode-topcompact .wrap-compact .ico,
+.toolbar-mode-bottomcompact .wrap-compact .ico,
+.toolbar-mode-floatinghorizontal .wrap-compact .ico,
+.toolbar-mode-topcompact .wrap-compact .fallback,
+.toolbar-mode-bottomcompact .wrap-compact .fallback,
+.toolbar-mode-floatinghorizontal .wrap-compact .fallback {
+    width: 16px;
+    height: 16px;
+    margin: 0 auto;
+}
+
+.toolbar-mode-left .wrap-compact .brand-icon,
+.toolbar-mode-right .wrap-compact .brand-icon,
+.toolbar-mode-left .wrap-compact .ico,
+.toolbar-mode-right .wrap-compact .ico,
+.toolbar-mode-left .wrap-compact .fallback,
+.toolbar-mode-right .wrap-compact .fallback {
+    width: 16px;
+    height: 16px;
+    margin: 0 auto;
+}
+
+.toolbar-mode-floatingvertical .wrap-compact .brand-icon,
+.toolbar-mode-floatingvertical .wrap-compact .ico,
+.toolbar-mode-floatingvertical .wrap-compact .fallback {
+    width: 16px;
+    height: 16px;
+    margin: 0 auto;
+}
+
+.toolbar-mode-topcompact .wrap-compact .fallback,
+.toolbar-mode-bottomcompact .wrap-compact .fallback,
+.toolbar-mode-floatinghorizontal .wrap-compact .fallback,
+.toolbar-mode-left .wrap-compact .fallback,
+.toolbar-mode-right .wrap-compact .fallback,
+.toolbar-mode-floatingvertical .wrap-compact .fallback {
+    font-size: 9px;
+    line-height: 10px;
+}
+
+.toolbar-mode-topcompact .brand-update-badge,
+.toolbar-mode-bottomcompact .brand-update-badge,
+.toolbar-mode-floatinghorizontal .brand-update-badge,
+.toolbar-mode-left .brand-update-badge,
+.toolbar-mode-right .brand-update-badge,
+.toolbar-mode-floatingvertical .brand-update-badge {
+    top: -2px;
+    right: -2px;
+    min-width: 10px;
+    height: 10px;
+    padding: 0 2px;
+    border-radius: 5px;
+    font-size: 7px;
+    line-height: 8px;
+}

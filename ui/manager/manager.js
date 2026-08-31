@@ -1617,9 +1617,44 @@
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarTitleSelect"), settings.toolbarTitleMode || "packageName");
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarButtonSizeSelect"), settings.toolbarButtonSize || "medium");
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarSubtitleSelect"), settings.toolbarSubtitleMode || "version");
+        updateToolbarModeSettings();
         Common.byId("developerModeCheck").checked = !!settings.developerMode;
         Common.byId("debugLoggingCheck").checked = !!settings.debugLogging;
         updateEndpointSettingsVisibility();
+    }
+
+    function toolbarUsesCompactButtons() {
+        var toolbarMode = window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarDockPositionSelect"));
+        return toolbarMode === "topcompact" || toolbarMode === "bottomcompact" || toolbarMode === "left" || toolbarMode === "right" || toolbarMode === "floatinghorizontal" || toolbarMode === "floatingvertical";
+    }
+
+    function setToolbarFieldDisabled(fieldId, selectId, isDisabled) {
+        var fieldElement = Common.byId(fieldId);
+        var selectElement = Common.byId(selectId);
+        var triggerButtons = selectElement.getElementsByTagName("button");
+        var buttonIndex;
+        Common.toggleClass(fieldElement, "settings-toolbar-field-disabled", isDisabled);
+        Common.toggleClass(selectElement, "is-disabled", isDisabled);
+        for (buttonIndex = 0; buttonIndex < triggerButtons.length; buttonIndex += 1) {
+            if (triggerButtons[buttonIndex].getAttribute("data-dropdown-trigger") !== null) {
+                triggerButtons[buttonIndex].disabled = isDisabled;
+            }
+        }
+    }
+
+    function updateToolbarModeSettings() {
+        var isCompact = toolbarUsesCompactButtons();
+        setToolbarFieldDisabled("toolbarTitleField", "toolbarTitleSelect", isCompact);
+        setToolbarFieldDisabled("toolbarButtonSizeField", "toolbarButtonSizeSelect", isCompact);
+        setToolbarFieldDisabled("toolbarSubtitleField", "toolbarSubtitleSelect", isCompact);
+        Common.toggleClass(Common.byId("compactToolbarNote"), "is-hidden", !isCompact);
+    }
+
+    function showSettingsPage(pageName) {
+        populateSettings();
+        showRuntimeUninstallConfirmation(false);
+        changeSettingsPage(pageName);
+        window.MaxPkgDialog.open(Common.byId("settingsShade"));
     }
 
     function saveSettings() {
@@ -1901,7 +1936,10 @@
         window.MaxPkgDropdown.bindSelect(Common.byId("managerThemeSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarThemeSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("frequencySelect"), saveSettings);
-        window.MaxPkgDropdown.bindSelect(Common.byId("toolbarDockPositionSelect"), saveSettings);
+        window.MaxPkgDropdown.bindSelect(Common.byId("toolbarDockPositionSelect"), function () {
+            updateToolbarModeSettings();
+            saveSettings();
+        });
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarTitleSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarButtonSizeSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarSubtitleSelect"), saveSettings);
@@ -1921,10 +1959,10 @@
             saveSettings();
         });
         Common.on(Common.byId("settingsButton"), "click", function () {
-            populateSettings();
-            showRuntimeUninstallConfirmation(false);
-            changeSettingsPage("general");
-            window.MaxPkgDialog.open(Common.byId("settingsShade"));
+            showSettingsPage("general");
+        });
+        Common.on(Common.byId("setupToolbarButton"), "click", function () {
+            showSettingsPage("toolbar");
         });
         Common.on(Common.byId("closeSettingsButton"), "click", hideSettingsDialog);
         Common.on(Common.byId("copyRuntimeInfoButton"), "click", function () {
