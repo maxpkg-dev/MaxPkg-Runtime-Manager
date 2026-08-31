@@ -19,6 +19,10 @@
     local httpModule = fileIn (runtimeRoot + @"core\http.ms")
     local imageCacheModule = fileIn (runtimeRoot + @"core\image-cache.ms")
     local notifierModule = fileIn (runtimeRoot + @"core\notifier.ms")
+    local uiScaleModule = fileIn (runtimeRoot + @"core\ui-scale.ms")
+    if ((uiScaleModule.scalePercentageFromDpi 96.0) != 100) do throw "100 percent UI scale calculation failed."
+    if ((uiScaleModule.scalePercentageFromDpi 144.0) != 150) do throw "150 percent UI scale calculation failed."
+    if ((uiScaleModule.scalePercentageFromDpi 384.0) != 300) do throw "Maximum UI scale limit failed."
     local selfUpdaterModule = fileIn (runtimeRoot + @"core\self-updater.ms")
     local updaterModule = fileIn (runtimeRoot + @"core\updater.ms")
     local updateTimestamp = updaterModule.updateCheckTimestamp()

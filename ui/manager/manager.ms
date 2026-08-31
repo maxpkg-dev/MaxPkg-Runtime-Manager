@@ -54,6 +54,7 @@
         http,
         imageCache,
         themes,
+        uiScale,
         runtimeRoot,
         rolloutRef,
         dialogOpen = false,
@@ -851,11 +852,14 @@
             return true
         ),
 
-        fn synchronizeBrowserSize browserControl = (
+        fn synchronizeBrowserSize browserControl dialogSize: undefined = (
             try (
-                local currentDialogSize = getDialogSize rolloutRef
-                browserControl.width = currentDialogSize.x
-                browserControl.height = currentDialogSize.y
+                if (dialogSize != undefined) do (
+                    browserControl.width = amax 1 dialogSize.x
+                    browserControl.height = amax 1 dialogSize.y
+                )
+                browserControl.Dock = (dotNetClass "System.Windows.Forms.DockStyle").Fill
+                if (browserControl.Parent != undefined) do browserControl.Parent.PerformLayout()
                 return true
             ) catch (
                 logger.logWarning "manager" ("Could not synchronize browser size: " + getCurrentException())
@@ -865,13 +869,14 @@
 
         fn onDocumentReady browserControl documentArgs = (
             if (browserControl.Document == undefined) do return false
-            synchronizeBrowserSize browserControl
+            synchronizeBrowserSize browserControl dialogSize: (getDialogSize rolloutRef)
+            if (uiScale != undefined) do uiScale.applyBrowserScale browserControl constrainViewport: true
             return true
         ),
 
         fn handleDialogOpened browserControl = (
             dialogOpen = true
-            synchronizeBrowserSize browserControl
+            synchronizeBrowserSize browserControl dialogSize: (getDialogSize rolloutRef)
             startFocusTimer()
             startImageDownloadTimer()
             return configureBrowser browserControl
@@ -890,8 +895,8 @@
                 setDialogSize rolloutRef constrainedDialogSize
                 return true
             )
-            browserControl.width = constrainedDialogSize.x
-            browserControl.height = constrainedDialogSize.y
+            synchronizeBrowserSize browserControl dialogSize: constrainedDialogSize
+            if (uiScale != undefined) do uiScale.applyBrowserScale browserControl constrainViewport: true
             onResize constrainedDialogSize
             return true
         ),

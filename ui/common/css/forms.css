@@ -87,8 +87,8 @@ textarea:focus {
 }
 
 .check-row input:checked + .switch-control {
-    border-color: {{success}};
-    background: {{success}};
+    border-color: {{switchChecked}};
+    background: {{switchChecked}};
 }
 
 .check-row input:checked + .switch-control .switch-thumb {
@@ -96,8 +96,8 @@ textarea:focus {
 }
 
 .check-row input:focus + .switch-control {
-    border-color: {{accentHover}};
-    box-shadow: 0 0 0 2px {{accentActive}};
+    border-color: {{switchCheckedHover}};
+    box-shadow: 0 0 0 2px {{switchFocus}};
 }
 
 .check-row input:disabled + .switch-control,

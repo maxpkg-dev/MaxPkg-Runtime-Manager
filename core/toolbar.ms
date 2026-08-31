@@ -14,15 +14,13 @@
         )
 
         on browser DocumentCompleted eventSender eventArgs do (
-            try (
-                browser.Document.InvokeScript "layout"
-            ) catch (
-            )
+            if (toolbarOwner != undefined) do toolbarOwner.onDocumentReady eventSender eventArgs
         )
 
         on MaxPkgRuntimeToolbarRollout resized size do (
-            browser.width = size.x
-            browser.height = size.y
+            browser.width = amax 1 size.x
+            browser.height = amax 1 size.y
+            if (toolbarOwner != undefined and toolbarOwner.uiScale != undefined) do toolbarOwner.uiScale.applyBrowserScale browser
             try (
                 browser.Document.InvokeScript "layout"
             ) catch (
@@ -46,6 +44,7 @@
         utils,
         logger,
         themes,
+        uiScale,
         runtimeRoot,
         rolloutRef,
 
@@ -154,6 +153,22 @@
             browserControl.WebBrowserShortcutsEnabled = false
             browserControl.DocumentText = buildHtml()
             return true
+        ),
+
+        fn invokeLayout browserControl = (
+            if (browserControl == undefined or browserControl.Document == undefined) do return false
+            try (
+                browserControl.Document.InvokeScript "layout"
+                return true
+            ) catch (
+                return false
+            )
+        ),
+
+        fn onDocumentReady browserControl eventArgs = (
+            if (browserControl == undefined or browserControl.Document == undefined) do return false
+            if (uiScale != undefined) do uiScale.applyBrowserScale browserControl
+            return invokeLayout browserControl
         ),
 
         fn unregister = (

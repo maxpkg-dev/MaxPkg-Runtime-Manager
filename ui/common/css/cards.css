@@ -64,3 +64,22 @@
         margin-right: 0;
     }
 }
+
+body.maxpkg-viewport-under-760 .card {
+    width: 49.25%;
+    margin-right: 1.5%;
+}
+
+body.maxpkg-viewport-under-760 .card-grid > .card:nth-child(3n) {
+    margin-right: 1.5%;
+}
+
+body.maxpkg-viewport-under-760 .card-grid > .card:nth-child(2n) {
+    margin-right: 0;
+}
+
+body.maxpkg-viewport-under-540 .card,
+body.maxpkg-viewport-under-540 .card-grid > .card:nth-child(3n) {
+    width: 100%;
+    margin-right: 0;
+}

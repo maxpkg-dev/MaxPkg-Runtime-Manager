@@ -1897,6 +1897,36 @@
     }
 }
 
+body.maxpkg-viewport-under-1200 #discoverTools {
+    width: 465px;
+}
+
+body.maxpkg-viewport-under-1200 #discoverTools.has-single-tool {
+    width: 165px;
+}
+
+body.maxpkg-viewport-under-1200 #discoverCategoryControl {
+    display: inline-block;
+}
+
+body.maxpkg-viewport-under-1200 #discoverTools .sort-control {
+    margin-left: 10px;
+}
+
+body.maxpkg-viewport-under-1200 #discoverTools.has-single-tool .sort-control {
+    margin-left: 0;
+}
+
+body.maxpkg-viewport-under-1200 .discover-layout,
+body.maxpkg-viewport-under-1200 .discover-results {
+    display: block;
+    width: 100%;
+}
+
+body.maxpkg-viewport-under-1200 .discover-category-sidebar {
+    display: none;
+}
+
 @media screen and (max-width: 900px) {
     .details-layout,
     .details-main,

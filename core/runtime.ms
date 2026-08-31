@@ -69,6 +69,8 @@
     imageCacheModule.initialize()
     local apiModule = fileIn (coreRoot + @"api.ms")
     local repositoryModule = fileIn (coreRoot + @"repository.ms")
+    local uiScaleModule = fileIn (coreRoot + @"ui-scale.ms")
+    uiScaleModule.logger = loggerModule
     local toolbarModule = fileIn (coreRoot + @"toolbar.ms")
     local managerModule = fileIn (runtimeRoot + @"ui\manager\manager.ms")
     local installerModule = fileIn (coreRoot + @"installer.ms")
@@ -519,8 +521,10 @@
 
     toolbarModule.initialize MaxPkg runtimeRoot utilsModule loggerModule toolbarModule
     toolbarModule.themes = themesModule
+    toolbarModule.uiScale = uiScaleModule
     managerModule.initialize MaxPkg runtimeRoot utilsModule managerModule
     managerModule.themes = themesModule
+    managerModule.uiScale = uiScaleModule
     managerModule.logger = loggerModule
     managerModule.http = httpModule
     managerModule.imageCache = imageCacheModule

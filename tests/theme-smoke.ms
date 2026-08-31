@@ -52,5 +52,5 @@
     if ((findString resultDialogCss "{{") != undefined) do throw "Result dialog CSS contains unresolved theme tokens."
 
     format "MAXPKG_THEME_SMOKE_OK\n"
-    quitMax #noPrompt
+    true
 )
