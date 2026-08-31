@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.7
+
+- Fixed: Manager and toolbar now remain correctly sized and readable when Windows interface scaling is enabled.
+- Fixed: Manager content stays centered, fills the resized window, and keeps package cards separated at responsive widths.
+- Changed: Settings checkboxes now use clear green toggle switches across all Manager themes.
+
 ## 1.1.6
 
 - Added: Discover now shows package categories in a dedicated sidebar on wide Manager windows and automatically switches to a compact dropdown on smaller windows.
