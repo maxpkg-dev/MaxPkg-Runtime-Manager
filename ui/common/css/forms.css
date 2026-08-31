@@ -34,14 +34,76 @@ textarea:focus {
 }
 
 .check-row {
+    position: relative;
     display: block;
-    margin-bottom: 11px;
+    min-height: 18px;
+    margin-bottom: 12px;
+    padding-left: 45px;
     cursor: pointer;
+    line-height: 18px;
 }
 
 .check-row input {
-    margin-right: 7px;
-    vertical-align: -2px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 36px;
+    height: 18px;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.switch-control {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 36px;
+    height: 18px;
+    border: 1px solid {{borderStrong}};
+    border-radius: 9px;
+    background: {{surfaceDisabled}};
+    cursor: pointer;
+}
+
+.switch-thumb {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    background: {{selectionBlueText}};
+    box-shadow: 0 1px 2px {{shadowSoft}};
+    transition: left 120ms ease-out;
+}
+
+.switch-label {
+    display: block;
+}
+
+.check-row:hover .switch-control {
+    border-color: {{textDisabled}};
+}
+
+.check-row input:checked + .switch-control {
+    border-color: {{success}};
+    background: {{success}};
+}
+
+.check-row input:checked + .switch-control .switch-thumb {
+    left: 19px;
+}
+
+.check-row input:focus + .switch-control {
+    border-color: {{accentHover}};
+    box-shadow: 0 0 0 2px {{accentActive}};
+}
+
+.check-row input:disabled + .switch-control,
+.check-row input:disabled ~ .switch-label {
+    cursor: default;
+    opacity: .55;
 }
 
 .html-select {
