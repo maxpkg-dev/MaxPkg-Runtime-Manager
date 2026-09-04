@@ -81,7 +81,7 @@ MaxPkg can create a toolbar with buttons for your installed scripts. You can:
 - Choose large, medium, small, or icon-only buttons
 - Show a version, developer name, or no extra text
 - Hide buttons you do not need
-- Change the button order
+- Change the button order from Installed or directly on any toolbar by holding `Alt` and dragging
 - Turn the MaxPkg toolbar off completely
 - Choose separate themes for the Manager and the toolbar
 

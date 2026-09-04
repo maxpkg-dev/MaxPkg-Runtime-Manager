@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.9
+
+- Added: Package buttons can now be reordered directly on every docked and floating toolbar by holding Alt and dragging.
+- Changed: Toolbar order changes immediately appear in Installed and remain after restart without losing the saved positions of hidden buttons.
+
 ## 1.1.8
 
 - Added: Compact Top, Bottom, Left, and Right toolbar modes use space-saving icon-only buttons.
