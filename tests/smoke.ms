@@ -67,19 +67,37 @@
     local buttonLayoutPosition = findString managerHtmlContent "id=\"toolbarWidthOptions\""
     local additionalLinePosition = findString managerHtmlContent "id=\"toolbarTextOptions\""
     if (buttonLayoutPosition == undefined or additionalLinePosition == undefined or additionalLinePosition < buttonLayoutPosition) do throw "Additional line is not placed after Button layout."
-    if ((findString managerHtmlContent "Left (Compact)") != undefined or (findString managerHtmlContent "Right (Compact)") != undefined) do throw "Left or Right is still presented as a separate Compact mode."
-    if ((findString managerHtmlContent "<strong>Left</strong>") == undefined or (findString managerHtmlContent "<strong>Right</strong>") == undefined) do throw "Left or Right Toolbar placement label is unavailable."
-    if ((findString managerHtmlContent "Horizontal (Compact)") == undefined or (findString managerHtmlContent "Vertical (Compact)") == undefined) do throw "Floating Toolbar modes are missing their Compact labels."
+    local toolbarPlacementMarkup = #(
+        "data-toolbar-choice=\"dockSide\" data-toolbar-value=\"top\"",
+        "data-toolbar-choice=\"dockSide\" data-toolbar-value=\"bottom\"",
+        "data-toolbar-choice=\"dockSide\" data-toolbar-value=\"left\"",
+        "data-toolbar-choice=\"dockSide\" data-toolbar-value=\"right\"",
+        "data-toolbar-choice=\"orientation\" data-toolbar-value=\"horizontal\"",
+        "data-toolbar-choice=\"orientation\" data-toolbar-value=\"vertical\""
+    )
+    for placementMarkup in toolbarPlacementMarkup where (findString managerHtmlContent placementMarkup) == undefined do throw ("Toolbar placement is unavailable: " + placementMarkup)
+    if ((findString managerHtmlContent "Floating Horizontal") == undefined or (findString managerHtmlContent "Floating Vertical") == undefined) do throw "Floating Toolbar placement labels are unavailable."
+    if ((findString managerHtmlContent "1. Placement") != undefined or (findString managerHtmlContent "2. Side") != undefined or (findString managerHtmlContent "3. Toolbar spacing") != undefined or (findString managerHtmlContent "4. Icon size") != undefined) do throw "Legacy numbered Toolbar configurator sections are still present."
+    if ((findString managerHtmlContent "class=\"toolbar-config-panel\"") == undefined or (findString managerHtmlContent "class=\"toolbar-segment") == undefined or (findString managerHtmlContent "class=\"toolbar-preview-heading\"") == undefined) do throw "Compact Toolbar configurator structure is unavailable."
+    local toolbarHiddenInputIds = #("toolbarDockPositionSelect", "toolbarDensityInput", "toolbarIconSizeInput", "toolbarButtonSizeSelect", "toolbarTitleSelect", "toolbarSubtitleSelect")
+    for inputId in toolbarHiddenInputIds where (findString managerHtmlContent ("id=\"" + inputId + "\"")) == undefined do throw ("Toolbar hidden setting is unavailable: " + inputId)
+    if ((findString managerHtmlContent "maxpkg://manager/reset-toolbar-order") == undefined or (findString managerHtmlContent "maxpkg://manager/reset-toolbar-position") == undefined or (findString managerHtmlContent "maxpkg://manager/reset-toolbar\"") == undefined) do throw "Toolbar reset actions are incomplete."
     if ((settingsModule.legacyToolbarDensity "left" "medium") != "regular" or (settingsModule.legacyToolbarDensity "right" "medium") != "regular") do throw "Vertical dock placement still forces Compact density."
     if ((findString toolbarSourceContent "if (isVerticalMode toolbarMode or isFloatingMode toolbarMode) do return true") == undefined) do throw "Vertical dock placement is not guaranteed to use icon-only buttons."
     if ((findString toolbarSourceContent "local iconOnlyThickness = iconOnlyToolbarThickness()") == undefined or (findString toolbarSourceContent "local dialogWidth = if (isVertical) then iconOnlyThickness else 1200") == undefined) do throw "Left or Right Toolbar width does not follow the selected icon size and spacing."
-    if ((findString renderedManagerCss ".toolbar-preview-stage .toolbar-preview-icon") == undefined or (findString renderedManagerCss "position: static !important") == undefined) do throw "Toolbar preview icon still depends on absolute centering."
+    if ((findString managerScriptContent "toolbarConfigurator.layout = \"docked\"") == undefined or (findString managerScriptContent "toolbarConfigurator.layout = \"floating\"") == undefined) do throw "Direct Toolbar placement choices do not select their layout."
+    if ((findString managerScriptContent "effectiveButtonWidth") == undefined or (findString managerScriptContent "preview-subtitle-") == undefined) do throw "Toolbar preview does not use effective icon-only or subtitle settings."
+    if ((findString renderedManagerCss ".toolbar-preview-icon") == undefined or (findString renderedManagerCss "position: static") == undefined) do throw "Toolbar preview icon still depends on absolute centering."
     if ((findString renderedManagerCss ".toolbar-preview-bar") == undefined or (findString renderedManagerCss "font-size: 0") == undefined) do throw "Docked Toolbar preview retains inline whitespace between buttons."
-    if ((findString renderedManagerCss "Live Preview is content-sized") == undefined or (findString renderedManagerCss "height: auto !important") == undefined) do throw "Toolbar preview bars are not sized by their content."
-    if ((findString renderedManagerCss ".toolbar-preview-stage.preview-density-compact .toolbar-preview-bar") == undefined or (findString renderedManagerCss "padding: 2px") == undefined) do throw "Compact Toolbar preview does not use a shared outer padding."
-    if ((findString renderedManagerCss ".toolbar-preview-stage .toolbar-preview-button > span") == undefined or (findString renderedManagerCss "vertical-align: middle") == undefined) do throw "Toolbar preview content is not vertically centered."
-    if ((findString renderedManagerCss ".toolbar-preview-stage.preview-docked.preview-left .toolbar-preview-button") == undefined or (findString renderedManagerCss ".toolbar-preview-stage.preview-density-compact.preview-docked.preview-left .toolbar-preview-button") == undefined) do throw "Docked vertical Toolbar preview does not distinguish Regular and Compact spacing."
-    if ((findString renderedManagerCss "display: table") == undefined or (findString renderedManagerCss "margin: 0 auto 4px !important") == undefined) do throw "Docked vertical Toolbar preview buttons are not flow-centered."
+    if ((findString renderedManagerCss "height: auto") == undefined or (findString renderedManagerCss ".preview-density-compact .toolbar-preview-bar") == undefined) do throw "Toolbar preview bars are not sized by their content."
+    if ((findString renderedManagerCss ".toolbar-preview-button > span") == undefined or (findString renderedManagerCss "vertical-align: middle") == undefined) do throw "Toolbar preview content is not vertically centered."
+    if ((findString renderedManagerCss ".preview-docked.preview-left .toolbar-preview-button") == undefined or (findString renderedManagerCss ".preview-density-compact.preview-docked.preview-left .toolbar-preview-button") == undefined) do throw "Docked vertical Toolbar preview does not distinguish Regular and Compact spacing."
+    local toolbarConfiguratorCssStart = findString renderedManagerCss ".toolbar-reset-actions"
+    local toolbarConfiguratorCssEnd = findString renderedManagerCss ".search-box"
+    if (toolbarConfiguratorCssStart == undefined or toolbarConfiguratorCssEnd == undefined or toolbarConfiguratorCssEnd <= toolbarConfiguratorCssStart) do throw "Toolbar configurator CSS section is unavailable."
+    local toolbarConfiguratorCss = substring renderedManagerCss toolbarConfiguratorCssStart (toolbarConfiguratorCssEnd - toolbarConfiguratorCssStart)
+    if ((findString toolbarConfiguratorCss "display: flex") != undefined or (findString toolbarConfiguratorCss "display: grid") != undefined or (findString toolbarConfiguratorCss "grid-template") != undefined) do throw "Toolbar configurator uses CSS unsupported by IE9."
+    if ((findString toolbarConfiguratorCss ".toolbar-segment.is-selected") == undefined or (findString toolbarConfiguratorCss "display: table") == undefined) do throw "IE9-safe compact Toolbar controls are unavailable."
     if ((findString renderedManagerCss "Live preview geometry mirrors the real icon-only toolbar sizes") != undefined or (findString renderedManagerCss ".preview-density-regular.preview-icons-small.preview-floating.preview-horizontal") != undefined) do throw "Legacy per-combination Toolbar preview geometry is still present."
     if (resultDialogModule == undefined) do throw "Reusable Runtime result dialog module is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.html"))) do throw "Runtime result dialog HTML is unavailable."

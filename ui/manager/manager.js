@@ -1682,12 +1682,19 @@
         var buttonIndex;
         var choiceGroup;
         var selectedValue;
+        var isSelected;
         for (buttonIndex = 0; buttonIndex < choiceButtons.length; buttonIndex += 1) {
             choiceGroup = choiceButtons[buttonIndex].getAttribute("data-toolbar-choice");
             if (choiceGroup) {
                 selectedValue = toolbarConfigurator[choiceGroup];
-                Common.toggleClass(choiceButtons[buttonIndex], "is-selected", choiceButtons[buttonIndex].getAttribute("data-toolbar-value") === selectedValue);
-                choiceButtons[buttonIndex].setAttribute("aria-pressed", choiceButtons[buttonIndex].getAttribute("data-toolbar-value") === selectedValue ? "true" : "false");
+                isSelected = choiceButtons[buttonIndex].getAttribute("data-toolbar-value") === selectedValue;
+                if (choiceGroup === "dockSide") {
+                    isSelected = toolbarConfigurator.layout === "docked" && isSelected;
+                } else if (choiceGroup === "orientation") {
+                    isSelected = toolbarConfigurator.layout === "floating" && isSelected;
+                }
+                Common.toggleClass(choiceButtons[buttonIndex], "is-selected", isSelected);
+                choiceButtons[buttonIndex].setAttribute("aria-pressed", isSelected ? "true" : "false");
             }
         }
     }
@@ -1695,10 +1702,29 @@
     function updateToolbarPreview() {
         var previewStage = Common.byId("toolbarPreviewStage");
         var summaryElement = Common.byId("toolbarPreviewSummary");
+        var showsButtonWidth = toolbarConfigurator.layout === "docked" && (toolbarConfigurator.dockSide === "top" || toolbarConfigurator.dockSide === "bottom");
+        var usesTextButtons = toolbarUsesTextButtons();
+        var effectiveButtonWidth = showsButtonWidth ? toolbarConfigurator.buttonWidth : "icon";
+        var effectiveSubtitle = usesTextButtons ? toolbarConfigurator.subtitle : "none";
         var orientationClass = toolbarConfigurator.layout === "floating" ? " preview-" + toolbarConfigurator.orientation : " preview-" + toolbarConfigurator.dockSide;
-        var placementLabel = toolbarConfigurator.layout === "floating" ? "Floating " + toolbarConfigurator.orientation : "Docked at the " + toolbarConfigurator.dockSide;
-        previewStage.className = "toolbar-preview-stage preview-" + toolbarConfigurator.layout + orientationClass + " preview-density-" + toolbarConfigurator.density + " preview-icons-" + toolbarConfigurator.iconSize + " preview-width-" + toolbarConfigurator.buttonWidth;
-        summaryElement.innerHTML = Common.escapeHtml(placementLabel + " · " + toolbarConfigurator.density.charAt(0).toUpperCase() + toolbarConfigurator.density.substring(1) + " · " + toolbarConfigurator.iconSize.charAt(0).toUpperCase() + toolbarConfigurator.iconSize.substring(1) + " icons");
+        var positionLabels = {
+            top: "Top",
+            bottom: "Bottom",
+            left: "Left",
+            right: "Right",
+            floatinghorizontal: "Floating Horizontal",
+            floatingvertical: "Floating Vertical"
+        };
+        var densityLabels = { regular: "Regular", compact: "Compact" };
+        var iconLabels = { small: "Small icons", medium: "Medium icons", large: "Large icons" };
+        var buttonLabels = { icon: "Icons only", small: "Narrow", medium: "Medium", large: "Wide" };
+        var subtitleLabels = { none: "No second line", version: "Version", developer: "Developer" };
+        var summaryParts = [positionLabels[toolbarPositionValue()], densityLabels[toolbarConfigurator.density], iconLabels[toolbarConfigurator.iconSize], buttonLabels[effectiveButtonWidth]];
+        previewStage.className = "toolbar-preview-stage preview-" + toolbarConfigurator.layout + orientationClass + " preview-density-" + toolbarConfigurator.density + " preview-icons-" + toolbarConfigurator.iconSize + " preview-width-" + effectiveButtonWidth + " preview-subtitle-" + effectiveSubtitle;
+        if (usesTextButtons) {
+            summaryParts.push(subtitleLabels[effectiveSubtitle]);
+        }
+        summaryElement.innerHTML = Common.escapeHtml(summaryParts.join(" · "));
     }
 
     function updateToolbarModeSettings() {
@@ -1710,8 +1736,6 @@
         Common.byId("toolbarIconSizeInput").value = toolbarConfigurator.iconSize;
         Common.byId("toolbarButtonSizeSelect").value = toolbarConfigurator.buttonWidth;
         Common.byId("toolbarSubtitleSelect").value = toolbarConfigurator.subtitle;
-        Common.toggleClass(Common.byId("toolbarDockedOptions"), "is-hidden", toolbarConfigurator.layout !== "docked");
-        Common.toggleClass(Common.byId("toolbarFloatingOptions"), "is-hidden", toolbarConfigurator.layout !== "floating");
         Common.toggleClass(Common.byId("toolbarTextOptions"), "is-hidden", !usesTextButtons);
         Common.toggleClass(Common.byId("toolbarWidthOptions"), "is-hidden", !showsButtonWidth);
         Common.toggleClass(Common.byId("compactToolbarNote"), "is-hidden", showsButtonWidth);
@@ -1730,10 +1754,27 @@
         }
         choiceGroup = choiceButton.getAttribute("data-toolbar-choice");
         choiceValue = choiceButton.getAttribute("data-toolbar-value");
-        if (!toolbarConfigurator.hasOwnProperty(choiceGroup) || toolbarConfigurator[choiceGroup] === choiceValue) {
+        if (!toolbarConfigurator.hasOwnProperty(choiceGroup)) {
             return;
         }
-        toolbarConfigurator[choiceGroup] = choiceValue;
+        if (choiceGroup === "dockSide") {
+            if (toolbarConfigurator.layout === "docked" && toolbarConfigurator.dockSide === choiceValue) {
+                return;
+            }
+            toolbarConfigurator.layout = "docked";
+            toolbarConfigurator.dockSide = choiceValue;
+        } else if (choiceGroup === "orientation") {
+            if (toolbarConfigurator.layout === "floating" && toolbarConfigurator.orientation === choiceValue) {
+                return;
+            }
+            toolbarConfigurator.layout = "floating";
+            toolbarConfigurator.orientation = choiceValue;
+        } else {
+            if (toolbarConfigurator[choiceGroup] === choiceValue) {
+                return;
+            }
+            toolbarConfigurator[choiceGroup] = choiceValue;
+        }
         updateToolbarModeSettings();
         saveSettings();
     }
