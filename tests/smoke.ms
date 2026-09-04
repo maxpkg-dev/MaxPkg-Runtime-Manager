@@ -42,10 +42,20 @@
     if ((findString renderedManagerCss "{{") != undefined or (findString renderedToolbarCss "{{") != undefined) do throw "Runtime theme CSS contains unresolved tokens."
     local toolbarScriptContent = utilsModule.readText (runtimeRoot + @"ui\toolbar\toolbar.js")
     local toolbarSourceContent = utilsModule.readText (runtimeRoot + @"core\toolbar.ms")
+    local runtimeSourceContent = utilsModule.readText (runtimeRoot + @"core\runtime.ms")
     local managerScriptContent = utilsModule.readText (runtimeRoot + @"ui\manager\manager.js")
     local managerHtmlContent = utilsModule.readText (runtimeRoot + @"ui\manager\index.html")
     if ((findString toolbarScriptContent "var outerInset = toolbarDensity() === \"compact\" ? 1 : 5;") == undefined) do throw "Floating Toolbar outer inset does not follow Toolbar spacing."
     if ((findString toolbarScriptContent "wrap.className.indexOf(\"wrap-compact\")") == undefined) do throw "Toolbar overflow axis is not selected from the rendered structure."
+    if ((findString toolbarScriptContent "var toolbarDragThreshold = 4;") == undefined) do throw "Toolbar Alt+drag threshold is unavailable."
+    if ((findString toolbarScriptContent "resolvedEvent.altKey") == undefined or (findString toolbarScriptContent "setCapture") == undefined or (findString toolbarScriptContent "releaseCapture") == undefined) do throw "Toolbar modifier-aware IE mouse capture is unavailable."
+    if ((findString toolbarScriptContent "isVerticalMode() ? clientY : clientX") == undefined or (findString toolbarScriptContent "toolbarAutoScrollTick") == undefined) do throw "Toolbar drag axis or edge auto-scroll is unavailable."
+    if ((findString toolbarScriptContent "maxpkg://ui/set-toolbar-order") == undefined or (findString toolbarScriptContent "toolbarOrderSaved") == undefined or (findString toolbarScriptContent "toolbarOrderSaveFailed") == undefined) do throw "Toolbar order save and rollback bridge is unavailable."
+    if ((findString toolbarScriptContent "dataTransfer") != undefined or (findString toolbarScriptContent "draggable = true") != undefined) do throw "Toolbar ordering uses unsupported HTML5 drag and drop."
+    if ((findString toolbarSourceContent "data-toolbar-sortable='true'") == undefined or (findString toolbarSourceContent "data-package-guid='") == undefined or (findString toolbarSourceContent "toolbarOrderPayload") == undefined or (findString toolbarSourceContent "data-toolbar-fixed='true'") == undefined) do throw "Toolbar ordering DOM contract is incomplete."
+    if ((findString toolbarSourceContent "fn normalizedVisiblePackageOrder") == undefined or (findString toolbarSourceContent "fn mergeVisiblePackageOrder") == undefined or (findString toolbarSourceContent "rebuildToolbarAfterSave: false") == undefined) do throw "Toolbar visible-order validation or non-rebuilding save is unavailable."
+    if ((findString runtimeSourceContent "fn setToolbarOrder requestedPackageGuids rebuildToolbarAfterSave: true") == undefined) do throw "Runtime Toolbar order API is not backward compatible."
+    if ((findString renderedToolbarCss ".toolbar-sort-placeholder") == undefined or (findString renderedToolbarCss "border-style: dashed") == undefined or (findString renderedToolbarCss ".toolbar-sort-ghost") == undefined) do throw "Toolbar drag placeholder or ghost styles are unavailable."
     if ((findString toolbarSourceContent "fn updateFloatingGeometry toolbarMode workingArea scalePercentage") == undefined) do throw "Floating Toolbar DPI geometry updater is unavailable."
     if ((findString toolbarSourceContent "uiScale.browserScalePercentage floatingBrowser") == undefined) do throw "Floating Toolbar does not measure DPI from its live browser host."
     if ((findString toolbarSourceContent "then 6 else 12") == undefined) do throw "Compact docked Toolbar does not compensate for CUI host height."
@@ -286,6 +296,8 @@
     MaxPkg.settings.toolbarOrder = #()
     if (not (MaxPkg.resetToolbarOrder())) do throw "Empty toolbar order could not be synchronized."
     if ((classOf MaxPkg.settings.toolbarOrder) != Array) do throw "Toolbar order synchronization did not preserve an array."
+    local unchangedToolbarOrder = for packageGuid in MaxPkg.settings.toolbarOrder collect packageGuid
+    if (not (MaxPkg.setToolbarOrder unchangedToolbarOrder rebuildToolbarAfterSave: false)) do throw "Toolbar-originated order save failed without a Toolbar rebuild."
     local runtimeStatus = MaxPkg.getStatus()
     if (runtimeStatus.connection != "configured") do throw "Default API endpoint fallback is unavailable."
     if ((classOf (MaxPkg.getPackages())) != Array) do throw "MaxPkg.getPackages() did not return an array."

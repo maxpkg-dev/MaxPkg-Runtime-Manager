@@ -158,7 +158,7 @@
         fn packageButtonHtml packageInfo toolbarMode = (
             local iconHtml = "<span class='fallback'>+</span>"
             if (packageInfo.iconFile != "" and doesFileExist packageInfo.iconFile) do (
-                iconHtml = "<img class='ico' src='" + (utils.htmlEscape (utils.fileUrl packageInfo.iconFile)) + "'>"
+                iconHtml = "<img class='ico' src='" + (utils.htmlEscape (utils.fileUrl packageInfo.iconFile)) + "' draggable='false' unselectable='on' alt=''>"
             )
             local titleSource = case owner.settings.toolbarTitleMode of (
                 "buttonName": packageInfo.buttonName
@@ -183,7 +183,8 @@
                 labelContainerClass = "txt"
                 subtitleHtml = "<span class='subtitle'>" + subtitleLabel + "</span>"
             )
-            return "<a class='toolBtn " + buttonSizeClass + "' href='maxpkg://run/" + packageInfo.guid + "' title='" + (utils.htmlEscape packageInfo.packageName) + "'>" + iconHtml + "<span class='" + labelContainerClass + "'><span class='name'>" + buttonLabel + "</span>" + subtitleHtml + "</span></a>"
+            local packageTitle = utils.htmlEscape (packageInfo.packageName + ". Hold Alt and drag to reorder")
+            return "<a class='toolBtn " + buttonSizeClass + "' data-package-guid='" + (utils.htmlEscape packageInfo.guid) + "' data-toolbar-sortable='true' unselectable='on' href='maxpkg://run/" + packageInfo.guid + "' title='" + packageTitle + "'>" + iconHtml + "<span class='" + labelContainerClass + "'><span class='name'>" + buttonLabel + "</span>" + subtitleHtml + "</span></a>"
         ),
 
         fn availableUpdateCount = (
@@ -209,7 +210,7 @@
             local brandTitle = if (updateCount > 0) then ((updateCount as string) + " package update(s) available. Open MaxPkg Manager") else "Open MaxPkg Manager"
             local brandClass = if (usesIconOnlyStructure toolbarMode) then "brand brand-compact" else "brand"
             local orientationClass = if (isVerticalMode toolbarMode) then "toolbar-orientation-vertical" else "toolbar-orientation-horizontal"
-            local brandHtml = "<a class='" + brandClass + "' id='brand' href='maxpkg://ui/openManager' title='" + (utils.htmlEscape brandTitle) + "'><img class='brand-icon' src='" + brandIconUrl + "' alt=''><span class='brand-label'>maxpkg</span>" + updateBadgeHtml + "</a>"
+            local brandHtml = "<a class='" + brandClass + "' id='brand' data-toolbar-fixed='true' unselectable='on' href='maxpkg://ui/openManager' title='" + (utils.htmlEscape brandTitle) + "'><img class='brand-icon' src='" + brandIconUrl + "' draggable='false' unselectable='on' alt=''><span class='brand-label'>maxpkg</span>" + updateBadgeHtml + "</a>"
             local html = "<!doctype html><html><head><meta http-equiv='X-UA-Compatible' content='IE=edge'><meta charset='utf-8'>"
             html += "<style>" + themeCss + "</style></head><body class='toolbar-mode-" + toolbarMode + " " + orientationClass + " toolbar-density-" + owner.settings.toolbarDensity + " toolbar-icons-" + owner.settings.toolbarIconSize + "' data-toolbar-mode='" + toolbarMode + "'>"
             if (usesIconOnlyStructure toolbarMode) then (
@@ -221,6 +222,7 @@
                 for packageInfo in orderedPackages() do html += packageButtonHtml packageInfo toolbarMode
                 html += "</div></div><a class='arrow' id='rightArrow' href='maxpkg://ui/scrollRight'>&rsaquo;</a></div>"
             )
+            html += "<span class='toolbar-order-payload' id='toolbarOrderPayload'></span>"
             html += "<script>" + (assetContent @"ui\toolbar\toolbar.js") + "</script></body></html>"
             return html
         ),
@@ -261,6 +263,90 @@
             if (browserControl == undefined or browserControl.Document == undefined) do return false
             if (uiScale != undefined) do uiScale.applyBrowserScale browserControl
             return invokeLayout browserControl
+        ),
+
+        fn packageGuidInEntries packageEntries packageGuid = (
+            if ((classOf packageEntries) != Array or packageGuid == undefined) do return false
+            local normalizedPackageGuid = toLower (packageGuid as string)
+            for packageInfo in packageEntries where (toLower packageInfo.guid) == normalizedPackageGuid do return true
+            return false
+        ),
+
+        fn normalizedVisiblePackageOrder requestedPackageGuids = (
+            if ((classOf requestedPackageGuids) != Array) do return undefined
+            local visiblePackages = orderedPackages()
+            if (requestedPackageGuids.count != visiblePackages.count) do return undefined
+            local normalizedPackageGuids = #()
+            for requestedPackageGuid in requestedPackageGuids do (
+                local matchingPackage = undefined
+                local normalizedRequestedGuid = toLower (utils.trim (requestedPackageGuid as string))
+                for visiblePackage in visiblePackages where (toLower visiblePackage.guid) == normalizedRequestedGuid do matchingPackage = visiblePackage
+                if (matchingPackage == undefined) do return undefined
+                for normalizedPackageGuid in normalizedPackageGuids where (toLower normalizedPackageGuid) == (toLower matchingPackage.guid) do return undefined
+                append normalizedPackageGuids matchingPackage.guid
+            )
+            return normalizedPackageGuids
+        ),
+
+        fn mergeVisiblePackageOrder requestedPackageGuids = (
+            local normalizedPackageGuids = normalizedVisiblePackageOrder requestedPackageGuids
+            if (normalizedPackageGuids == undefined) do return undefined
+            local visiblePackages = orderedPackages()
+            local savedToolbarOrder = owner.settings.toolbarOrder
+            if ((classOf savedToolbarOrder) != Array) do savedToolbarOrder = #()
+            local mergedPackageGuids = #()
+            local visiblePackageIndex = 1
+            for savedPackageGuid in savedToolbarOrder do (
+                if (packageGuidInEntries visiblePackages savedPackageGuid) then (
+                    if (visiblePackageIndex <= normalizedPackageGuids.count) do (
+                        append mergedPackageGuids normalizedPackageGuids[visiblePackageIndex]
+                        visiblePackageIndex += 1
+                    )
+                ) else (
+                    append mergedPackageGuids savedPackageGuid
+                )
+            )
+            while (visiblePackageIndex <= normalizedPackageGuids.count) do (
+                append mergedPackageGuids normalizedPackageGuids[visiblePackageIndex]
+                visiblePackageIndex += 1
+            )
+            return mergedPackageGuids
+        ),
+
+        fn readToolbarPayload payloadElementId = (
+            if (activeBrowser == undefined or activeBrowser.Document == undefined) do return ""
+            try (
+                local payloadElement = activeBrowser.Document.GetElementById payloadElementId
+                if (payloadElement == undefined) do return ""
+                local payloadContent = payloadElement.InnerText
+                if (payloadContent == undefined) do return ""
+                return utils.trim (payloadContent as string)
+            ) catch (
+                logger.logWarning "toolbar" ("Could not read Toolbar order payload: " + getCurrentException())
+                return ""
+            )
+        ),
+
+        fn invokeToolbarScript scriptFunctionName = (
+            if (activeBrowser == undefined or activeBrowser.Document == undefined) do return false
+            try (
+                activeBrowser.Document.InvokeScript scriptFunctionName
+                return true
+            ) catch (
+                logger.logWarning "toolbar" ("Could not invoke Toolbar script " + scriptFunctionName + ": " + getCurrentException())
+                return false
+            )
+        ),
+
+        fn saveToolbarOrderFromBrowser = (
+            local toolbarOrderContent = readToolbarPayload "toolbarOrderPayload"
+            local requestedPackageGuids = if (toolbarOrderContent == "") then #() else filterString toolbarOrderContent "|"
+            local mergedPackageGuids = mergeVisiblePackageOrder requestedPackageGuids
+            if (mergedPackageGuids == undefined) do (
+                logger.logWarning "toolbar" "Rejected an invalid visible Toolbar order."
+                return false
+            )
+            return owner.setToolbarOrder mergedPackageGuids rebuildToolbarAfterSave: false
         ),
 
         fn unregisterDockedToolbar = (
@@ -666,6 +752,14 @@
                         "openManager": owner.openManager()
                         "scrollLeft": try (if (activeBrowser != undefined) do activeBrowser.Document.InvokeScript "moveLeft") catch ()
                         "scrollRight": try (if (activeBrowser != undefined) do activeBrowser.Document.InvokeScript "moveRight") catch ()
+                        "set-toolbar-order": (
+                            local isToolbarOrderSaved = saveToolbarOrderFromBrowser()
+                            if (isToolbarOrderSaved) then (
+                                invokeToolbarScript "toolbarOrderSaved"
+                            ) else (
+                                invokeToolbarScript "toolbarOrderSaveFailed"
+                            )
+                        )
                     )
                 )
             )

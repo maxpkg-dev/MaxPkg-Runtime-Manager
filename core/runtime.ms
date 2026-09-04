@@ -423,7 +423,7 @@
             return isToolbarRebuilt
         ),
 
-        fn setToolbarOrder requestedPackageGuids = (
+        fn setToolbarOrder requestedPackageGuids rebuildToolbarAfterSave: true = (
             if ((classOf requestedPackageGuids) != Array) do return false
             local previousToolbarOrder = cloneArrayValues settings.toolbarOrder
             local reorderedGuids = #()
@@ -440,7 +440,8 @@
                 loggerModule.logError "runtime" "Could not save the toolbar package order."
                 return false
             )
-            local isToolbarRebuilt = rebuildToolbar()
+            local isToolbarRebuilt = true
+            if (rebuildToolbarAfterSave) do isToolbarRebuilt = rebuildToolbar()
             refreshManager "set-toolbar-order"
             return isToolbarRebuilt
         ),
