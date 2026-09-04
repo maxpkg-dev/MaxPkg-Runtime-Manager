@@ -160,6 +160,7 @@
     border-radius: 4px;
     background: {{surfacePrimary}};
     box-shadow: 0 3px 10px {{shadowSoft}};
+    font-size: 0;
     white-space: nowrap;
 }
 
@@ -339,7 +340,6 @@
     margin-left: 2px;
 }
 
-/* Live preview geometry mirrors the real icon-only toolbar sizes. */
 .toolbar-preview-window {
     position: relative;
 }
@@ -362,257 +362,6 @@
 
 .toolbar-preview-window-dot:nth-child(3) {
     top: 13px;
-}
-
-.preview-floating.preview-horizontal .toolbar-preview-handle {
-    padding-top: 7px;
-    white-space: normal;
-}
-
-.preview-density-compact .toolbar-preview-button,
-.preview-docked.preview-left .toolbar-preview-button,
-.preview-docked.preview-right .toolbar-preview-button,
-.preview-floating .toolbar-preview-button {
-    box-sizing: border-box;
-}
-
-.preview-docked.preview-left .toolbar-preview-icon,
-.preview-docked.preview-right .toolbar-preview-icon,
-.preview-floating .toolbar-preview-icon {
-    margin: 0;
-}
-
-.preview-density-regular.preview-docked.preview-left .toolbar-preview-button,
-.preview-density-regular.preview-docked.preview-right .toolbar-preview-button,
-.preview-density-regular.preview-floating .toolbar-preview-button {
-    padding: 3px;
-}
-
-.preview-density-compact.preview-icons-small .toolbar-preview-button {
-    width: 18px;
-    height: 18px;
-}
-
-.preview-density-compact.preview-icons-medium .toolbar-preview-button {
-    width: 22px;
-    height: 22px;
-}
-
-.preview-density-compact.preview-icons-large .toolbar-preview-button {
-    width: 26px;
-    height: 26px;
-}
-
-.preview-density-compact.preview-docked.preview-top .toolbar-preview-button,
-.preview-density-compact.preview-docked.preview-bottom .toolbar-preview-button {
-    margin-top: 1px;
-}
-
-.preview-density-compact.preview-icons-small.preview-docked.preview-top .toolbar-preview-bar,
-.preview-density-compact.preview-icons-small.preview-docked.preview-bottom .toolbar-preview-bar {
-    height: 20px;
-}
-
-.preview-density-compact.preview-icons-medium.preview-docked.preview-top .toolbar-preview-bar,
-.preview-density-compact.preview-icons-medium.preview-docked.preview-bottom .toolbar-preview-bar {
-    height: 24px;
-}
-
-.preview-density-compact.preview-icons-large.preview-docked.preview-top .toolbar-preview-bar,
-.preview-density-compact.preview-icons-large.preview-docked.preview-bottom .toolbar-preview-bar {
-    height: 28px;
-}
-
-.preview-density-regular.preview-icons-small.preview-docked.preview-left .toolbar-preview-button,
-.preview-density-regular.preview-icons-small.preview-docked.preview-right .toolbar-preview-button,
-.preview-density-regular.preview-icons-small.preview-floating .toolbar-preview-button {
-    width: 22px;
-    height: 22px;
-}
-
-.preview-density-regular.preview-icons-medium.preview-docked.preview-left .toolbar-preview-button,
-.preview-density-regular.preview-icons-medium.preview-docked.preview-right .toolbar-preview-button,
-.preview-density-regular.preview-icons-medium.preview-floating .toolbar-preview-button {
-    width: 26px;
-    height: 26px;
-}
-
-.preview-density-regular.preview-icons-large.preview-docked.preview-left .toolbar-preview-button,
-.preview-density-regular.preview-icons-large.preview-docked.preview-right .toolbar-preview-button,
-.preview-density-regular.preview-icons-large.preview-floating .toolbar-preview-button {
-    width: 30px;
-    height: 30px;
-}
-
-.preview-floating.preview-horizontal .toolbar-preview-button {
-    margin-top: 2px;
-    margin-left: 2px;
-}
-
-.preview-density-regular.preview-icons-small.preview-floating.preview-horizontal .toolbar-preview-bar {
-    width: 84px;
-    height: 32px;
-    margin-left: -42px;
-}
-
-.preview-density-regular.preview-icons-medium.preview-floating.preview-horizontal .toolbar-preview-bar {
-    width: 96px;
-    height: 36px;
-    margin-left: -48px;
-}
-
-.preview-density-regular.preview-icons-large.preview-floating.preview-horizontal .toolbar-preview-bar {
-    width: 108px;
-    height: 40px;
-    margin-left: -54px;
-}
-
-.preview-density-compact.preview-icons-small.preview-floating.preview-horizontal .toolbar-preview-bar {
-    width: 72px;
-    height: 24px;
-    margin-left: -36px;
-}
-
-.preview-density-compact.preview-icons-medium.preview-floating.preview-horizontal .toolbar-preview-bar {
-    width: 84px;
-    height: 28px;
-    margin-left: -42px;
-}
-
-.preview-density-compact.preview-icons-large.preview-floating.preview-horizontal .toolbar-preview-bar {
-    width: 96px;
-    height: 32px;
-    margin-left: -48px;
-}
-
-.preview-floating.preview-horizontal .toolbar-preview-bar {
-    top: 68px;
-}
-
-.preview-density-regular.preview-icons-small.preview-floating.preview-horizontal .toolbar-preview-handle,
-.preview-density-compact.preview-icons-medium.preview-floating.preview-horizontal .toolbar-preview-handle,
-.preview-density-compact.preview-icons-large.preview-floating.preview-horizontal .toolbar-preview-handle {
-    padding-top: 5px;
-}
-
-.preview-density-compact.preview-icons-small.preview-floating.preview-horizontal .toolbar-preview-handle {
-    padding-top: 3px;
-}
-
-.preview-density-regular.preview-icons-medium.preview-floating.preview-horizontal .toolbar-preview-handle {
-    padding-top: 7px;
-}
-
-.preview-density-regular.preview-icons-large.preview-floating.preview-horizontal .toolbar-preview-handle {
-    padding-top: 9px;
-}
-
-.preview-density-regular.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar,
-.preview-density-regular.preview-icons-small.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-regular.preview-icons-small.preview-docked.preview-right .toolbar-preview-bar {
-    width: 32px;
-}
-
-.preview-density-regular.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar,
-.preview-density-regular.preview-icons-medium.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-regular.preview-icons-medium.preview-docked.preview-right .toolbar-preview-bar {
-    width: 36px;
-}
-
-.preview-density-regular.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar,
-.preview-density-regular.preview-icons-large.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-regular.preview-icons-large.preview-docked.preview-right .toolbar-preview-bar {
-    width: 40px;
-}
-
-.preview-density-compact.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar,
-.preview-density-compact.preview-icons-small.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-compact.preview-icons-small.preview-docked.preview-right .toolbar-preview-bar {
-    width: 24px;
-}
-
-.preview-density-compact.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar,
-.preview-density-compact.preview-icons-medium.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-compact.preview-icons-medium.preview-docked.preview-right .toolbar-preview-bar {
-    width: 28px;
-}
-
-.preview-density-compact.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar,
-.preview-density-compact.preview-icons-large.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-compact.preview-icons-large.preview-docked.preview-right .toolbar-preview-bar {
-    width: 32px;
-}
-
-.preview-density-regular.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar {
-    height: 96px;
-    margin-left: -16px;
-}
-
-.preview-density-regular.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar {
-    height: 108px;
-    margin-left: -18px;
-}
-
-.preview-density-regular.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar {
-    height: 120px;
-    margin-left: -20px;
-}
-
-.preview-density-compact.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar {
-    height: 74px;
-    margin-left: -12px;
-}
-
-.preview-density-compact.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar {
-    height: 86px;
-    margin-left: -14px;
-}
-
-.preview-density-compact.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar {
-    height: 98px;
-    margin-left: -16px;
-}
-
-.preview-density-regular.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar {
-    top: 15px;
-}
-
-.preview-density-regular.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar {
-    top: 9px;
-}
-
-.preview-density-regular.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar {
-    top: 3px;
-}
-
-.preview-density-compact.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar {
-    top: 26px;
-}
-
-.preview-density-compact.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar {
-    top: 20px;
-}
-
-.preview-density-compact.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar {
-    top: 14px;
-}
-
-.preview-density-regular.preview-icons-small.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-regular.preview-icons-medium.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-regular.preview-icons-large.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-compact.preview-icons-small.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-compact.preview-icons-medium.preview-docked.preview-left .toolbar-preview-bar,
-.preview-density-compact.preview-icons-large.preview-docked.preview-left .toolbar-preview-bar {
-    left: 8px;
-}
-
-.preview-density-regular.preview-icons-small.preview-docked.preview-right .toolbar-preview-bar,
-.preview-density-regular.preview-icons-medium.preview-docked.preview-right .toolbar-preview-bar,
-.preview-density-regular.preview-icons-large.preview-docked.preview-right .toolbar-preview-bar,
-.preview-density-compact.preview-icons-small.preview-docked.preview-right .toolbar-preview-bar,
-.preview-density-compact.preview-icons-medium.preview-docked.preview-right .toolbar-preview-bar,
-.preview-density-compact.preview-icons-large.preview-docked.preview-right .toolbar-preview-bar {
-    right: 8px;
 }
 
 .toolbar-preview-summary {
@@ -858,141 +607,226 @@
     width: 56px;
 }
 
-.preview-width-icon .toolbar-preview-button {
+/*
+ * Live Preview is content-sized. The bar gets its thickness from the
+ * rendered buttons plus one shared padding value; no icon-size/density
+ * combination owns a separate bar height.
+ */
+.toolbar-preview-stage .toolbar-preview-bar {
     box-sizing: border-box;
-    padding: 3px;
+    height: auto !important;
+    padding: 4px;
+    line-height: 0;
 }
 
-.preview-width-icon .toolbar-preview-button > span {
-    display: none;
+.toolbar-preview-stage {
+    height: auto;
+    min-height: 126px;
 }
 
-.preview-width-icon .toolbar-preview-icon {
-    margin: 0;
+.toolbar-preview-stage.preview-density-compact .toolbar-preview-bar {
+    padding: 2px;
 }
 
-.preview-width-icon.preview-icons-small .toolbar-preview-button {
-    width: 22px;
-    height: 22px;
+.toolbar-preview-stage .toolbar-preview-button {
+    position: relative;
+    box-sizing: border-box;
+    height: auto !important;
+    min-height: 0;
+    margin: 0 4px 0 0 !important;
+    padding: 3px 5px;
+    line-height: 0;
+    text-align: left;
+    vertical-align: middle;
 }
 
-.preview-width-icon.preview-icons-medium .toolbar-preview-button {
-    width: 26px;
-    height: 26px;
+.toolbar-preview-stage.preview-density-compact .toolbar-preview-button {
+    margin: 0 2px 0 0 !important;
+    padding: 1px 3px;
 }
 
-.preview-width-icon.preview-icons-large .toolbar-preview-button {
-    width: 30px;
-    height: 30px;
+.toolbar-preview-stage .toolbar-preview-icon {
+    position: static !important;
+    margin: 0 5px 0 0 !important;
+    vertical-align: middle;
 }
 
-.preview-docked.preview-top.preview-width-small .toolbar-preview-button,
-.preview-docked.preview-bottom.preview-width-small .toolbar-preview-button {
+.toolbar-preview-stage .toolbar-preview-button > span {
+    position: static !important;
+    display: inline-block;
+    height: auto;
+    margin: 0 !important;
+    vertical-align: middle;
+}
+
+.toolbar-preview-stage.preview-width-small .toolbar-preview-button > span {
+    width: 37px;
+}
+
+.toolbar-preview-stage.preview-width-medium .toolbar-preview-button > span {
+    width: 61px;
+}
+
+.toolbar-preview-stage.preview-width-large .toolbar-preview-button > span {
+    width: 87px;
+}
+
+.toolbar-preview-stage.preview-docked.preview-top.preview-width-small .toolbar-preview-button,
+.toolbar-preview-stage.preview-docked.preview-bottom.preview-width-small .toolbar-preview-button {
     width: 76px;
 }
 
-.preview-docked.preview-top.preview-width-medium .toolbar-preview-button,
-.preview-docked.preview-bottom.preview-width-medium .toolbar-preview-button {
+.toolbar-preview-stage.preview-docked.preview-top.preview-width-medium .toolbar-preview-button,
+.toolbar-preview-stage.preview-docked.preview-bottom.preview-width-medium .toolbar-preview-button {
     width: 100px;
 }
 
-.preview-docked.preview-top.preview-width-large .toolbar-preview-button,
-.preview-docked.preview-bottom.preview-width-large .toolbar-preview-button {
+.toolbar-preview-stage.preview-docked.preview-top.preview-width-large .toolbar-preview-button,
+.toolbar-preview-stage.preview-docked.preview-bottom.preview-width-large .toolbar-preview-button {
     width: 126px;
 }
 
-.preview-docked.preview-top.preview-icons-small .toolbar-preview-button,
-.preview-docked.preview-bottom.preview-icons-small .toolbar-preview-button {
-    height: 30px;
+.toolbar-preview-stage.preview-docked.preview-top .toolbar-preview-button:last-child,
+.toolbar-preview-stage.preview-docked.preview-bottom .toolbar-preview-button:last-child,
+.toolbar-preview-stage.preview-floating.preview-horizontal .toolbar-preview-button:last-child {
+    margin-right: 0;
 }
 
-.preview-docked.preview-top.preview-icons-medium .toolbar-preview-button,
-.preview-docked.preview-bottom.preview-icons-medium .toolbar-preview-button {
-    height: 34px;
+.toolbar-preview-stage.preview-width-icon .toolbar-preview-button,
+.toolbar-preview-stage.preview-docked.preview-left .toolbar-preview-button,
+.toolbar-preview-stage.preview-docked.preview-right .toolbar-preview-button,
+.toolbar-preview-stage.preview-floating .toolbar-preview-button {
+    width: auto !important;
 }
 
-.preview-docked.preview-top.preview-icons-large .toolbar-preview-button,
-.preview-docked.preview-bottom.preview-icons-large .toolbar-preview-button {
-    height: 38px;
+.toolbar-preview-stage.preview-width-icon .toolbar-preview-button {
+    padding: 3px;
 }
 
-.preview-density-regular.preview-docked.preview-top.preview-icons-small .toolbar-preview-bar,
-.preview-density-regular.preview-docked.preview-bottom.preview-icons-small .toolbar-preview-bar {
-    height: 38px;
-}
-
-.preview-density-regular.preview-docked.preview-top.preview-icons-medium .toolbar-preview-bar,
-.preview-density-regular.preview-docked.preview-bottom.preview-icons-medium .toolbar-preview-bar {
-    height: 42px;
-}
-
-.preview-density-regular.preview-docked.preview-top.preview-icons-large .toolbar-preview-bar,
-.preview-density-regular.preview-docked.preview-bottom.preview-icons-large .toolbar-preview-bar {
-    height: 46px;
-}
-
-.preview-density-compact.preview-docked.preview-top.preview-icons-small .toolbar-preview-bar,
-.preview-density-compact.preview-docked.preview-bottom.preview-icons-small .toolbar-preview-bar {
-    height: 32px;
-}
-
-.preview-density-compact.preview-docked.preview-top.preview-icons-medium .toolbar-preview-bar,
-.preview-density-compact.preview-docked.preview-bottom.preview-icons-medium .toolbar-preview-bar {
-    height: 36px;
-}
-
-.preview-density-compact.preview-docked.preview-top.preview-icons-large .toolbar-preview-bar,
-.preview-density-compact.preview-docked.preview-bottom.preview-icons-large .toolbar-preview-bar {
-    height: 40px;
-}
-
-.preview-density-regular.preview-width-icon.preview-docked.preview-top.preview-icons-small .toolbar-preview-bar,
-.preview-density-regular.preview-width-icon.preview-docked.preview-bottom.preview-icons-small .toolbar-preview-bar {
-    height: 32px;
-}
-
-.preview-density-regular.preview-width-icon.preview-docked.preview-top.preview-icons-medium .toolbar-preview-bar,
-.preview-density-regular.preview-width-icon.preview-docked.preview-bottom.preview-icons-medium .toolbar-preview-bar {
-    height: 36px;
-}
-
-.preview-density-regular.preview-width-icon.preview-docked.preview-top.preview-icons-large .toolbar-preview-bar,
-.preview-density-regular.preview-width-icon.preview-docked.preview-bottom.preview-icons-large .toolbar-preview-bar {
-    height: 40px;
-}
-
-.preview-density-compact.preview-width-icon.preview-docked.preview-top.preview-icons-small .toolbar-preview-bar,
-.preview-density-compact.preview-width-icon.preview-docked.preview-bottom.preview-icons-small .toolbar-preview-bar {
-    height: 20px;
-}
-
-.preview-density-compact.preview-width-icon.preview-docked.preview-top.preview-icons-medium .toolbar-preview-bar,
-.preview-density-compact.preview-width-icon.preview-docked.preview-bottom.preview-icons-medium .toolbar-preview-bar {
-    height: 24px;
-}
-
-.preview-density-compact.preview-width-icon.preview-docked.preview-top.preview-icons-large .toolbar-preview-bar,
-.preview-density-compact.preview-width-icon.preview-docked.preview-bottom.preview-icons-large .toolbar-preview-bar {
-    height: 28px;
-}
-
-.preview-density-compact.preview-width-icon .toolbar-preview-button {
+.toolbar-preview-stage.preview-density-compact.preview-width-icon .toolbar-preview-button {
     padding: 1px;
 }
 
-.preview-density-compact.preview-width-icon.preview-icons-small .toolbar-preview-button {
-    width: 18px;
-    height: 18px;
+.toolbar-preview-stage.preview-width-icon .toolbar-preview-button > span,
+.toolbar-preview-stage.preview-docked.preview-left .toolbar-preview-button > span,
+.toolbar-preview-stage.preview-docked.preview-right .toolbar-preview-button > span,
+.toolbar-preview-stage.preview-floating .toolbar-preview-button > span {
+    display: none;
 }
 
-.preview-density-compact.preview-width-icon.preview-icons-medium .toolbar-preview-button {
-    width: 22px;
-    height: 22px;
+.toolbar-preview-stage.preview-width-icon .toolbar-preview-icon,
+.toolbar-preview-stage.preview-docked.preview-left .toolbar-preview-icon,
+.toolbar-preview-stage.preview-docked.preview-right .toolbar-preview-icon,
+.toolbar-preview-stage.preview-floating .toolbar-preview-icon {
+    margin-right: 0 !important;
 }
 
-.preview-density-compact.preview-width-icon.preview-icons-large .toolbar-preview-button {
-    width: 26px;
-    height: 26px;
+.toolbar-preview-stage.preview-docked.preview-top .toolbar-preview-bar,
+.toolbar-preview-stage.preview-docked.preview-bottom .toolbar-preview-bar {
+    height: auto !important;
+}
+
+.toolbar-preview-stage.preview-docked.preview-left .toolbar-preview-bar,
+.toolbar-preview-stage.preview-docked.preview-right .toolbar-preview-bar {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: auto !important;
+    height: auto !important;
+    margin: 8px !important;
+    padding: 4px;
+    text-align: center;
+}
+
+.toolbar-preview-stage.preview-docked.preview-left .toolbar-preview-bar {
+    float: left;
+}
+
+.toolbar-preview-stage.preview-docked.preview-right .toolbar-preview-bar {
+    float: right;
+}
+
+.toolbar-preview-stage.preview-density-compact.preview-docked.preview-left .toolbar-preview-bar,
+.toolbar-preview-stage.preview-density-compact.preview-docked.preview-right .toolbar-preview-bar {
+    padding: 2px;
+}
+
+.toolbar-preview-stage.preview-docked.preview-left .toolbar-preview-button,
+.toolbar-preview-stage.preview-docked.preview-right .toolbar-preview-button,
+.toolbar-preview-stage.preview-floating.preview-vertical .toolbar-preview-button {
+    display: table;
+    margin: 0 auto 4px !important;
+    padding: 3px;
+}
+
+.toolbar-preview-stage.preview-density-compact.preview-docked.preview-left .toolbar-preview-button,
+.toolbar-preview-stage.preview-density-compact.preview-docked.preview-right .toolbar-preview-button,
+.toolbar-preview-stage.preview-density-compact.preview-floating.preview-vertical .toolbar-preview-button {
+    margin: 0 auto 2px !important;
+    padding: 1px;
+}
+
+.toolbar-preview-stage.preview-docked.preview-left .toolbar-preview-button:last-child,
+.toolbar-preview-stage.preview-docked.preview-right .toolbar-preview-button:last-child,
+.toolbar-preview-stage.preview-floating.preview-vertical .toolbar-preview-button:last-child {
+    margin: 0 auto !important;
+}
+
+.toolbar-preview-stage.preview-floating.preview-horizontal .toolbar-preview-bar {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 1px;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.toolbar-preview-stage.preview-floating.preview-vertical .toolbar-preview-bar {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 1px;
+    text-align: center;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.toolbar-preview-stage.preview-floating.preview-horizontal .toolbar-preview-button {
+    margin: 0 1px 0 0 !important;
+    padding: 1px;
+}
+
+.toolbar-preview-stage.preview-floating.preview-vertical .toolbar-preview-button {
+    margin-bottom: 1px;
+}
+
+.toolbar-preview-stage.preview-floating.preview-horizontal .toolbar-preview-handle {
+    box-sizing: border-box;
+    width: 10px;
+    height: 14px;
+    margin-right: 1px;
+    padding: 1px;
+    white-space: normal;
+    vertical-align: middle;
+}
+
+.toolbar-preview-stage.preview-floating.preview-vertical .toolbar-preview-handle {
+    box-sizing: border-box;
+    width: 100%;
+    height: 10px;
+    margin-bottom: 1px;
+    padding: 0;
+    white-space: nowrap;
 }
 
 .toolbar-inline-fields {
