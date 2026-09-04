@@ -20,8 +20,13 @@ function toolbarMode() {
     return document.body.getAttribute("data-toolbar-mode") || "top";
 }
 
+function toolbarDensity() {
+    return document.body.className.indexOf("toolbar-density-compact") >= 0 ? "compact" : "regular";
+}
+
 function isCompactMode() {
-    return toolbarMode() === "topcompact" || toolbarMode() === "bottomcompact" || toolbarMode() === "left" || toolbarMode() === "right" || toolbarMode() === "floatinghorizontal" || toolbarMode() === "floatingvertical";
+    var wrap = byId("wrap");
+    return wrap && wrap.className.indexOf("wrap-compact") >= 0;
 }
 
 function isVerticalMode() {
@@ -72,21 +77,25 @@ function layoutCompact() {
     var viewport = byId("viewport");
     var strip = byId("strip");
     var vertical = isVerticalMode();
-    var mode = toolbarMode();
+    var outerInset = toolbarDensity() === "compact" ? 1 : 5;
     var fullLength = vertical ? measureVerticalStrip() : measureHorizontalStrip();
-    var availableLength = vertical ? wrap.clientHeight : wrap.clientWidth;
-    var maximumOffset = Math.max(0, fullLength - availableLength);
+    var availableLength = (vertical ? wrap.clientHeight : wrap.clientWidth) - (outerInset * 2);
+    var maximumOffset;
 
-    viewport.style.left = "0px";
-    viewport.style.top = "0px";
-    viewport.style.width = wrap.clientWidth + "px";
-    viewport.style.height = wrap.clientHeight + "px";
+    if (availableLength < 1) {
+        availableLength = 1;
+    }
+    maximumOffset = Math.max(0, fullLength - availableLength);
+    viewport.style.left = outerInset + "px";
+    viewport.style.top = outerInset + "px";
+    viewport.style.width = Math.max(1, wrap.clientWidth - (outerInset * 2)) + "px";
+    viewport.style.height = Math.max(1, wrap.clientHeight - (outerInset * 2)) + "px";
     if (vertical) {
-        strip.style.width = "24px";
+        strip.style.width = wrap.clientWidth + "px";
         strip.style.height = (fullLength > 0 ? fullLength : 1) + "px";
     } else {
         strip.style.width = (fullLength > 0 ? fullLength : 1) + "px";
-        strip.style.height = mode === "floatinghorizontal" || mode === "topcompact" || mode === "bottomcompact" ? "24px" : "38px";
+        strip.style.height = wrap.clientHeight + "px";
     }
     normalizeScrollOffset(maximumOffset);
     strip.style.left = vertical ? "0px" : (-scrollOffset) + "px";
@@ -100,7 +109,7 @@ function layoutDockedHorizontal() {
     var leftArrow = byId("leftArrow");
     var rightArrow = byId("rightArrow");
     var brand = byId("brand");
-    var edge = 7;
+    var edge = toolbarDensity() === "compact" ? 2 : 7;
     var fullWidth = measureHorizontalStrip();
     var cursor = edge;
     var rightEdge = wrap.clientWidth - edge;
@@ -174,6 +183,7 @@ function handleMouseWheel(eventObject) {
 
 function initializeLayout() {
     var wrap = byId("wrap");
+    controlGap = toolbarDensity() === "compact" ? 2 : 4;
     layout();
     window.setTimeout(layout, 50);
     window.setTimeout(layout, 250);

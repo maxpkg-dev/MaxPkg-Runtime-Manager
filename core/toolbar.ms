@@ -66,6 +66,7 @@
         floatingCloseAllowed = false,
         floatingNaturalWidth = 1,
         floatingNaturalHeight = 1,
+        floatingScalePercentage = 100,
         dragNormalColor,
         dragHoverColor,
         dragPressedColor,
@@ -79,12 +80,46 @@
             return toolbarMode == "left" or toolbarMode == "right" or toolbarMode == "floatingvertical"
         ),
 
-        fn isHorizontalCompactMode toolbarMode = (
-            return toolbarMode == "topcompact" or toolbarMode == "bottomcompact" or toolbarMode == "floatinghorizontal"
+        fn usesIconOnlyStructure toolbarMode = (
+            if (isVerticalMode toolbarMode or isFloatingMode toolbarMode) do return true
+            return owner.settings.toolbarButtonSize == "icon"
         ),
 
-        fn isCompactMode toolbarMode = (
-            return isVerticalMode toolbarMode or isHorizontalCompactMode toolbarMode
+        fn iconOnlyButtonLength = (
+            local isCompactDensity = owner.settings.toolbarDensity == "compact"
+            case owner.settings.toolbarIconSize of (
+                "small": return if (isCompactDensity) then 18 else 22
+                "medium": return if (isCompactDensity) then 22 else 26
+                default: return if (isCompactDensity) then 26 else 30
+            )
+        ),
+
+        fn iconOnlyOuterPadding = (
+            return if (owner.settings.toolbarDensity == "compact") then 2 else 10
+        ),
+
+        fn iconOnlyToolbarThickness = (
+            return (iconOnlyButtonLength()) + (iconOnlyOuterPadding())
+        ),
+
+        fn iconOnlyButtonGap = (
+            return if (owner.settings.toolbarDensity == "compact") then 2 else 4
+        ),
+
+        fn textButtonHeight = (
+            case owner.settings.toolbarIconSize of (
+                "small": return 30
+                "medium": return 34
+                default: return 38
+            )
+        ),
+
+        fn textToolbarThickness = (
+            -- Horizontal CUI docking consumes four pixels before the WebBrowser
+            -- receives its client height. Compact HTML needs a full 40 px client
+            -- area for a 38 px button with one pixel above and below.
+            local outerPadding = if (owner.settings.toolbarDensity == "compact") then 6 else 12
+            return (textButtonHeight()) + outerPadding
         ),
 
         fn isHidden packageGuid = (
@@ -138,7 +173,7 @@
             )
             local labelContainerClass = "txt single-line"
             local subtitleHtml = ""
-            local buttonSizeClass = if (isCompactMode toolbarMode) then "size-icon" else case owner.settings.toolbarButtonSize of (
+            local buttonSizeClass = if (usesIconOnlyStructure toolbarMode) then "size-icon" else case owner.settings.toolbarButtonSize of (
                 "large": "size-large"
                 "small": "size-small"
                 "icon": "size-icon"
@@ -172,16 +207,16 @@
             local updateCount = availableUpdateCount()
             local updateBadgeHtml = if (updateCount > 0) then "<span class='brand-update-badge'>" + (updateCount as string) + "</span>" else ""
             local brandTitle = if (updateCount > 0) then ((updateCount as string) + " package update(s) available. Open MaxPkg Manager") else "Open MaxPkg Manager"
-            local brandClass = if (isCompactMode toolbarMode) then "brand brand-compact" else "brand"
+            local brandClass = if (usesIconOnlyStructure toolbarMode) then "brand brand-compact" else "brand"
             local brandHtml = "<a class='" + brandClass + "' id='brand' href='maxpkg://ui/openManager' title='" + (utils.htmlEscape brandTitle) + "'><img class='brand-icon' src='" + brandIconUrl + "' alt=''><span class='brand-label'>maxpkg</span>" + updateBadgeHtml + "</a>"
             local html = "<!doctype html><html><head><meta http-equiv='X-UA-Compatible' content='IE=edge'><meta charset='utf-8'>"
-            html += "<style>" + themeCss + "</style></head><body class='toolbar-mode-" + toolbarMode + "' data-toolbar-mode='" + toolbarMode + "'>"
-            if (isCompactMode toolbarMode) then (
+            html += "<style>" + themeCss + "</style></head><body class='toolbar-mode-" + toolbarMode + " toolbar-density-" + owner.settings.toolbarDensity + " toolbar-icons-" + owner.settings.toolbarIconSize + "' data-toolbar-mode='" + toolbarMode + "'>"
+            if (usesIconOnlyStructure toolbarMode) then (
                 html += "<div class='wrap wrap-compact' id='wrap'><div class='viewport viewport-compact' id='viewport'><div class='strip strip-compact' id='strip'>" + brandHtml
                 for packageInfo in orderedPackages() do html += packageButtonHtml packageInfo toolbarMode
                 html += "</div></div><a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><a class='arrow' id='rightArrow' href='maxpkg://ui/scrollRight'>&rsaquo;</a></div>"
             ) else (
-                html += "<div class='wrap' id='wrap'>" + brandHtml + "<a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><div class='viewport' id='viewport'><div class='strip' id='strip'>"
+                html += "<div class='wrap wrap-normal' id='wrap'>" + brandHtml + "<a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><div class='viewport' id='viewport'><div class='strip' id='strip'>"
                 for packageInfo in orderedPackages() do html += packageButtonHtml packageInfo toolbarMode
                 html += "</div></div><a class='arrow' id='rightArrow' href='maxpkg://ui/scrollRight'>&rsaquo;</a></div>"
             )
@@ -271,6 +306,7 @@
             floatingOwnerWindow = undefined
             floatingDragging = false
             floatingDragOffset = undefined
+            floatingScalePercentage = 100
             activeBrowser = undefined
             try (
                 if (formToDispose != undefined) do (
@@ -347,6 +383,27 @@
             floatingForm.MinimumSize = fixedFormSize
             floatingForm.MaximumSize = fixedFormSize
             return true
+        ),
+
+        fn updateFloatingGeometry toolbarMode workingArea scalePercentage = (
+            if (floatingForm == undefined or floatingDragHandle == undefined) do return false
+            local normalizedScalePercentage = amax 1 scalePercentage
+            local buttonLength = scaledSize (iconOnlyButtonLength()) normalizedScalePercentage
+            local floatingThickness = scaledSize (iconOnlyToolbarThickness()) normalizedScalePercentage
+            local buttonGap = scaledSize (iconOnlyButtonGap()) normalizedScalePercentage
+            local outerPadding = scaledSize (iconOnlyOuterPadding()) normalizedScalePercentage
+            local handleSize = scaledSize 17 normalizedScalePercentage
+            local visibleButtonCount = (orderedPackages()).count + 1
+            local contentLength = (visibleButtonCount * buttonLength) + ((visibleButtonCount - 1) * buttonGap)
+            floatingNaturalWidth = if (toolbarMode == "floatingvertical") then floatingThickness else handleSize + contentLength + outerPadding
+            floatingNaturalHeight = if (toolbarMode == "floatingvertical") then handleSize + contentLength + outerPadding else floatingThickness
+            if (toolbarMode == "floatingvertical") then (
+                floatingDragHandle.Height = handleSize
+            ) else (
+                floatingDragHandle.Width = handleSize
+            )
+            floatingScalePercentage = normalizedScalePercentage
+            return applyFloatingSize workingArea
         ),
 
         fn persistFloatingPosition = (
@@ -435,9 +492,16 @@
                 local cursorPosition = (dotNetClass "System.Windows.Forms.Cursor").Position
                 local requestedPosition = [cursorPosition.X - floatingDragOffset.x, cursorPosition.Y - floatingDragOffset.y]
                 local targetScreen = screenForPosition requestedPosition.x requestedPosition.y
-                applyFloatingSize targetScreen.WorkingArea
                 local normalizedPosition = clampFloatingPosition requestedPosition floatingForm.Width floatingForm.Height targetScreen.WorkingArea
                 floatingForm.Location = dotNetObject "System.Drawing.Point" normalizedPosition.x normalizedPosition.y
+                local detectedScalePercentage = if (uiScale != undefined) then uiScale.browserScalePercentage floatingBrowser else 100
+                if (detectedScalePercentage != floatingScalePercentage) do (
+                    updateFloatingGeometry owner.settings.toolbarDockPosition targetScreen.WorkingArea detectedScalePercentage
+                    normalizedPosition = clampFloatingPosition requestedPosition floatingForm.Width floatingForm.Height targetScreen.WorkingArea
+                    floatingForm.Location = dotNetObject "System.Drawing.Point" normalizedPosition.x normalizedPosition.y
+                    if (uiScale != undefined) do uiScale.applyBrowserScale floatingBrowser
+                    invokeLayout floatingBrowser
+                )
             ) catch (
             )
             return true
@@ -495,33 +559,20 @@
                 floatingDragHandle.BackColor = dragNormalColor
                 floatingForm.Controls.Add floatingBrowser
                 floatingForm.Controls.Add floatingDragHandle
-                local scalePercentage = if (uiScale != undefined) then uiScale.browserScalePercentage floatingBrowser else 100
-                local buttonLength = scaledSize 22 scalePercentage
-                local floatingThickness = scaledSize 24 scalePercentage
-                local buttonGap = scaledSize 4 scalePercentage
-                local handleSize = scaledSize 17 scalePercentage
-                local visibleButtonCount = (orderedPackages()).count + 1
-                local contentLength = (visibleButtonCount * buttonLength) + ((visibleButtonCount - 1) * buttonGap)
                 local savedX = if (toolbarMode == "floatingvertical") then owner.settings.floatingVerticalX else owner.settings.floatingHorizontalX
                 local savedY = if (toolbarMode == "floatingvertical") then owner.settings.floatingVerticalY else owner.settings.floatingHorizontalY
                 local targetScreen = screenForPosition savedX savedY
                 local workingArea = targetScreen.WorkingArea
-                floatingNaturalWidth = if (toolbarMode == "floatingvertical") then floatingThickness else handleSize + contentLength + 1
-                floatingNaturalHeight = if (toolbarMode == "floatingvertical") then handleSize + contentLength + 1 else floatingThickness
-                applyFloatingSize workingArea
-                local formWidth = floatingForm.Width as integer
-                local formHeight = floatingForm.Height as integer
                 if (toolbarMode == "floatingvertical") then (
                     floatingDragHandle.Dock = dockStyle.Top
-                    floatingDragHandle.Height = handleSize
                     floatingBrowser.Dock = dockStyle.Fill
                 ) else (
                     floatingDragHandle.Dock = dockStyle.Left
-                    floatingDragHandle.Width = handleSize
                     floatingBrowser.Dock = dockStyle.Fill
                 )
+                updateFloatingGeometry toolbarMode workingArea 100
                 local requestedPosition = requestedFloatingPosition toolbarMode workingArea
-                local normalizedPosition = clampFloatingPosition requestedPosition formWidth formHeight workingArea
+                local normalizedPosition = clampFloatingPosition requestedPosition floatingForm.Width floatingForm.Height workingArea
                 floatingForm.Location = dotNetObject "System.Drawing.Point" normalizedPosition.x normalizedPosition.y
                 dotNet.addEventHandler floatingBrowser "Navigating" handleFloatingNavigating
                 dotNet.addEventHandler floatingBrowser "DocumentCompleted" handleFloatingDocumentCompleted
@@ -545,6 +596,13 @@
                     floatingOwnerWindow = undefined
                     floatingForm.Show()
                 )
+                local scalePercentage = if (uiScale != undefined) then uiScale.browserScalePercentage floatingBrowser else 100
+                updateFloatingGeometry toolbarMode workingArea scalePercentage
+                requestedPosition = requestedFloatingPosition toolbarMode workingArea
+                normalizedPosition = clampFloatingPosition requestedPosition floatingForm.Width floatingForm.Height workingArea
+                floatingForm.Location = dotNetObject "System.Drawing.Point" normalizedPosition.x normalizedPosition.y
+                if (uiScale != undefined) do uiScale.applyBrowserScale floatingBrowser
+                invokeLayout floatingBrowser
                 return true
             ) catch (
                 logger.logError "toolbar" ("Could not create the Floating Toolbar: " + getCurrentException())
@@ -570,8 +628,9 @@
             destroyDockedToolbar()
             try (
                 local isVertical = isVerticalMode toolbarMode
-                local dialogWidth = if (isVertical) then 24 else 1200
-                local dialogHeight = if (isVertical) then 600 else if (isHorizontalCompactMode toolbarMode) then 24 else 50
+                local iconOnlyThickness = iconOnlyToolbarThickness()
+                local dialogWidth = if (isVertical) then iconOnlyThickness else 1200
+                local dialogHeight = if (isVertical) then 600 else if (usesIconOnlyStructure toolbarMode) then iconOnlyThickness else textToolbarThickness()
                 createDialog rolloutRef width: dialogWidth height: dialogHeight style: #(#style_sysmenu, #style_toolwindow)
                 return true
             ) catch (
@@ -634,6 +693,33 @@
             local isReleased = hideToolbar()
             if (isReleased) do toolbarOwner = undefined
             return isReleased
+        ),
+
+        fn resetFloatingPosition = (
+            local toolbarMode = owner.settings.toolbarDockPosition
+            if (not (isFloatingMode toolbarMode)) do return false
+            local previousX = if (toolbarMode == "floatingvertical") then owner.settings.floatingVerticalX else owner.settings.floatingHorizontalX
+            local previousY = if (toolbarMode == "floatingvertical") then owner.settings.floatingVerticalY else owner.settings.floatingHorizontalY
+            if (toolbarMode == "floatingvertical") then (
+                owner.settings.floatingVerticalX = -1
+                owner.settings.floatingVerticalY = -1
+            ) else (
+                owner.settings.floatingHorizontalX = -1
+                owner.settings.floatingHorizontalY = -1
+            )
+            if (not (owner.saveSettings())) do (
+                if (toolbarMode == "floatingvertical") then (
+                    owner.settings.floatingVerticalX = previousX
+                    owner.settings.floatingVerticalY = previousY
+                ) else (
+                    owner.settings.floatingHorizontalX = previousX
+                    owner.settings.floatingHorizontalY = previousY
+                )
+                return false
+            )
+            if (not owner.settings.toolbarVisible) do return true
+            if (not (toolbarOwner.build())) do return false
+            return persistFloatingPosition()
         ),
 
         fn build = (

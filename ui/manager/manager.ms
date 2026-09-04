@@ -438,6 +438,8 @@
             settingsContent += "\"toolbarSubtitleMode\":" + (utils.jsonString settings.toolbarSubtitleMode) + ","
             settingsContent += "\"toolbarButtonSize\":" + (utils.jsonString settings.toolbarButtonSize) + ","
             settingsContent += "\"toolbarDockPosition\":" + (utils.jsonString settings.toolbarDockPosition) + ","
+            settingsContent += "\"toolbarDensity\":" + (utils.jsonString settings.toolbarDensity) + ","
+            settingsContent += "\"toolbarIconSize\":" + (utils.jsonString settings.toolbarIconSize) + ","
             settingsContent += "\"toolbarTheme\":" + (utils.jsonString settings.toolbarTheme) + ","
             settingsContent += "\"toolbarThemes\":" + (themeOptionsJson "toolbar") + ","
             settingsContent += "\"toolbarOrder\":" + (stringArrayJson settings.toolbarOrder) + ","
@@ -599,24 +601,43 @@
 
         fn resetToolbarPlacement = (
             local previousToolbarVisibility = owner.settings.toolbarVisible
+            local previousToolbarTitleMode = owner.settings.toolbarTitleMode
+            local previousToolbarSubtitleMode = owner.settings.toolbarSubtitleMode
+            local previousToolbarButtonSize = owner.settings.toolbarButtonSize
+            local previousToolbarDockPosition = owner.settings.toolbarDockPosition
+            local previousToolbarDensity = owner.settings.toolbarDensity
+            local previousToolbarIconSize = owner.settings.toolbarIconSize
             local previousHorizontalX = owner.settings.floatingHorizontalX
             local previousHorizontalY = owner.settings.floatingHorizontalY
             local previousVerticalX = owner.settings.floatingVerticalX
             local previousVerticalY = owner.settings.floatingVerticalY
             owner.settings.toolbarVisible = true
+            owner.settings.toolbarTitleMode = "packageName"
+            owner.settings.toolbarSubtitleMode = "version"
+            owner.settings.toolbarButtonSize = "medium"
+            owner.settings.toolbarDockPosition = "top"
+            owner.settings.toolbarDensity = "regular"
+            owner.settings.toolbarIconSize = "large"
             owner.settings.floatingHorizontalX = -1
             owner.settings.floatingHorizontalY = -1
             owner.settings.floatingVerticalX = -1
             owner.settings.floatingVerticalY = -1
             if (not (owner.saveSettings())) do (
                 owner.settings.toolbarVisible = previousToolbarVisibility
+                owner.settings.toolbarTitleMode = previousToolbarTitleMode
+                owner.settings.toolbarSubtitleMode = previousToolbarSubtitleMode
+                owner.settings.toolbarButtonSize = previousToolbarButtonSize
+                owner.settings.toolbarDockPosition = previousToolbarDockPosition
+                owner.settings.toolbarDensity = previousToolbarDensity
+                owner.settings.toolbarIconSize = previousToolbarIconSize
                 owner.settings.floatingHorizontalX = previousHorizontalX
                 owner.settings.floatingHorizontalY = previousHorizontalY
                 owner.settings.floatingVerticalX = previousVerticalX
                 owner.settings.floatingVerticalY = previousVerticalY
                 return false
             )
-            return owner.rebuildToolbar()
+            local isToolbarRebuilt = owner.rebuildToolbar()
+            return isToolbarRebuilt
         ),
 
         fn saveSettings queryString = (
@@ -625,6 +646,8 @@
             local previousToolbarSubtitleMode = owner.settings.toolbarSubtitleMode
             local previousToolbarButtonSize = owner.settings.toolbarButtonSize
             local previousToolbarDockPosition = owner.settings.toolbarDockPosition
+            local previousToolbarDensity = owner.settings.toolbarDensity
+            local previousToolbarIconSize = owner.settings.toolbarIconSize
             local previousToolbarTheme = owner.settings.toolbarTheme
             local previousManagerTheme = owner.settings.managerTheme
             owner.settings.language = queryParameter queryString "language" defaultContent: owner.settings.language
@@ -644,12 +667,14 @@
             owner.settings.toolbarSubtitleMode = queryParameter queryString "toolbarSubtitleMode" defaultContent: owner.settings.toolbarSubtitleMode
             owner.settings.toolbarButtonSize = queryParameter queryString "toolbarButtonSize" defaultContent: owner.settings.toolbarButtonSize
             owner.settings.toolbarDockPosition = queryParameter queryString "toolbarDockPosition" defaultContent: owner.settings.toolbarDockPosition
+            owner.settings.toolbarDensity = queryParameter queryString "toolbarDensity" defaultContent: owner.settings.toolbarDensity
+            owner.settings.toolbarIconSize = queryParameter queryString "toolbarIconSize" defaultContent: owner.settings.toolbarIconSize
             owner.settings.toolbarTheme = queryParameter queryString "toolbarTheme" defaultContent: owner.settings.toolbarTheme
             if (themes != undefined) do owner.settings.toolbarTheme = themes.resolveThemeId "toolbar" owner.settings.toolbarTheme
             owner.settings.developerMode = boolParameter queryString "developerMode" defaultState: owner.settings.developerMode
             owner.settings.debugLogging = boolParameter queryString "debugLogging" defaultState: owner.settings.debugLogging
             if (not (owner.saveSettings())) do return false
-            if (previousToolbarVisibility != owner.settings.toolbarVisible or previousToolbarTitleMode != owner.settings.toolbarTitleMode or previousToolbarSubtitleMode != owner.settings.toolbarSubtitleMode or previousToolbarButtonSize != owner.settings.toolbarButtonSize or previousToolbarDockPosition != owner.settings.toolbarDockPosition or previousToolbarTheme != owner.settings.toolbarTheme) do owner.rebuildToolbar()
+            if (previousToolbarVisibility != owner.settings.toolbarVisible or previousToolbarTitleMode != owner.settings.toolbarTitleMode or previousToolbarSubtitleMode != owner.settings.toolbarSubtitleMode or previousToolbarButtonSize != owner.settings.toolbarButtonSize or previousToolbarDockPosition != owner.settings.toolbarDockPosition or previousToolbarDensity != owner.settings.toolbarDensity or previousToolbarIconSize != owner.settings.toolbarIconSize or previousToolbarTheme != owner.settings.toolbarTheme) do owner.rebuildToolbar()
             if (previousManagerTheme != owner.settings.managerTheme and themes != undefined) do (
                 if (themes.prepareManagerAssets owner.settings.managerTheme) then (
                     browserReady = false
@@ -730,6 +755,10 @@
             if (commandPath == "reset-toolbar") do (
                 isSuccess = resetToolbarPlacement()
                 notify (if (isSuccess) then "Toolbar restarted and its position was reset." else "Could not reset the Toolbar.") notificationType: (if (isSuccess) then "success" else "error")
+            )
+            if (commandPath == "reset-toolbar-position") do (
+                isSuccess = owner.resetToolbarPosition()
+                notify (if (isSuccess) then "Floating Toolbar was centered." else "Could not reset the Floating Toolbar position.") notificationType: (if (isSuccess) then "success" else "error")
             )
             if (commandPath == "save-settings") do (
                 isSuccess = saveSettings queryString

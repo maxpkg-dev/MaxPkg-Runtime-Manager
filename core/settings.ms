@@ -14,6 +14,8 @@
         toolbarSubtitleMode = "version",
         toolbarButtonSize = "medium",
         toolbarDockPosition = "top",
+        toolbarDensity = "regular",
+        toolbarIconSize = "large",
         floatingHorizontalX = -1,
         floatingHorizontalY = -1,
         floatingVerticalX = -1,
@@ -92,6 +94,35 @@
             if (normalizedSize == "large" or normalizedSize == "medium" or normalizedSize == "small" or normalizedSize == "icon") do return normalizedSize
             logger.logWarning "settings" ("Unsupported toolbar button size: " + (requestedSize as string) + "; using medium")
             return "medium"
+        ),
+
+        fn normalizeToolbarDensity requestedDensity = (
+            local normalizedDensity = toLower (utils.trim requestedDensity)
+            if (normalizedDensity == "regular" or normalizedDensity == "compact") do return normalizedDensity
+            logger.logWarning "settings" ("Unsupported toolbar density: " + (requestedDensity as string) + "; using regular")
+            return "regular"
+        ),
+
+        fn normalizeToolbarIconSize requestedSize = (
+            local normalizedSize = toLower (utils.trim requestedSize)
+            if (normalizedSize == "small" or normalizedSize == "medium" or normalizedSize == "large") do return normalizedSize
+            logger.logWarning "settings" ("Unsupported toolbar icon size: " + (requestedSize as string) + "; using large")
+            return "large"
+        ),
+
+        fn legacyToolbarDensity toolbarPosition buttonSize = (
+            local normalizedPosition = toLower (utils.trim toolbarPosition)
+            if (normalizedPosition == "topcompact" or normalizedPosition == "bottomcompact") do return "compact"
+            if (normalizedPosition == "left" or normalizedPosition == "right") do return "compact"
+            if (normalizedPosition == "floatinghorizontal" or normalizedPosition == "floatingvertical") do return "compact"
+            if ((toLower (utils.trim buttonSize)) == "icon") do return "compact"
+            return "regular"
+        ),
+
+        fn canonicalToolbarPosition toolbarPosition = (
+            if (toolbarPosition == "topcompact") do return "top"
+            if (toolbarPosition == "bottomcompact") do return "bottom"
+            return toolbarPosition
         ),
 
         fn normalizeToolbarDockPosition requestedPosition = (
@@ -173,8 +204,13 @@
             settingsData.toolbarVisible = utils.boolValue (ini.read settingsData.filePath "Toolbar" "Visible" defaultValue: "true") defaultValue: true
             settingsData.toolbarTitleMode = normalizeToolbarTitleMode (ini.read settingsData.filePath "Toolbar" "TitleMode" defaultValue: "packageName")
             settingsData.toolbarSubtitleMode = normalizeToolbarSubtitleMode (ini.read settingsData.filePath "Toolbar" "SubtitleMode" defaultValue: "version")
-            settingsData.toolbarButtonSize = normalizeToolbarButtonSize (ini.read settingsData.filePath "Toolbar" "ButtonSize" defaultValue: "medium")
-            settingsData.toolbarDockPosition = normalizeToolbarDockPosition (ini.read settingsData.filePath "Toolbar" "DockPosition" defaultValue: "top")
+            local configuredToolbarButtonSize = ini.read settingsData.filePath "Toolbar" "ButtonSize" defaultValue: "medium"
+            local configuredToolbarPosition = normalizeToolbarDockPosition (ini.read settingsData.filePath "Toolbar" "DockPosition" defaultValue: "top")
+            local configuredToolbarDensity = ini.read settingsData.filePath "Toolbar" "Density"
+            settingsData.toolbarButtonSize = normalizeToolbarButtonSize configuredToolbarButtonSize
+            settingsData.toolbarDensity = if (configuredToolbarDensity == "") then legacyToolbarDensity configuredToolbarPosition configuredToolbarButtonSize else normalizeToolbarDensity configuredToolbarDensity
+            settingsData.toolbarDockPosition = canonicalToolbarPosition configuredToolbarPosition
+            settingsData.toolbarIconSize = normalizeToolbarIconSize (ini.read settingsData.filePath "Toolbar" "IconSize" defaultValue: "large")
             settingsData.floatingHorizontalX = integerValue (ini.read settingsData.filePath "Toolbar" "FloatingHorizontalX" defaultValue: "-1") -1 "Toolbar.FloatingHorizontalX"
             settingsData.floatingHorizontalY = integerValue (ini.read settingsData.filePath "Toolbar" "FloatingHorizontalY" defaultValue: "-1") -1 "Toolbar.FloatingHorizontalY"
             settingsData.floatingVerticalX = integerValue (ini.read settingsData.filePath "Toolbar" "FloatingVerticalX" defaultValue: "-1") -1 "Toolbar.FloatingVerticalX"
@@ -232,7 +268,9 @@
             settingsData.toolbarTitleMode = normalizeToolbarTitleMode settingsData.toolbarTitleMode
             settingsData.toolbarSubtitleMode = normalizeToolbarSubtitleMode settingsData.toolbarSubtitleMode
             settingsData.toolbarButtonSize = normalizeToolbarButtonSize settingsData.toolbarButtonSize
-            settingsData.toolbarDockPosition = normalizeToolbarDockPosition settingsData.toolbarDockPosition
+            settingsData.toolbarDockPosition = canonicalToolbarPosition (normalizeToolbarDockPosition settingsData.toolbarDockPosition)
+            settingsData.toolbarDensity = normalizeToolbarDensity settingsData.toolbarDensity
+            settingsData.toolbarIconSize = normalizeToolbarIconSize settingsData.toolbarIconSize
             settingsData.apiEndpoint = utils.normalizeApiEndpoint settingsData.apiEndpoint
             local isSaved = true
             if (not (ini.write settingsData.filePath "Packages" "Roots" (utils.join settingsData.packageRoots separator: "|"))) do isSaved = false
@@ -243,6 +281,8 @@
             if (not (ini.write settingsData.filePath "Toolbar" "SubtitleMode" settingsData.toolbarSubtitleMode)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "ButtonSize" settingsData.toolbarButtonSize)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "DockPosition" settingsData.toolbarDockPosition)) do isSaved = false
+            if (not (ini.write settingsData.filePath "Toolbar" "Density" settingsData.toolbarDensity)) do isSaved = false
+            if (not (ini.write settingsData.filePath "Toolbar" "IconSize" settingsData.toolbarIconSize)) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "FloatingHorizontalX" (settingsData.floatingHorizontalX as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "FloatingHorizontalY" (settingsData.floatingHorizontalY as string))) do isSaved = false
             if (not (ini.write settingsData.filePath "Toolbar" "FloatingVerticalX" (settingsData.floatingVerticalX as string))) do isSaved = false

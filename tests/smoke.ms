@@ -38,6 +38,23 @@
     local renderedToolbarCss = themesModule.renderToolbarCss "default"
     if (renderedManagerCss == "" or renderedToolbarCss == "") do throw "Runtime theme CSS is empty."
     if ((findString renderedManagerCss "{{") != undefined or (findString renderedToolbarCss "{{") != undefined) do throw "Runtime theme CSS contains unresolved tokens."
+    local toolbarScriptContent = utilsModule.readText (runtimeRoot + @"ui\toolbar\toolbar.js")
+    local toolbarSourceContent = utilsModule.readText (runtimeRoot + @"core\toolbar.ms")
+    local managerScriptContent = utilsModule.readText (runtimeRoot + @"ui\manager\manager.js")
+    local managerHtmlContent = utilsModule.readText (runtimeRoot + @"ui\manager\index.html")
+    if ((findString toolbarScriptContent "var outerInset = toolbarDensity() === \"compact\" ? 1 : 5;") == undefined) do throw "Floating Toolbar outer inset does not follow Toolbar spacing."
+    if ((findString toolbarScriptContent "wrap.className.indexOf(\"wrap-compact\")") == undefined) do throw "Toolbar overflow axis is not selected from the rendered structure."
+    if ((findString toolbarSourceContent "fn updateFloatingGeometry toolbarMode workingArea scalePercentage") == undefined) do throw "Floating Toolbar DPI geometry updater is unavailable."
+    if ((findString toolbarSourceContent "uiScale.browserScalePercentage floatingBrowser") == undefined) do throw "Floating Toolbar does not measure DPI from its live browser host."
+    if ((findString toolbarSourceContent "then 6 else 12") == undefined) do throw "Compact docked Toolbar does not compensate for CUI host height."
+    if ((findString toolbarSourceContent "wrap wrap-normal") == undefined) do throw "Docked text Toolbar is missing its normal-layout marker."
+    if ((findString renderedToolbarCss ".toolbar-density-compact .wrap-normal") == undefined) do throw "Compact docked Toolbar client-height styles are unavailable."
+    if ((findString renderedToolbarCss ".toolbar-density-compact.toolbar-icons-small .wrap:not(.wrap-compact) .name") == undefined or (findString renderedToolbarCss ".toolbar-density-compact.toolbar-icons-medium .wrap:not(.wrap-compact) .name") == undefined or (findString renderedToolbarCss ".toolbar-density-compact.toolbar-icons-large .wrap:not(.wrap-compact) .name") == undefined) do throw "Compact docked Toolbar text rows can clip at Small, Medium, or Large icon size."
+    if ((findString managerScriptContent "return \"topcompact\"") != undefined or (findString managerScriptContent "return \"bottomcompact\"") != undefined) do throw "Toolbar side and spacing are not serialized independently."
+    local buttonLayoutPosition = findString managerHtmlContent "id=\"toolbarWidthOptions\""
+    local additionalLinePosition = findString managerHtmlContent "id=\"toolbarTextOptions\""
+    if (buttonLayoutPosition == undefined or additionalLinePosition == undefined or additionalLinePosition < buttonLayoutPosition) do throw "Additional line is not placed after Button layout."
+    if ((findString managerHtmlContent "Left (Compact)") == undefined or (findString managerHtmlContent "Right (Compact)") == undefined or (findString managerHtmlContent "Horizontal (Compact)") == undefined or (findString managerHtmlContent "Vertical (Compact)") == undefined) do throw "Compact toolbar modes are missing their Compact labels."
     if (resultDialogModule == undefined) do throw "Reusable Runtime result dialog module is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.html"))) do throw "Runtime result dialog HTML is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.css"))) do throw "Runtime result dialog styles are unavailable."
@@ -202,6 +219,8 @@
     if (not (isProperty MaxPkg.settings #toolbarSubtitleMode)) do throw "Toolbar subtitle mode is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarButtonSize)) do throw "Toolbar button size is unavailable."
     if (not (isProperty MaxPkg.settings #toolbarDockPosition)) do throw "Toolbar dock position is unavailable."
+    if (not (isProperty MaxPkg.settings #toolbarDensity)) do throw "Toolbar density is unavailable."
+    if (not (isProperty MaxPkg.settings #toolbarIconSize)) do throw "Toolbar icon size is unavailable."
     if (not (isProperty MaxPkg.settings #floatingHorizontalX)) do throw "Floating Horizontal X position is unavailable."
     if (not (isProperty MaxPkg.settings #floatingHorizontalY)) do throw "Floating Horizontal Y position is unavailable."
     if (not (isProperty MaxPkg.settings #floatingVerticalX)) do throw "Floating Vertical X position is unavailable."
@@ -213,8 +232,12 @@
     if (not (isProperty MaxPkg.settings #lastPackageUpdateCheck)) do throw "Package update check timestamp is unavailable."
     if (not (isProperty MaxPkg.settings #packageUpdateCache)) do throw "Package update cache is unavailable."
     if ((classOf MaxPkg.settings.packageUpdateCache) != Array) do throw "Package update cache is not an array."
-    local supportedToolbarPositions = #("top", "bottom", "topcompact", "bottomcompact", "left", "right", "floatinghorizontal", "floatingvertical")
+    local supportedToolbarPositions = #("top", "bottom", "left", "right", "floatinghorizontal", "floatingvertical")
     if ((findItem supportedToolbarPositions MaxPkg.settings.toolbarDockPosition) == 0) do throw "Toolbar dock position is invalid."
+    if ((findItem #("regular", "compact") MaxPkg.settings.toolbarDensity) == 0) do throw "Toolbar density is invalid."
+    if ((findItem #("small", "medium", "large") MaxPkg.settings.toolbarIconSize) == 0) do throw "Toolbar icon size is invalid."
+    if ((findItem #("icon", "small", "medium", "large") MaxPkg.settings.toolbarButtonSize) == 0) do throw "Toolbar button layout is invalid."
+    if (not (isProperty MaxPkg #resetToolbarPosition)) do throw "Floating Toolbar position reset is unavailable."
     if (not (isProperty MaxPkg.settings #apiEndpoint)) do throw "API endpoint setting is unavailable."
     MaxPkg.settings.toolbarOrder = #()
     if (not (MaxPkg.resetToolbarOrder())) do throw "Empty toolbar order could not be synchronized."

@@ -91,6 +91,957 @@
     margin: 0 12px 8px 0;
 }
 
+.settings-toolbar-page {
+    max-width: 1024px;
+    padding-bottom: 24px;
+}
+
+.settings-toolbar-heading h3 {
+    margin-bottom: 4px;
+}
+
+.settings-toolbar-heading p {
+    margin: 0 0 14px;
+}
+
+.toolbar-visibility-row {
+    margin-bottom: 16px;
+}
+
+.toolbar-live-preview,
+.toolbar-config-section {
+    margin-bottom: 16px;
+}
+
+.toolbar-live-preview {
+    padding: 12px;
+    border: 1px solid {{borderDefault}};
+    border-radius: 7px;
+    background: {{surfaceSecondary}};
+}
+
+.toolbar-config-label {
+    display: block;
+    margin-bottom: 8px;
+    color: {{textStrong}};
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.toolbar-preview-stage {
+    position: relative;
+    height: 126px;
+    overflow: hidden;
+    border: 1px solid {{borderSoft}};
+    border-radius: 6px;
+    background: {{backgroundWindow}};
+}
+
+.toolbar-preview-window {
+    height: 19px;
+    padding-left: 8px;
+    border-bottom: 1px solid {{borderSoft}};
+    background: {{surfaceRaised}};
+}
+
+.toolbar-preview-window-dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    margin: 7px 4px 0 0;
+    border-radius: 2px;
+    background: {{textDisabled}};
+}
+
+.toolbar-preview-bar {
+    position: absolute;
+    overflow: hidden;
+    border: 1px solid {{borderStrong}};
+    border-radius: 4px;
+    background: {{surfacePrimary}};
+    box-shadow: 0 3px 10px {{shadowSoft}};
+    white-space: nowrap;
+}
+
+.preview-docked.preview-top .toolbar-preview-bar,
+.preview-docked.preview-bottom .toolbar-preview-bar {
+    right: 8px;
+    left: 8px;
+    height: 38px;
+}
+
+.preview-docked.preview-top .toolbar-preview-bar {
+    top: 27px;
+}
+
+.preview-docked.preview-bottom .toolbar-preview-bar {
+    bottom: 8px;
+}
+
+.preview-docked.preview-left .toolbar-preview-bar,
+.preview-docked.preview-right .toolbar-preview-bar {
+    top: 27px;
+    bottom: 8px;
+    width: 34px;
+    white-space: normal;
+}
+
+.preview-docked.preview-left .toolbar-preview-bar {
+    left: 8px;
+}
+
+.preview-docked.preview-right .toolbar-preview-bar {
+    right: 8px;
+}
+
+.preview-floating.preview-horizontal .toolbar-preview-bar {
+    top: 58px;
+    left: 50%;
+    width: 250px;
+    height: 34px;
+    margin-left: -125px;
+}
+
+.preview-floating.preview-vertical .toolbar-preview-bar {
+    top: 29px;
+    left: 50%;
+    width: 34px;
+    height: 88px;
+    margin-left: -17px;
+    white-space: normal;
+}
+
+.toolbar-preview-handle {
+    display: none;
+    width: 12px;
+    height: 100%;
+    padding-top: 6px;
+    background: {{surfaceHover}};
+    vertical-align: top;
+    text-align: center;
+}
+
+.preview-floating.preview-horizontal .toolbar-preview-handle {
+    display: inline-block;
+    width: 10px;
+    padding-right: 1px;
+    padding-left: 1px;
+}
+
+.preview-floating.preview-vertical .toolbar-preview-handle {
+    display: block;
+    width: 100%;
+    height: 12px;
+    padding-top: 2px;
+    white-space: nowrap;
+}
+
+.toolbar-preview-handle i {
+    display: inline-block;
+    width: 2px;
+    height: 2px;
+    margin: 1px;
+    border-radius: 1px;
+    background: {{textMuted}};
+}
+
+.toolbar-preview-button {
+    display: inline-block;
+    height: 28px;
+    margin: 4px 0 0 4px;
+    padding: 2px 5px;
+    overflow: hidden;
+    border: 1px solid {{borderDefault}};
+    border-radius: 4px;
+    background: {{surfaceSecondary}};
+    color: {{textPrimary}};
+    vertical-align: top;
+}
+
+.toolbar-preview-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin: 1px 5px 0 0;
+    border-radius: 3px;
+    background: {{accentActive}};
+    color: {{textStrong}};
+    font-size: 9px;
+    line-height: 20px;
+    text-align: center;
+    vertical-align: top;
+}
+
+.toolbar-preview-button > span {
+    display: inline-block;
+    width: 62px;
+    vertical-align: top;
+}
+
+.toolbar-preview-button strong,
+.toolbar-preview-button small {
+    display: block;
+    overflow: hidden;
+    line-height: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.toolbar-preview-button strong {
+    color: {{textStrong}};
+    font-size: 9px;
+}
+
+.toolbar-preview-button small {
+    color: {{textMuted}};
+    font-size: 8px;
+}
+
+.preview-density-compact .toolbar-preview-button,
+.preview-docked.preview-left .toolbar-preview-button,
+.preview-docked.preview-right .toolbar-preview-button,
+.preview-floating .toolbar-preview-button {
+    padding: 1px;
+}
+
+.preview-docked.preview-left .toolbar-preview-button > span,
+.preview-docked.preview-right .toolbar-preview-button > span,
+.preview-floating .toolbar-preview-button > span {
+    display: none;
+}
+
+.preview-docked.preview-left .toolbar-preview-button,
+.preview-docked.preview-right .toolbar-preview-button,
+.preview-floating.preview-vertical .toolbar-preview-button {
+    display: block;
+    margin: 3px auto 0;
+}
+
+.preview-icons-small .toolbar-preview-icon {
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+}
+
+.preview-icons-medium .toolbar-preview-icon {
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+}
+
+.preview-icons-large .toolbar-preview-icon {
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+}
+
+.preview-density-compact .toolbar-preview-button {
+    margin-left: 2px;
+}
+
+/* Live preview geometry mirrors the real icon-only toolbar sizes. */
+.toolbar-preview-window {
+    position: relative;
+}
+
+.toolbar-preview-window-dot {
+    position: absolute;
+    left: 8px;
+    width: 3px;
+    height: 3px;
+    margin: 0;
+}
+
+.toolbar-preview-window-dot:nth-child(1) {
+    top: 3px;
+}
+
+.toolbar-preview-window-dot:nth-child(2) {
+    top: 8px;
+}
+
+.toolbar-preview-window-dot:nth-child(3) {
+    top: 13px;
+}
+
+.preview-floating.preview-horizontal .toolbar-preview-handle {
+    padding-top: 7px;
+    white-space: normal;
+}
+
+.preview-density-compact .toolbar-preview-button,
+.preview-docked.preview-left .toolbar-preview-button,
+.preview-docked.preview-right .toolbar-preview-button,
+.preview-floating .toolbar-preview-button {
+    box-sizing: border-box;
+}
+
+.preview-docked.preview-left .toolbar-preview-icon,
+.preview-docked.preview-right .toolbar-preview-icon,
+.preview-floating .toolbar-preview-icon {
+    margin: 0;
+}
+
+.preview-density-regular.preview-docked.preview-left .toolbar-preview-button,
+.preview-density-regular.preview-docked.preview-right .toolbar-preview-button,
+.preview-density-regular.preview-floating .toolbar-preview-button {
+    padding: 3px;
+}
+
+.preview-density-compact.preview-icons-small .toolbar-preview-button {
+    width: 18px;
+    height: 18px;
+}
+
+.preview-density-compact.preview-icons-medium .toolbar-preview-button {
+    width: 22px;
+    height: 22px;
+}
+
+.preview-density-compact.preview-icons-large .toolbar-preview-button {
+    width: 26px;
+    height: 26px;
+}
+
+.preview-density-compact.preview-docked.preview-top .toolbar-preview-button,
+.preview-density-compact.preview-docked.preview-bottom .toolbar-preview-button {
+    margin-top: 1px;
+}
+
+.preview-density-compact.preview-icons-small.preview-docked.preview-top .toolbar-preview-bar,
+.preview-density-compact.preview-icons-small.preview-docked.preview-bottom .toolbar-preview-bar {
+    height: 20px;
+}
+
+.preview-density-compact.preview-icons-medium.preview-docked.preview-top .toolbar-preview-bar,
+.preview-density-compact.preview-icons-medium.preview-docked.preview-bottom .toolbar-preview-bar {
+    height: 24px;
+}
+
+.preview-density-compact.preview-icons-large.preview-docked.preview-top .toolbar-preview-bar,
+.preview-density-compact.preview-icons-large.preview-docked.preview-bottom .toolbar-preview-bar {
+    height: 28px;
+}
+
+.preview-density-regular.preview-icons-small.preview-docked.preview-left .toolbar-preview-button,
+.preview-density-regular.preview-icons-small.preview-docked.preview-right .toolbar-preview-button,
+.preview-density-regular.preview-icons-small.preview-floating .toolbar-preview-button {
+    width: 22px;
+    height: 22px;
+}
+
+.preview-density-regular.preview-icons-medium.preview-docked.preview-left .toolbar-preview-button,
+.preview-density-regular.preview-icons-medium.preview-docked.preview-right .toolbar-preview-button,
+.preview-density-regular.preview-icons-medium.preview-floating .toolbar-preview-button {
+    width: 26px;
+    height: 26px;
+}
+
+.preview-density-regular.preview-icons-large.preview-docked.preview-left .toolbar-preview-button,
+.preview-density-regular.preview-icons-large.preview-docked.preview-right .toolbar-preview-button,
+.preview-density-regular.preview-icons-large.preview-floating .toolbar-preview-button {
+    width: 30px;
+    height: 30px;
+}
+
+.preview-floating.preview-horizontal .toolbar-preview-button {
+    margin-top: 2px;
+    margin-left: 2px;
+}
+
+.preview-density-regular.preview-icons-small.preview-floating.preview-horizontal .toolbar-preview-bar {
+    width: 84px;
+    height: 32px;
+    margin-left: -42px;
+}
+
+.preview-density-regular.preview-icons-medium.preview-floating.preview-horizontal .toolbar-preview-bar {
+    width: 96px;
+    height: 36px;
+    margin-left: -48px;
+}
+
+.preview-density-regular.preview-icons-large.preview-floating.preview-horizontal .toolbar-preview-bar {
+    width: 108px;
+    height: 40px;
+    margin-left: -54px;
+}
+
+.preview-density-compact.preview-icons-small.preview-floating.preview-horizontal .toolbar-preview-bar {
+    width: 72px;
+    height: 24px;
+    margin-left: -36px;
+}
+
+.preview-density-compact.preview-icons-medium.preview-floating.preview-horizontal .toolbar-preview-bar {
+    width: 84px;
+    height: 28px;
+    margin-left: -42px;
+}
+
+.preview-density-compact.preview-icons-large.preview-floating.preview-horizontal .toolbar-preview-bar {
+    width: 96px;
+    height: 32px;
+    margin-left: -48px;
+}
+
+.preview-floating.preview-horizontal .toolbar-preview-bar {
+    top: 68px;
+}
+
+.preview-density-regular.preview-icons-small.preview-floating.preview-horizontal .toolbar-preview-handle,
+.preview-density-compact.preview-icons-medium.preview-floating.preview-horizontal .toolbar-preview-handle,
+.preview-density-compact.preview-icons-large.preview-floating.preview-horizontal .toolbar-preview-handle {
+    padding-top: 5px;
+}
+
+.preview-density-compact.preview-icons-small.preview-floating.preview-horizontal .toolbar-preview-handle {
+    padding-top: 3px;
+}
+
+.preview-density-regular.preview-icons-medium.preview-floating.preview-horizontal .toolbar-preview-handle {
+    padding-top: 7px;
+}
+
+.preview-density-regular.preview-icons-large.preview-floating.preview-horizontal .toolbar-preview-handle {
+    padding-top: 9px;
+}
+
+.preview-density-regular.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar,
+.preview-density-regular.preview-icons-small.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-regular.preview-icons-small.preview-docked.preview-right .toolbar-preview-bar {
+    width: 32px;
+}
+
+.preview-density-regular.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar,
+.preview-density-regular.preview-icons-medium.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-regular.preview-icons-medium.preview-docked.preview-right .toolbar-preview-bar {
+    width: 36px;
+}
+
+.preview-density-regular.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar,
+.preview-density-regular.preview-icons-large.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-regular.preview-icons-large.preview-docked.preview-right .toolbar-preview-bar {
+    width: 40px;
+}
+
+.preview-density-compact.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar,
+.preview-density-compact.preview-icons-small.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-compact.preview-icons-small.preview-docked.preview-right .toolbar-preview-bar {
+    width: 24px;
+}
+
+.preview-density-compact.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar,
+.preview-density-compact.preview-icons-medium.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-compact.preview-icons-medium.preview-docked.preview-right .toolbar-preview-bar {
+    width: 28px;
+}
+
+.preview-density-compact.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar,
+.preview-density-compact.preview-icons-large.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-compact.preview-icons-large.preview-docked.preview-right .toolbar-preview-bar {
+    width: 32px;
+}
+
+.preview-density-regular.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar {
+    height: 96px;
+    margin-left: -16px;
+}
+
+.preview-density-regular.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar {
+    height: 108px;
+    margin-left: -18px;
+}
+
+.preview-density-regular.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar {
+    height: 120px;
+    margin-left: -20px;
+}
+
+.preview-density-compact.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar {
+    height: 74px;
+    margin-left: -12px;
+}
+
+.preview-density-compact.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar {
+    height: 86px;
+    margin-left: -14px;
+}
+
+.preview-density-compact.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar {
+    height: 98px;
+    margin-left: -16px;
+}
+
+.preview-density-regular.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar {
+    top: 15px;
+}
+
+.preview-density-regular.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar {
+    top: 9px;
+}
+
+.preview-density-regular.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar {
+    top: 3px;
+}
+
+.preview-density-compact.preview-icons-small.preview-floating.preview-vertical .toolbar-preview-bar {
+    top: 26px;
+}
+
+.preview-density-compact.preview-icons-medium.preview-floating.preview-vertical .toolbar-preview-bar {
+    top: 20px;
+}
+
+.preview-density-compact.preview-icons-large.preview-floating.preview-vertical .toolbar-preview-bar {
+    top: 14px;
+}
+
+.preview-density-regular.preview-icons-small.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-regular.preview-icons-medium.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-regular.preview-icons-large.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-compact.preview-icons-small.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-compact.preview-icons-medium.preview-docked.preview-left .toolbar-preview-bar,
+.preview-density-compact.preview-icons-large.preview-docked.preview-left .toolbar-preview-bar {
+    left: 8px;
+}
+
+.preview-density-regular.preview-icons-small.preview-docked.preview-right .toolbar-preview-bar,
+.preview-density-regular.preview-icons-medium.preview-docked.preview-right .toolbar-preview-bar,
+.preview-density-regular.preview-icons-large.preview-docked.preview-right .toolbar-preview-bar,
+.preview-density-compact.preview-icons-small.preview-docked.preview-right .toolbar-preview-bar,
+.preview-density-compact.preview-icons-medium.preview-docked.preview-right .toolbar-preview-bar,
+.preview-density-compact.preview-icons-large.preview-docked.preview-right .toolbar-preview-bar {
+    right: 8px;
+}
+
+.toolbar-preview-summary {
+    margin: 8px 0 0;
+    color: {{textMuted}};
+    font-size: 11px;
+    text-align: center;
+}
+
+.toolbar-choice-grid {
+    margin-right: -8px;
+    font-size: 0;
+}
+
+.toolbar-choice-card {
+    display: inline-block;
+    min-height: 68px;
+    margin: 0 8px 8px 0;
+    padding: 9px;
+    border: 1px solid {{borderDefault}};
+    border-radius: 6px;
+    background: {{surfaceSecondary}};
+    color: {{textSecondary}};
+    text-align: left;
+    vertical-align: top;
+    cursor: pointer;
+}
+
+.toolbar-choice-grid-two .toolbar-choice-card {
+    width: 48%;
+}
+
+.toolbar-choice-grid-three .toolbar-choice-card {
+    width: 31%;
+}
+
+.toolbar-choice-grid-four .toolbar-choice-card {
+    width: 23%;
+}
+
+.toolbar-choice-card:hover,
+.toolbar-choice-card:focus {
+    border-color: {{borderStrong}};
+    background: {{surfaceHover}};
+    outline: none;
+}
+
+.toolbar-choice-card.is-selected {
+    border-color: {{borderFocus}};
+    background: {{accentActive}};
+    box-shadow: 0 0 10px {{borderFocus}};
+    color: {{textStrong}};
+}
+
+.toolbar-choice-card strong,
+.toolbar-choice-card small {
+    display: block;
+}
+
+.toolbar-choice-card strong {
+    margin-top: 5px;
+    color: {{textStrong}};
+    font-size: 12px;
+}
+
+.toolbar-choice-card small {
+    margin-top: 3px;
+    color: {{textMuted}};
+    font-size: 10px;
+    line-height: 13px;
+}
+
+.toolbar-choice-small {
+    min-height: 60px;
+    text-align: center;
+}
+
+.toolbar-side-choices .toolbar-choice-card,
+.toolbar-choice-orientation {
+    height: 70px;
+}
+
+.toolbar-layout-glyph {
+    display: block;
+    position: relative;
+    width: 48px;
+    height: 28px;
+    border: 1px solid {{textDisabled}};
+    border-radius: 4px;
+}
+
+.toolbar-layout-glyph i {
+    position: absolute;
+    height: 5px;
+    border-radius: 2px;
+    background: {{accent}};
+}
+
+.toolbar-glyph-docked i {
+    right: 3px;
+    left: 3px;
+    top: 3px;
+}
+
+.toolbar-glyph-floating i {
+    top: 10px;
+    left: 9px;
+    width: 28px;
+}
+
+.toolbar-side-glyph {
+    display: inline-block;
+    position: relative;
+    width: 32px;
+    height: 24px;
+    border: 1px solid {{textDisabled}};
+    border-radius: 3px;
+}
+
+.toolbar-side-glyph i {
+    position: absolute;
+    background: {{accent}};
+}
+
+.toolbar-side-top i,
+.toolbar-side-bottom i {
+    right: 2px;
+    left: 2px;
+    height: 4px;
+}
+
+.toolbar-side-top i {
+    top: 2px;
+}
+
+.toolbar-side-bottom i {
+    bottom: 2px;
+}
+
+.toolbar-side-left i,
+.toolbar-side-right i {
+    top: 2px;
+    bottom: 2px;
+    width: 4px;
+}
+
+.toolbar-side-left i {
+    left: 2px;
+}
+
+.toolbar-side-right i {
+    right: 2px;
+}
+
+.toolbar-orientation-glyph,
+.toolbar-density-glyph {
+    display: block;
+    height: 20px;
+    white-space: nowrap;
+}
+
+.toolbar-orientation-glyph i,
+.toolbar-density-glyph i {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin: 2px;
+    border: 1px solid {{borderStrong}};
+    border-radius: 3px;
+    background: {{surfaceRaised}};
+}
+
+.toolbar-orientation-vertical {
+    width: 21px;
+    height: 50px;
+}
+
+.toolbar-orientation-vertical i {
+    display: block;
+}
+
+.toolbar-density-compact-glyph i {
+    width: 11px;
+    height: 11px;
+    margin-top: 4px;
+}
+
+.toolbar-size-sample {
+    display: block;
+    width: 24px;
+    height: 24px;
+    margin: 0 auto;
+    border: 1px solid {{borderFocus}};
+    border-radius: 4px;
+    background: {{accentActive}};
+    color: {{textStrong}};
+    line-height: 22px;
+    text-align: center;
+}
+
+.toolbar-size-small {
+    margin-top: 4px;
+    font-size: 9px;
+}
+
+.toolbar-size-medium {
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+.toolbar-size-large {
+    margin-top: 4px;
+    font-size: 18px;
+}
+
+.toolbar-choice-icon {
+    height: 70px;
+    text-align: center;
+}
+
+.toolbar-width-glyph {
+    display: block;
+    height: 13px;
+    margin: 4px auto 0;
+    border: 1px solid {{borderFocus}};
+    border-radius: 3px;
+    background: {{accentActive}};
+}
+
+.toolbar-width-narrow {
+    width: 24px;
+}
+
+.toolbar-width-icon {
+    width: 13px;
+}
+
+.toolbar-width-medium {
+    width: 40px;
+}
+
+.toolbar-width-wide {
+    width: 56px;
+}
+
+.preview-width-icon .toolbar-preview-button {
+    box-sizing: border-box;
+    padding: 3px;
+}
+
+.preview-width-icon .toolbar-preview-button > span {
+    display: none;
+}
+
+.preview-width-icon .toolbar-preview-icon {
+    margin: 0;
+}
+
+.preview-width-icon.preview-icons-small .toolbar-preview-button {
+    width: 22px;
+    height: 22px;
+}
+
+.preview-width-icon.preview-icons-medium .toolbar-preview-button {
+    width: 26px;
+    height: 26px;
+}
+
+.preview-width-icon.preview-icons-large .toolbar-preview-button {
+    width: 30px;
+    height: 30px;
+}
+
+.preview-docked.preview-top.preview-width-small .toolbar-preview-button,
+.preview-docked.preview-bottom.preview-width-small .toolbar-preview-button {
+    width: 76px;
+}
+
+.preview-docked.preview-top.preview-width-medium .toolbar-preview-button,
+.preview-docked.preview-bottom.preview-width-medium .toolbar-preview-button {
+    width: 100px;
+}
+
+.preview-docked.preview-top.preview-width-large .toolbar-preview-button,
+.preview-docked.preview-bottom.preview-width-large .toolbar-preview-button {
+    width: 126px;
+}
+
+.preview-docked.preview-top.preview-icons-small .toolbar-preview-button,
+.preview-docked.preview-bottom.preview-icons-small .toolbar-preview-button {
+    height: 30px;
+}
+
+.preview-docked.preview-top.preview-icons-medium .toolbar-preview-button,
+.preview-docked.preview-bottom.preview-icons-medium .toolbar-preview-button {
+    height: 34px;
+}
+
+.preview-docked.preview-top.preview-icons-large .toolbar-preview-button,
+.preview-docked.preview-bottom.preview-icons-large .toolbar-preview-button {
+    height: 38px;
+}
+
+.preview-density-regular.preview-docked.preview-top.preview-icons-small .toolbar-preview-bar,
+.preview-density-regular.preview-docked.preview-bottom.preview-icons-small .toolbar-preview-bar {
+    height: 38px;
+}
+
+.preview-density-regular.preview-docked.preview-top.preview-icons-medium .toolbar-preview-bar,
+.preview-density-regular.preview-docked.preview-bottom.preview-icons-medium .toolbar-preview-bar {
+    height: 42px;
+}
+
+.preview-density-regular.preview-docked.preview-top.preview-icons-large .toolbar-preview-bar,
+.preview-density-regular.preview-docked.preview-bottom.preview-icons-large .toolbar-preview-bar {
+    height: 46px;
+}
+
+.preview-density-compact.preview-docked.preview-top.preview-icons-small .toolbar-preview-bar,
+.preview-density-compact.preview-docked.preview-bottom.preview-icons-small .toolbar-preview-bar {
+    height: 32px;
+}
+
+.preview-density-compact.preview-docked.preview-top.preview-icons-medium .toolbar-preview-bar,
+.preview-density-compact.preview-docked.preview-bottom.preview-icons-medium .toolbar-preview-bar {
+    height: 36px;
+}
+
+.preview-density-compact.preview-docked.preview-top.preview-icons-large .toolbar-preview-bar,
+.preview-density-compact.preview-docked.preview-bottom.preview-icons-large .toolbar-preview-bar {
+    height: 40px;
+}
+
+.preview-density-regular.preview-width-icon.preview-docked.preview-top.preview-icons-small .toolbar-preview-bar,
+.preview-density-regular.preview-width-icon.preview-docked.preview-bottom.preview-icons-small .toolbar-preview-bar {
+    height: 32px;
+}
+
+.preview-density-regular.preview-width-icon.preview-docked.preview-top.preview-icons-medium .toolbar-preview-bar,
+.preview-density-regular.preview-width-icon.preview-docked.preview-bottom.preview-icons-medium .toolbar-preview-bar {
+    height: 36px;
+}
+
+.preview-density-regular.preview-width-icon.preview-docked.preview-top.preview-icons-large .toolbar-preview-bar,
+.preview-density-regular.preview-width-icon.preview-docked.preview-bottom.preview-icons-large .toolbar-preview-bar {
+    height: 40px;
+}
+
+.preview-density-compact.preview-width-icon.preview-docked.preview-top.preview-icons-small .toolbar-preview-bar,
+.preview-density-compact.preview-width-icon.preview-docked.preview-bottom.preview-icons-small .toolbar-preview-bar {
+    height: 20px;
+}
+
+.preview-density-compact.preview-width-icon.preview-docked.preview-top.preview-icons-medium .toolbar-preview-bar,
+.preview-density-compact.preview-width-icon.preview-docked.preview-bottom.preview-icons-medium .toolbar-preview-bar {
+    height: 24px;
+}
+
+.preview-density-compact.preview-width-icon.preview-docked.preview-top.preview-icons-large .toolbar-preview-bar,
+.preview-density-compact.preview-width-icon.preview-docked.preview-bottom.preview-icons-large .toolbar-preview-bar {
+    height: 28px;
+}
+
+.preview-density-compact.preview-width-icon .toolbar-preview-button {
+    padding: 1px;
+}
+
+.preview-density-compact.preview-width-icon.preview-icons-small .toolbar-preview-button {
+    width: 18px;
+    height: 18px;
+}
+
+.preview-density-compact.preview-width-icon.preview-icons-medium .toolbar-preview-button {
+    width: 22px;
+    height: 22px;
+}
+
+.preview-density-compact.preview-width-icon.preview-icons-large .toolbar-preview-button {
+    width: 26px;
+    height: 26px;
+}
+
+.toolbar-inline-fields {
+    margin-right: -12px;
+    font-size: 0;
+}
+
+.toolbar-inline-fields .field {
+    display: inline-block;
+    width: 48%;
+    margin-right: 12px;
+    vertical-align: top;
+}
+
+.toolbar-inline-fields .html-select {
+    min-width: 0;
+    width: 100%;
+}
+
+.toolbar-mode-note {
+    margin: 0 0 14px;
+    padding: 9px 11px;
+    border-left: 3px solid {{borderFocus}};
+    background: {{accentActive}};
+    color: {{textSecondary}};
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.toolbar-package-note {
+    margin-bottom: 14px;
+}
+
+.toolbar-subtitle-glyph {
+    display: block;
+    width: 38px;
+    height: 16px;
+    margin: 2px auto 0;
+    border-bottom: 2px solid {{accent}};
+    color: {{textMuted}};
+    font-size: 9px;
+    line-height: 13px;
+    text-align: center;
+}
+
+.toolbar-subtitle-none {
+    border-bottom-color: {{textDisabled}};
+}
+
 .search-box {
     position: relative;
     width: 100%;
@@ -1795,7 +2746,7 @@
 }
 
 .settings-page {
-    max-width: 470px;
+    max-width: 1024px;
 }
 
 .about-summary {

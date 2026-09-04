@@ -35,6 +35,15 @@
     var activeScreenshotIndex = 0;
     var detailsListScrollTop = 0;
     var settingsSaveTimer = null;
+    var toolbarConfigurator = {
+        layout: "docked",
+        dockSide: "top",
+        orientation: "horizontal",
+        density: "regular",
+        iconSize: "large",
+        buttonWidth: "large",
+        subtitle: "version"
+    };
 
     var draggedToolbarCard = null;
     var draggedToolbarGrid = null;
@@ -1485,6 +1494,7 @@
     function readRuntimeState() {
         var payloadElement = Common.byId("runtimePayload");
         var sourceText = payloadElement.innerText || payloadElement.textContent || "";
+        var settingsDialogWasOpen = !Common.hasClass(Common.byId("settingsShade"), "is-hidden");
         try {
             currentState = JSON.parse(sourceText);
             readDiscoverSelection();
@@ -1493,6 +1503,9 @@
             activeSort = currentState.settings.managerSort || activeSort;
             window.MaxPkgDropdown.setSelectValue(Common.byId("sortSelect"), activeSort);
             renderAll();
+            if (settingsDialogWasOpen) {
+                populateSettings();
+            }
             if (activeTab === "discover" && (!(currentState.collections || {}).loaded || !(currentState.categories || {}).loaded || (!currentState.discover.available && !currentState.discover.errorCode))) {
                 requestDiscover();
             }
@@ -1613,41 +1626,116 @@
         Common.byId("autoDownloadCheck").checked = !!settings.downloadUpdatesAutomatically;
         Common.byId("apiEndpointInput").value = settings.apiEndpoint || settings.defaultApiEndpoint || "";
         Common.byId("toolbarVisibleCheck").checked = !!settings.toolbarVisible;
-        window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarDockPositionSelect"), settings.toolbarDockPosition || "top");
-        window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarTitleSelect"), settings.toolbarTitleMode || "packageName");
-        window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarButtonSizeSelect"), settings.toolbarButtonSize || "medium");
-        window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarSubtitleSelect"), settings.toolbarSubtitleMode || "version");
+        Common.byId("toolbarTitleSelect").value = settings.toolbarTitleMode || "packageName";
+        readToolbarConfigurator(settings);
         updateToolbarModeSettings();
         Common.byId("developerModeCheck").checked = !!settings.developerMode;
         Common.byId("debugLoggingCheck").checked = !!settings.debugLogging;
         updateEndpointSettingsVisibility();
     }
 
-    function toolbarUsesCompactButtons() {
-        var toolbarMode = window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarDockPositionSelect"));
-        return toolbarMode === "topcompact" || toolbarMode === "bottomcompact" || toolbarMode === "left" || toolbarMode === "right" || toolbarMode === "floatinghorizontal" || toolbarMode === "floatingvertical";
+    function validToolbarChoice(candidateValue, supportedValues, fallbackValue) {
+        var choiceIndex;
+        for (choiceIndex = 0; choiceIndex < supportedValues.length; choiceIndex += 1) {
+            if (candidateValue === supportedValues[choiceIndex]) {
+                return candidateValue;
+            }
+        }
+        return fallbackValue;
     }
 
-    function setToolbarFieldDisabled(fieldId, selectId, isDisabled) {
-        var fieldElement = Common.byId(fieldId);
-        var selectElement = Common.byId(selectId);
-        var triggerButtons = selectElement.getElementsByTagName("button");
+    function readToolbarConfigurator(settings) {
+        var toolbarPosition = String(settings.toolbarDockPosition || "top").toLowerCase();
+        var savedDensity = String(settings.toolbarDensity || "").toLowerCase();
+        var savedButtonWidth = String(settings.toolbarButtonSize || "medium").toLowerCase();
+        toolbarConfigurator.layout = toolbarPosition.indexOf("floating") === 0 ? "floating" : "docked";
+        toolbarConfigurator.orientation = toolbarPosition === "floatingvertical" ? "vertical" : "horizontal";
+        if (toolbarPosition === "left" || toolbarPosition === "right") {
+            toolbarConfigurator.dockSide = toolbarPosition;
+        } else if (toolbarPosition === "bottom" || toolbarPosition === "bottomcompact") {
+            toolbarConfigurator.dockSide = "bottom";
+        } else {
+            toolbarConfigurator.dockSide = "top";
+        }
+        if (!savedDensity) {
+            savedDensity = toolbarPosition.indexOf("compact") >= 0 || toolbarPosition === "left" || toolbarPosition === "right" || toolbarConfigurator.layout === "floating" || savedButtonWidth === "icon" ? "compact" : "regular";
+        }
+        toolbarConfigurator.density = validToolbarChoice(savedDensity, ["regular", "compact"], "regular");
+        toolbarConfigurator.iconSize = validToolbarChoice(String(settings.toolbarIconSize || "large").toLowerCase(), ["small", "medium", "large"], "large");
+        toolbarConfigurator.buttonWidth = validToolbarChoice(savedButtonWidth, ["icon", "small", "medium", "large"], "medium");
+        toolbarConfigurator.subtitle = validToolbarChoice(String(settings.toolbarSubtitleMode || "version").toLowerCase(), ["none", "version", "developer"], "version");
+    }
+
+    function toolbarPositionValue() {
+        if (toolbarConfigurator.layout === "floating") {
+            return toolbarConfigurator.orientation === "vertical" ? "floatingvertical" : "floatinghorizontal";
+        }
+        return toolbarConfigurator.dockSide;
+    }
+
+    function toolbarUsesTextButtons() {
+        return toolbarConfigurator.layout === "docked" && (toolbarConfigurator.dockSide === "top" || toolbarConfigurator.dockSide === "bottom") && toolbarConfigurator.buttonWidth !== "icon";
+    }
+
+    function updateToolbarChoiceState() {
+        var choiceButtons = document.getElementsByTagName("button");
         var buttonIndex;
-        Common.toggleClass(fieldElement, "settings-toolbar-field-disabled", isDisabled);
-        Common.toggleClass(selectElement, "is-disabled", isDisabled);
-        for (buttonIndex = 0; buttonIndex < triggerButtons.length; buttonIndex += 1) {
-            if (triggerButtons[buttonIndex].getAttribute("data-dropdown-trigger") !== null) {
-                triggerButtons[buttonIndex].disabled = isDisabled;
+        var choiceGroup;
+        var selectedValue;
+        for (buttonIndex = 0; buttonIndex < choiceButtons.length; buttonIndex += 1) {
+            choiceGroup = choiceButtons[buttonIndex].getAttribute("data-toolbar-choice");
+            if (choiceGroup) {
+                selectedValue = toolbarConfigurator[choiceGroup];
+                Common.toggleClass(choiceButtons[buttonIndex], "is-selected", choiceButtons[buttonIndex].getAttribute("data-toolbar-value") === selectedValue);
+                choiceButtons[buttonIndex].setAttribute("aria-pressed", choiceButtons[buttonIndex].getAttribute("data-toolbar-value") === selectedValue ? "true" : "false");
             }
         }
     }
 
+    function updateToolbarPreview() {
+        var previewStage = Common.byId("toolbarPreviewStage");
+        var summaryElement = Common.byId("toolbarPreviewSummary");
+        var orientationClass = toolbarConfigurator.layout === "floating" ? " preview-" + toolbarConfigurator.orientation : " preview-" + toolbarConfigurator.dockSide;
+        var placementLabel = toolbarConfigurator.layout === "floating" ? "Floating " + toolbarConfigurator.orientation : "Docked at the " + toolbarConfigurator.dockSide;
+        previewStage.className = "toolbar-preview-stage preview-" + toolbarConfigurator.layout + orientationClass + " preview-density-" + toolbarConfigurator.density + " preview-icons-" + toolbarConfigurator.iconSize + " preview-width-" + toolbarConfigurator.buttonWidth;
+        summaryElement.innerHTML = Common.escapeHtml(placementLabel + " · " + toolbarConfigurator.density.charAt(0).toUpperCase() + toolbarConfigurator.density.substring(1) + " · " + toolbarConfigurator.iconSize.charAt(0).toUpperCase() + toolbarConfigurator.iconSize.substring(1) + " icons");
+    }
+
     function updateToolbarModeSettings() {
-        var isCompact = toolbarUsesCompactButtons();
-        setToolbarFieldDisabled("toolbarTitleField", "toolbarTitleSelect", isCompact);
-        setToolbarFieldDisabled("toolbarButtonSizeField", "toolbarButtonSizeSelect", isCompact);
-        setToolbarFieldDisabled("toolbarSubtitleField", "toolbarSubtitleSelect", isCompact);
-        Common.toggleClass(Common.byId("compactToolbarNote"), "is-hidden", !isCompact);
+        var usesTextButtons = toolbarUsesTextButtons();
+        var showsButtonWidth = toolbarConfigurator.layout === "docked" && (toolbarConfigurator.dockSide === "top" || toolbarConfigurator.dockSide === "bottom");
+        Common.toggleClass(Common.byId("toolbarConfiguratorContent"), "is-hidden", !Common.byId("toolbarVisibleCheck").checked);
+        Common.byId("toolbarDockPositionSelect").value = toolbarPositionValue();
+        Common.byId("toolbarDensityInput").value = toolbarConfigurator.density;
+        Common.byId("toolbarIconSizeInput").value = toolbarConfigurator.iconSize;
+        Common.byId("toolbarButtonSizeSelect").value = toolbarConfigurator.buttonWidth;
+        Common.byId("toolbarSubtitleSelect").value = toolbarConfigurator.subtitle;
+        Common.toggleClass(Common.byId("toolbarDockedOptions"), "is-hidden", toolbarConfigurator.layout !== "docked");
+        Common.toggleClass(Common.byId("toolbarFloatingOptions"), "is-hidden", toolbarConfigurator.layout !== "floating");
+        Common.toggleClass(Common.byId("toolbarTextOptions"), "is-hidden", !usesTextButtons);
+        Common.toggleClass(Common.byId("toolbarWidthOptions"), "is-hidden", !showsButtonWidth);
+        Common.toggleClass(Common.byId("compactToolbarNote"), "is-hidden", showsButtonWidth);
+        Common.toggleClass(Common.byId("resetToolbarPositionButton"), "is-hidden", toolbarConfigurator.layout !== "floating");
+        updateToolbarChoiceState();
+        updateToolbarPreview();
+    }
+
+    function handleToolbarConfiguratorClick(eventObject) {
+        var sourceElement = eventObject.target || eventObject.srcElement;
+        var choiceButton = Common.closestWithAttribute(sourceElement, "data-toolbar-choice");
+        var choiceGroup;
+        var choiceValue;
+        if (!choiceButton) {
+            return;
+        }
+        choiceGroup = choiceButton.getAttribute("data-toolbar-choice");
+        choiceValue = choiceButton.getAttribute("data-toolbar-value");
+        if (!toolbarConfigurator.hasOwnProperty(choiceGroup) || toolbarConfigurator[choiceGroup] === choiceValue) {
+            return;
+        }
+        toolbarConfigurator[choiceGroup] = choiceValue;
+        updateToolbarModeSettings();
+        saveSettings();
     }
 
     function showSettingsPage(pageName) {
@@ -1684,11 +1772,13 @@
         }
         queryParts.push("apiEndpoint=" + Common.encode(endpointOverride));
         queryParts.push("toolbarVisible=" + boolText(Common.byId("toolbarVisibleCheck").checked));
-        queryParts.push("toolbarDockPosition=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarDockPositionSelect"))));
+        queryParts.push("toolbarDockPosition=" + Common.encode(Common.byId("toolbarDockPositionSelect").value));
+        queryParts.push("toolbarDensity=" + Common.encode(Common.byId("toolbarDensityInput").value));
+        queryParts.push("toolbarIconSize=" + Common.encode(Common.byId("toolbarIconSizeInput").value));
         queryParts.push("toolbarTheme=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarThemeSelect"))));
-        queryParts.push("toolbarTitleMode=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarTitleSelect"))));
-        queryParts.push("toolbarButtonSize=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarButtonSizeSelect"))));
-        queryParts.push("toolbarSubtitleMode=" + Common.encode(window.MaxPkgDropdown.getSelectValue(Common.byId("toolbarSubtitleSelect"))));
+        queryParts.push("toolbarTitleMode=" + Common.encode(Common.byId("toolbarTitleSelect").value));
+        queryParts.push("toolbarButtonSize=" + Common.encode(Common.byId("toolbarButtonSizeSelect").value));
+        queryParts.push("toolbarSubtitleMode=" + Common.encode(Common.byId("toolbarSubtitleSelect").value));
         queryParts.push("developerMode=" + boolText(Common.byId("developerModeCheck").checked));
         queryParts.push("debugLogging=" + boolText(Common.byId("debugLoggingCheck").checked));
         queryParts.push("silent=true");
@@ -1898,6 +1988,7 @@
             debouncedSearch();
         };
         Common.on(document, "click", handleDocumentClick);
+        Common.on(document, "click", handleToolbarConfiguratorClick);
         Common.on(document, "dragstart", handleToolbarDragStart);
         Common.on(document, "dragenter", handleToolbarDragOver);
         Common.on(document, "dragover", handleToolbarDragOver);
@@ -1936,13 +2027,6 @@
         window.MaxPkgDropdown.bindSelect(Common.byId("managerThemeSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("toolbarThemeSelect"), saveSettings);
         window.MaxPkgDropdown.bindSelect(Common.byId("frequencySelect"), saveSettings);
-        window.MaxPkgDropdown.bindSelect(Common.byId("toolbarDockPositionSelect"), function () {
-            updateToolbarModeSettings();
-            saveSettings();
-        });
-        window.MaxPkgDropdown.bindSelect(Common.byId("toolbarTitleSelect"), saveSettings);
-        window.MaxPkgDropdown.bindSelect(Common.byId("toolbarButtonSizeSelect"), saveSettings);
-        window.MaxPkgDropdown.bindSelect(Common.byId("toolbarSubtitleSelect"), saveSettings);
         bindImmediateSettingsSave("autoStartCheck");
         bindImmediateSettingsSave("openManagerCheck");
         bindImmediateSettingsSave("notificationsCheck");
@@ -1951,6 +2035,7 @@
         bindImmediateSettingsSave("autoCheckRuntimeCheck");
         bindImmediateSettingsSave("autoDownloadCheck");
         bindImmediateSettingsSave("toolbarVisibleCheck");
+        Common.on(Common.byId("toolbarVisibleCheck"), "change", updateToolbarModeSettings);
         bindImmediateSettingsSave("debugLoggingCheck");
         bindTextSettingsSave("apiEndpointInput");
         Common.on(Common.byId("developerModeCheck"), "change", function () {

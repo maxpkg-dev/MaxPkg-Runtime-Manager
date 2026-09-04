@@ -24,8 +24,8 @@
                     </div>
                 </div>
                 <div id="headerActions" class="header-actions">
-                    <button id="setupToolbarButton" class="button" type="button" title="Setup Toolbar">
-                        <img class="icon" src="../../data/themes/manager/icons/panel-top.svg" alt=""><span class="header-button-label">Setup Toolbar</span>
+                    <button id="setupToolbarButton" class="button" type="button" title="Toolbar Configurator">
+                        <img class="icon" src="../../data/themes/manager/icons/panel-top.svg" alt=""><span class="header-button-label">Toolbar Configurator</span>
                     </button>
                     <a id="checkUpdatesButton" class="button" href="maxpkg://manager/check-updates" data-busy="Checking updates...">
                         <img class="icon" src="../../data/themes/manager/icons/refresh-cw.svg" alt=""><span class="header-button-label">Check Updates</span>
@@ -219,75 +219,112 @@
                             </div>
                         </div>
                     </div>
-                    <div class="settings-page is-hidden" data-settings-panel="toolbar">
-                        <h3>Toolbar</h3>
-                        <label class="check-row"><input id="toolbarVisibleCheck" type="checkbox"><span class="switch-control" aria-hidden="true"><span class="switch-thumb"></span></span><span class="switch-label">Show MaxPkg toolbar</span></label>
-                        <div class="field">
-                            <span id="toolbarDockPositionLabel" class="field-label">Toolbar position</span>
-                            <div id="toolbarDockPositionSelect" class="html-select html-select-wide" data-value="top">
-                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarDockPositionLabel" data-dropdown-trigger="true">
-                                    <span data-select-label="toolbarDockPositionSelect">Top</span>
-                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
+                    <div class="settings-page settings-toolbar-page is-hidden" data-settings-panel="toolbar">
+                        <div class="settings-toolbar-heading">
+                            <h3>Toolbar Configurator</h3>
+                            <p class="text-muted">Choose a layout visually. Changes are applied automatically.</p>
+                        </div>
+                        <label class="check-row toolbar-visibility-row"><input id="toolbarVisibleCheck" type="checkbox"><span class="switch-control" aria-hidden="true"><span class="switch-thumb"></span></span><span class="switch-label">Show MaxPkg toolbar</span></label>
+
+                        <div id="toolbarConfiguratorContent">
+                        <div class="toolbar-live-preview">
+                            <span class="toolbar-config-label">Live preview</span>
+                            <div id="toolbarPreviewStage" class="toolbar-preview-stage preview-docked preview-top preview-density-regular preview-icons-large">
+                                <div class="toolbar-preview-window">
+                                    <span class="toolbar-preview-window-dot"></span><span class="toolbar-preview-window-dot"></span><span class="toolbar-preview-window-dot"></span>
+                                </div>
+                                <div class="toolbar-preview-bar">
+                                    <span class="toolbar-preview-handle"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                                    <span class="toolbar-preview-button toolbar-preview-brand"><b class="toolbar-preview-icon">M</b><span><strong>maxpkg</strong><small>Manager</small></span></span>
+                                    <span class="toolbar-preview-button"><b class="toolbar-preview-icon">P</b><span><strong>Prune Scene</strong><small>v3.7</small></span></span>
+                                    <span class="toolbar-preview-button"><b class="toolbar-preview-icon">2P</b><span><strong>2 Point Scale</strong><small>v1.0</small></span></span>
+                                </div>
+                            </div>
+                            <p id="toolbarPreviewSummary" class="toolbar-preview-summary">Docked at the top · Regular · Large icons</p>
+                        </div>
+
+                        <div class="toolbar-config-section">
+                            <span class="toolbar-config-label">1. Placement</span>
+                            <div class="toolbar-choice-grid toolbar-choice-grid-two">
+                                <button class="toolbar-choice-card" type="button" data-toolbar-choice="layout" data-toolbar-value="docked">
+                                    <span class="toolbar-layout-glyph toolbar-glyph-docked"><i></i></span>
+                                    <strong>Docked</strong><small>Attached to the 3ds Max window</small>
                                 </button>
-                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
-                                    <button type="button" data-dropdown-option="top">Top</button>
-                                    <button type="button" data-dropdown-option="bottom">Bottom</button>
-                                    <button type="button" data-dropdown-option="topcompact">Top (Compact)</button>
-                                    <button type="button" data-dropdown-option="bottomcompact">Bottom (Compact)</button>
-                                    <button type="button" data-dropdown-option="left">Left (Compact)</button>
-                                    <button type="button" data-dropdown-option="right">Right (Compact)</button>
-                                    <button type="button" data-dropdown-option="floatinghorizontal">Floating Horizontal (Compact)</button>
-                                    <button type="button" data-dropdown-option="floatingvertical">Floating Vertical (Compact)</button>
+                                <button class="toolbar-choice-card" type="button" data-toolbar-choice="layout" data-toolbar-value="floating">
+                                    <span class="toolbar-layout-glyph toolbar-glyph-floating"><i></i></span>
+                                    <strong>Floating</strong><small>Move it anywhere over 3ds Max</small>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="toolbarDockedOptions" class="toolbar-config-section">
+                            <span class="toolbar-config-label">2. Side</span>
+                            <div class="toolbar-choice-grid toolbar-choice-grid-four toolbar-side-choices">
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="dockSide" data-toolbar-value="top"><span class="toolbar-side-glyph toolbar-side-top"><i></i></span><strong>Top</strong></button>
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="dockSide" data-toolbar-value="bottom"><span class="toolbar-side-glyph toolbar-side-bottom"><i></i></span><strong>Bottom</strong></button>
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="dockSide" data-toolbar-value="left"><span class="toolbar-side-glyph toolbar-side-left"><i></i></span><strong>Left (Compact)</strong></button>
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="dockSide" data-toolbar-value="right"><span class="toolbar-side-glyph toolbar-side-right"><i></i></span><strong>Right (Compact)</strong></button>
+                            </div>
+                        </div>
+
+                        <div id="toolbarFloatingOptions" class="toolbar-config-section is-hidden">
+                            <span class="toolbar-config-label">2. Orientation</span>
+                            <div class="toolbar-choice-grid toolbar-choice-grid-two">
+                                <button class="toolbar-choice-card toolbar-choice-orientation" type="button" data-toolbar-choice="orientation" data-toolbar-value="horizontal"><span class="toolbar-orientation-glyph toolbar-orientation-horizontal"><i></i><i></i><i></i></span><strong>Horizontal (Compact)</strong></button>
+                                <button class="toolbar-choice-card toolbar-choice-orientation" type="button" data-toolbar-choice="orientation" data-toolbar-value="vertical"><span class="toolbar-orientation-glyph toolbar-orientation-vertical"><i></i><i></i><i></i></span><strong>Vertical (Compact)</strong></button>
+                            </div>
+                        </div>
+
+                        <div class="toolbar-config-section toolbar-config-row">
+                            <div class="toolbar-config-column">
+                                <span class="toolbar-config-label">3. Toolbar spacing</span>
+                                <div class="toolbar-choice-grid toolbar-choice-grid-two">
+                                    <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="density" data-toolbar-value="regular"><span class="toolbar-density-glyph toolbar-density-regular-glyph"><i></i><i></i><i></i></span><strong>Regular</strong></button>
+                                    <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="density" data-toolbar-value="compact"><span class="toolbar-density-glyph toolbar-density-compact-glyph"><i></i><i></i><i></i></span><strong>Compact</strong></button>
+                                </div>
+                            </div>
+                            <div class="toolbar-config-column">
+                                <span class="toolbar-config-label">4. Icon size</span>
+                                <div class="toolbar-choice-grid toolbar-choice-grid-three toolbar-icon-size-choices">
+                                    <button class="toolbar-choice-card toolbar-choice-icon" type="button" data-toolbar-choice="iconSize" data-toolbar-value="small"><span class="toolbar-size-sample toolbar-size-small">A</span><strong>Small</strong></button>
+                                    <button class="toolbar-choice-card toolbar-choice-icon" type="button" data-toolbar-choice="iconSize" data-toolbar-value="medium"><span class="toolbar-size-sample toolbar-size-medium">A</span><strong>Medium</strong></button>
+                                    <button class="toolbar-choice-card toolbar-choice-icon" type="button" data-toolbar-choice="iconSize" data-toolbar-value="large"><span class="toolbar-size-sample toolbar-size-large">A</span><strong>Large</strong></button>
                                 </div>
                             </div>
                         </div>
-                        <div id="toolbarTitleField" class="field">
-                            <span id="toolbarTitleLabel" class="field-label">Button primary text</span>
-                            <div id="toolbarTitleSelect" class="html-select html-select-wide" data-value="packageName">
-                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarTitleLabel" data-dropdown-trigger="true">
-                                    <span data-select-label="toolbarTitleSelect">Package name</span>
-                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
-                                </button>
-                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
-                                    <button type="button" data-dropdown-option="packageName">Package name</button>
-                                    <button type="button" data-dropdown-option="buttonName">Button name</button>
-                                </div>
+
+                        <div id="toolbarWidthOptions" class="toolbar-config-section">
+                            <span class="toolbar-config-label">Button layout</span>
+                            <div class="toolbar-choice-grid toolbar-choice-grid-four">
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="buttonWidth" data-toolbar-value="icon"><span class="toolbar-width-glyph toolbar-width-icon"></span><strong>Icons only</strong></button>
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="buttonWidth" data-toolbar-value="small"><span class="toolbar-width-glyph toolbar-width-narrow"></span><strong>Narrow</strong></button>
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="buttonWidth" data-toolbar-value="medium"><span class="toolbar-width-glyph toolbar-width-medium"></span><strong>Medium</strong></button>
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="buttonWidth" data-toolbar-value="large"><span class="toolbar-width-glyph toolbar-width-wide"></span><strong>Wide</strong></button>
                             </div>
                         </div>
-                        <div id="toolbarButtonSizeField" class="field">
-                            <span id="toolbarButtonSizeLabel" class="field-label">Button size</span>
-                            <div id="toolbarButtonSizeSelect" class="html-select html-select-wide" data-value="medium">
-                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarButtonSizeLabel" data-dropdown-trigger="true">
-                                    <span data-select-label="toolbarButtonSizeSelect">Medium</span>
-                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
-                                </button>
-                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
-                                    <button type="button" data-dropdown-option="large">Large</button>
-                                    <button type="button" data-dropdown-option="medium">Medium</button>
-                                    <button type="button" data-dropdown-option="small">Small</button>
-                                    <button type="button" data-dropdown-option="icon">Icon only</button>
-                                </div>
+
+                        <div id="toolbarTextOptions" class="toolbar-config-section toolbar-advanced-options">
+                            <span class="toolbar-config-label">Additional line</span>
+                            <div class="toolbar-choice-grid toolbar-choice-grid-three">
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="subtitle" data-toolbar-value="none"><span class="toolbar-subtitle-glyph toolbar-subtitle-none"></span><strong>Nothing</strong></button>
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="subtitle" data-toolbar-value="version"><span class="toolbar-subtitle-glyph">v1.2</span><strong>Version</strong></button>
+                                <button class="toolbar-choice-card toolbar-choice-small" type="button" data-toolbar-choice="subtitle" data-toolbar-value="developer"><span class="toolbar-subtitle-glyph">Artist</span><strong>Developer</strong></button>
                             </div>
                         </div>
-                        <div id="toolbarSubtitleField" class="field">
-                            <span id="toolbarSubtitleLabel" class="field-label">Button secondary text</span>
-                            <div id="toolbarSubtitleSelect" class="html-select html-select-wide" data-value="version">
-                                <button class="html-select-button" type="button" aria-haspopup="true" aria-expanded="false" aria-labelledby="toolbarSubtitleLabel" data-dropdown-trigger="true">
-                                    <span data-select-label="toolbarSubtitleSelect">Version</span>
-                                    <img class="html-select-caret" src="../../data/themes/manager/icons/chevron-down.svg" alt="">
-                                </button>
-                                <div class="html-select-menu is-hidden" data-dropdown-width="source">
-                                    <button type="button" data-dropdown-option="none">Nothing</button>
-                                    <button type="button" data-dropdown-option="version">Version</button>
-                                    <button type="button" data-dropdown-option="developer">Developer</button>
-                                </div>
-                            </div>
-                        </div>
-                        <p id="compactToolbarNote" class="text-muted is-hidden">This compact toolbar position uses icon-only buttons. Text and button-size preferences are preserved for Top and Bottom.</p>
-                        <p class="text-muted">Package buttons can be shown or hidden from each Installed card.</p>
+
+                        <input id="toolbarDockPositionSelect" type="hidden" value="top">
+                        <input id="toolbarDensityInput" type="hidden" value="regular">
+                        <input id="toolbarIconSizeInput" type="hidden" value="large">
+                        <input id="toolbarButtonSizeSelect" type="hidden" value="medium">
+                        <input id="toolbarTitleSelect" type="hidden" value="packageName">
+                        <input id="toolbarSubtitleSelect" type="hidden" value="version">
+                        <p id="compactToolbarNote" class="toolbar-mode-note is-hidden">Left, Right, and Floating toolbars use icon-only buttons. Your label preferences stay saved for Top or Bottom.</p>
+                        <p class="text-muted toolbar-package-note">Show or hide individual package buttons from their Installed cards.</p>
                         <div class="toolbar-reset-actions">
                             <a class="button" href="maxpkg://manager/reset-toolbar-order">Reset package order</a>
-                            <a class="button" href="maxpkg://manager/reset-toolbar">Reset Toolbar</a>
+                            <a id="resetToolbarPositionButton" class="button is-hidden" href="maxpkg://manager/reset-toolbar-position">Reset Toolbar Position</a>
+                            <a class="button" href="maxpkg://manager/reset-toolbar">Reset Toolbar to Default</a>
+                        </div>
                         </div>
                     </div>
                     <div class="settings-page is-hidden" data-settings-panel="themes">

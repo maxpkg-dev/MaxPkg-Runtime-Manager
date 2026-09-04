@@ -380,6 +380,12 @@
             return toolbarModule.build()
         ),
 
+        fn resetToolbarPosition = (
+            local isPositionReset = toolbarModule.resetFloatingPosition()
+            if (isPositionReset) do refreshManager "reset-toolbar-position"
+            return isPositionReset
+        ),
+
         fn setToolbarVisible packageReference isVisible = (
             local resolvedPackage = apiModule.resolve packages packageReference
             if (resolvedPackage == undefined) do return false
