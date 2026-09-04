@@ -9,6 +9,8 @@
     local runtimeRoot = getFilenamePath (substring testRoot 1 (testRoot.count - 1))
     local startupFile = runtimeRoot + "startup.ms"
     local utilsModule = fileIn (runtimeRoot + @"core\utils.ms")
+    local settingsModule = fileIn (runtimeRoot + @"core\settings.ms")
+    settingsModule.utils = utilsModule
     local iniModule = fileIn (runtimeRoot + @"core\ini.ms")
     local themesModule = fileIn (runtimeRoot + @"core\themes.ms")
     local resultDialogModule = fileIn (runtimeRoot + @"ui\common\result-dialog.ms")
@@ -50,11 +52,26 @@
     if ((findString toolbarSourceContent "wrap wrap-normal") == undefined) do throw "Docked text Toolbar is missing its normal-layout marker."
     if ((findString renderedToolbarCss ".toolbar-density-compact .wrap-normal") == undefined) do throw "Compact docked Toolbar client-height styles are unavailable."
     if ((findString renderedToolbarCss ".toolbar-density-compact.toolbar-icons-small .wrap:not(.wrap-compact) .name") == undefined or (findString renderedToolbarCss ".toolbar-density-compact.toolbar-icons-medium .wrap:not(.wrap-compact) .name") == undefined or (findString renderedToolbarCss ".toolbar-density-compact.toolbar-icons-large .wrap:not(.wrap-compact) .name") == undefined) do throw "Compact docked Toolbar text rows can clip at Small, Medium, or Large icon size."
+    if ((findString toolbarSourceContent "toolbar-orientation-vertical") == undefined or (findString toolbarSourceContent "toolbar-structure-icon-only") == undefined or (findString toolbarSourceContent "toolbar-structure-text") == undefined) do throw "Toolbar orientation and structure branches are unavailable."
+    if ((findString renderedToolbarCss ".toolbar-orientation-vertical.toolbar-density-compact .wrap-compact.toolbar-structure-icon-only .brand + .toolBtn") == undefined) do throw "Compact vertical Toolbar gap reset is unavailable."
+    local compactHorizontalLayoutMatrix = #(#("small", "36px"), #("medium", "40px"), #("large", "44px"))
+    for layoutData in compactHorizontalLayoutMatrix do (
+        local layoutSelector = ".toolbar-orientation-horizontal.toolbar-density-compact.toolbar-icons-" + layoutData[1] + " .wrap-normal.toolbar-structure-text"
+        local selectorPosition = findString renderedToolbarCss layoutSelector
+        if (selectorPosition == undefined) do throw ("Compact horizontal Toolbar layout is unavailable for " + layoutData[1] + ".")
+        local selectorContentLength = amin 220 (renderedToolbarCss.count - selectorPosition + 1)
+        local selectorContent = substring renderedToolbarCss selectorPosition selectorContentLength
+        if ((findString selectorContent ("height: " + layoutData[2])) == undefined) do throw ("Compact horizontal Toolbar height is invalid for " + layoutData[1] + ".")
+    )
     if ((findString managerScriptContent "return \"topcompact\"") != undefined or (findString managerScriptContent "return \"bottomcompact\"") != undefined) do throw "Toolbar side and spacing are not serialized independently."
     local buttonLayoutPosition = findString managerHtmlContent "id=\"toolbarWidthOptions\""
     local additionalLinePosition = findString managerHtmlContent "id=\"toolbarTextOptions\""
     if (buttonLayoutPosition == undefined or additionalLinePosition == undefined or additionalLinePosition < buttonLayoutPosition) do throw "Additional line is not placed after Button layout."
-    if ((findString managerHtmlContent "Left (Compact)") == undefined or (findString managerHtmlContent "Right (Compact)") == undefined or (findString managerHtmlContent "Horizontal (Compact)") == undefined or (findString managerHtmlContent "Vertical (Compact)") == undefined) do throw "Compact toolbar modes are missing their Compact labels."
+    if ((findString managerHtmlContent "Left (Compact)") != undefined or (findString managerHtmlContent "Right (Compact)") != undefined) do throw "Left or Right is still presented as a separate Compact mode."
+    if ((findString managerHtmlContent "<strong>Left</strong>") == undefined or (findString managerHtmlContent "<strong>Right</strong>") == undefined) do throw "Left or Right Toolbar placement label is unavailable."
+    if ((findString managerHtmlContent "Horizontal (Compact)") == undefined or (findString managerHtmlContent "Vertical (Compact)") == undefined) do throw "Floating Toolbar modes are missing their Compact labels."
+    if ((settingsModule.legacyToolbarDensity "left" "medium") != "regular" or (settingsModule.legacyToolbarDensity "right" "medium") != "regular") do throw "Vertical dock placement still forces Compact density."
+    if ((findString toolbarSourceContent "if (isVerticalMode toolbarMode or isFloatingMode toolbarMode) do return true") == undefined) do throw "Vertical dock placement is not guaranteed to use icon-only buttons."
     if (resultDialogModule == undefined) do throw "Reusable Runtime result dialog module is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.html"))) do throw "Runtime result dialog HTML is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.css"))) do throw "Runtime result dialog styles are unavailable."

@@ -420,12 +420,9 @@ body {
     margin-left: 2px;
 }
 
-.toolbar-density-compact.toolbar-mode-left .wrap-compact .toolBtn,
-.toolbar-density-compact.toolbar-mode-right .wrap-compact .toolBtn,
-.toolbar-density-compact.toolbar-mode-floatingvertical .wrap-compact .toolBtn,
-.toolbar-density-compact.toolbar-mode-left .wrap-compact .brand + .toolBtn,
-.toolbar-density-compact.toolbar-mode-right .wrap-compact .brand + .toolBtn,
-.toolbar-density-compact.toolbar-mode-floatingvertical .wrap-compact .brand + .toolBtn {
+.toolbar-orientation-vertical.toolbar-density-compact .wrap-compact.toolbar-structure-icon-only .toolBtn,
+.toolbar-orientation-vertical.toolbar-density-compact .wrap-compact.toolbar-structure-icon-only .brand + .toolBtn {
+    margin-left: 0;
     margin-top: 2px;
 }
 
@@ -838,4 +835,33 @@ body {
 
 .toolbar-icons-large .wrap:not(.wrap-compact) .arrow {
     line-height: 34px;
+}
+
+/*
+ * Horizontal text buttons and vertical icon-only buttons use independent
+ * box models. IE/Trident otherwise adds borders and padding outside the
+ * declared button height, so a shared viewport silently clips Top/Bottom
+ * while a vertical spacing fix is being applied.
+ */
+.toolbar-orientation-horizontal .wrap-normal.toolbar-structure-text,
+.toolbar-orientation-horizontal .wrap-normal.toolbar-structure-text .brand,
+.toolbar-orientation-horizontal .wrap-normal.toolbar-structure-text .arrow,
+.toolbar-orientation-horizontal .wrap-normal.toolbar-structure-text .toolBtn {
+    box-sizing: border-box;
+}
+
+.toolbar-orientation-horizontal.toolbar-density-compact.toolbar-icons-small .wrap-normal.toolbar-structure-text {
+    height: 36px;
+}
+
+.toolbar-orientation-horizontal.toolbar-density-compact.toolbar-icons-medium .wrap-normal.toolbar-structure-text {
+    height: 40px;
+}
+
+.toolbar-orientation-horizontal.toolbar-density-compact.toolbar-icons-large .wrap-normal.toolbar-structure-text {
+    height: 44px;
+}
+
+.toolbar-orientation-horizontal.toolbar-density-compact .wrap-normal.toolbar-structure-text .txt {
+    top: 0;
 }

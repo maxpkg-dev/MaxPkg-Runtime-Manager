@@ -113,7 +113,6 @@
         fn legacyToolbarDensity toolbarPosition buttonSize = (
             local normalizedPosition = toLower (utils.trim toolbarPosition)
             if (normalizedPosition == "topcompact" or normalizedPosition == "bottomcompact") do return "compact"
-            if (normalizedPosition == "left" or normalizedPosition == "right") do return "compact"
             if (normalizedPosition == "floatinghorizontal" or normalizedPosition == "floatingvertical") do return "compact"
             if ((toLower (utils.trim buttonSize)) == "icon") do return "compact"
             return "regular"

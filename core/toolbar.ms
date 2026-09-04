@@ -208,15 +208,16 @@
             local updateBadgeHtml = if (updateCount > 0) then "<span class='brand-update-badge'>" + (updateCount as string) + "</span>" else ""
             local brandTitle = if (updateCount > 0) then ((updateCount as string) + " package update(s) available. Open MaxPkg Manager") else "Open MaxPkg Manager"
             local brandClass = if (usesIconOnlyStructure toolbarMode) then "brand brand-compact" else "brand"
+            local orientationClass = if (isVerticalMode toolbarMode) then "toolbar-orientation-vertical" else "toolbar-orientation-horizontal"
             local brandHtml = "<a class='" + brandClass + "' id='brand' href='maxpkg://ui/openManager' title='" + (utils.htmlEscape brandTitle) + "'><img class='brand-icon' src='" + brandIconUrl + "' alt=''><span class='brand-label'>maxpkg</span>" + updateBadgeHtml + "</a>"
             local html = "<!doctype html><html><head><meta http-equiv='X-UA-Compatible' content='IE=edge'><meta charset='utf-8'>"
-            html += "<style>" + themeCss + "</style></head><body class='toolbar-mode-" + toolbarMode + " toolbar-density-" + owner.settings.toolbarDensity + " toolbar-icons-" + owner.settings.toolbarIconSize + "' data-toolbar-mode='" + toolbarMode + "'>"
+            html += "<style>" + themeCss + "</style></head><body class='toolbar-mode-" + toolbarMode + " " + orientationClass + " toolbar-density-" + owner.settings.toolbarDensity + " toolbar-icons-" + owner.settings.toolbarIconSize + "' data-toolbar-mode='" + toolbarMode + "'>"
             if (usesIconOnlyStructure toolbarMode) then (
-                html += "<div class='wrap wrap-compact' id='wrap'><div class='viewport viewport-compact' id='viewport'><div class='strip strip-compact' id='strip'>" + brandHtml
+                html += "<div class='wrap wrap-compact toolbar-structure-icon-only' id='wrap'><div class='viewport viewport-compact' id='viewport'><div class='strip strip-compact' id='strip'>" + brandHtml
                 for packageInfo in orderedPackages() do html += packageButtonHtml packageInfo toolbarMode
                 html += "</div></div><a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><a class='arrow' id='rightArrow' href='maxpkg://ui/scrollRight'>&rsaquo;</a></div>"
             ) else (
-                html += "<div class='wrap wrap-normal' id='wrap'>" + brandHtml + "<a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><div class='viewport' id='viewport'><div class='strip' id='strip'>"
+                html += "<div class='wrap wrap-normal toolbar-structure-text' id='wrap'>" + brandHtml + "<a class='arrow' id='leftArrow' href='maxpkg://ui/scrollLeft'>&lsaquo;</a><div class='viewport' id='viewport'><div class='strip' id='strip'>"
                 for packageInfo in orderedPackages() do html += packageButtonHtml packageInfo toolbarMode
                 html += "</div></div><a class='arrow' id='rightArrow' href='maxpkg://ui/scrollRight'>&rsaquo;</a></div>"
             )
