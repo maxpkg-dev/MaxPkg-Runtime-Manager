@@ -72,6 +72,7 @@
     if ((findString managerHtmlContent "Horizontal (Compact)") == undefined or (findString managerHtmlContent "Vertical (Compact)") == undefined) do throw "Floating Toolbar modes are missing their Compact labels."
     if ((settingsModule.legacyToolbarDensity "left" "medium") != "regular" or (settingsModule.legacyToolbarDensity "right" "medium") != "regular") do throw "Vertical dock placement still forces Compact density."
     if ((findString toolbarSourceContent "if (isVerticalMode toolbarMode or isFloatingMode toolbarMode) do return true") == undefined) do throw "Vertical dock placement is not guaranteed to use icon-only buttons."
+    if ((findString toolbarSourceContent "local iconOnlyThickness = iconOnlyToolbarThickness()") == undefined or (findString toolbarSourceContent "local dialogWidth = if (isVertical) then iconOnlyThickness else 1200") == undefined) do throw "Left or Right Toolbar width does not follow the selected icon size and spacing."
     if (resultDialogModule == undefined) do throw "Reusable Runtime result dialog module is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.html"))) do throw "Runtime result dialog HTML is unavailable."
     if (not (doesFileExist (runtimeRoot + @"ui\common\result-dialog.css"))) do throw "Runtime result dialog styles are unavailable."
