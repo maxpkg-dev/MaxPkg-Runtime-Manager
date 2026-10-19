@@ -4,7 +4,8 @@
 -- Developed by https://3dground.net (3DGROUND)
 
 (
-    local runtimeRoot = getFilenamePath (getFilenamePath (getSourceFileName()))
+    local testRoot = getFilenamePath (getSourceFileName())
+    local runtimeRoot = getFilenamePath (substring testRoot 1 (testRoot.count - 1))
     local utilsModule = fileIn (runtimeRoot + @"core\utils.ms")
     local iniModule = fileIn (runtimeRoot + @"core\ini.ms")
     local themesModule = fileIn (runtimeRoot + @"core\themes.ms")

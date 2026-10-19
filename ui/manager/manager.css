@@ -890,6 +890,10 @@ body.maxpkg-viewport-under-760 .toolbar-mode-note {
     width: 150px;
 }
 
+#installedTools.has-single-tool {
+    width: 160px;
+}
+
 .page-tools-cell.has-single-tool .sort-control {
     margin-left: 0;
 }
@@ -1318,7 +1322,8 @@ body.maxpkg-viewport-under-760 .toolbar-mode-note {
 }
 
 .card.card-full {
-    height: 274px;
+    height: auto;
+    min-height: 274px;
 }
 
 .package-description {
@@ -1377,7 +1382,37 @@ body.maxpkg-viewport-under-760 .toolbar-mode-note {
 }
 
 .card.card-compact {
-    height: 128px;
+    height: auto;
+    min-height: 128px;
+}
+
+#installedPage .card-actions {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    height: auto;
+    margin: 0 12px 4px;
+    padding-right: 44px;
+    font-size: 0;
+}
+
+#installedPage .card-actions .button {
+    max-width: 100%;
+    margin: 0 12px 8px 0;
+    font-size: 13px;
+    word-wrap: break-word;
+}
+
+#installedPage .card-actions .button:last-of-type {
+    margin-right: 0;
+}
+
+#installedPage .card-actions .more-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
 }
 
 .badge-purchase {
@@ -1595,7 +1630,6 @@ body.maxpkg-viewport-under-760 .toolbar-mode-note {
 
 .details-copy {
     min-height: 48px;
-    margin-right: 198px;
     padding-top: 1px;
 }
 
@@ -1617,12 +1651,16 @@ body.maxpkg-viewport-under-760 .toolbar-mode-note {
 }
 
 .details-hero-actions {
-    position: absolute;
-    top: 50%;
-    right: 12px;
-    width: 190px;
-    margin-top: -17px;
-    text-align: right;
+    clear: both;
+    padding-top: 4px;
+    text-align: left;
+    font-size: 0;
+    white-space: normal;
+}
+
+.details-hero-actions .button {
+    margin: 8px 12px 0 0;
+    font-size: 12px;
     white-space: nowrap;
 }
 
@@ -2591,21 +2629,6 @@ body.maxpkg-viewport-under-1200 .discover-category-sidebar {
 }
 
 @media screen and (max-width: 540px) {
-    .details-copy {
-        margin-right: 0;
-        padding-right: 0;
-    }
-
-    .details-hero-actions {
-        position: static;
-        clear: both;
-        width: auto;
-        margin: 12px 0 0;
-        padding-top: 10px;
-        border-top: 1px solid {{borderSoft}};
-        text-align: left;
-    }
-
     .purchase-details-notice,
     .purchase-notice-icon,
     .purchase-notice-copy,

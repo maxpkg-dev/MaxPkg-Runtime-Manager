@@ -1,0 +1,57 @@
+/*
+ * Styles the themed post-install onboarding window.
+ * Copyright (c) 2026 Lukianenko Vasyl
+ * https://maxpkg.dev
+ * Developed by https://3dground.net (3DGROUND)
+ */
+.onboarding-shell { position: relative; height: 100%; color: {{textPrimary}}; background: {{backgroundWindow}}; }
+.onboarding-header { position: absolute; top: 0; right: 0; left: 0; height: 76px; padding: 12px 22px; border-bottom: 1px solid {{borderDefault}}; background: {{surfacePrimary}}; }
+.onboarding-logo { float: left; width: 34px; height: 34px; margin: 5px 14px 0 0; }
+.onboarding-heading { overflow: hidden; }
+.onboarding-heading h1 { margin: 0 0 7px; color: {{textStrong}}; font-size: 21px; line-height: 26px; }
+.onboarding-heading p { margin: 0; color: {{textSecondary}}; line-height: 18px; }
+.onboarding-content { position: absolute; top: 76px; right: 0; bottom: 58px; left: 0; padding: 16px 22px 18px; overflow-x: hidden; overflow-y: auto; }
+.onboarding-card { position: relative; margin-bottom: 12px; padding: 15px 16px; border: 1px solid {{borderDefault}}; border-radius: 10px; background: {{surfacePrimary}}; }
+.onboarding-icon { position: absolute; top: 23px; left: 16px; width: 23px; height: 23px; }
+.onboarding-copy { margin-left: 37px; }
+.onboarding-step { color: {{textMuted}}; font-size: 10px; letter-spacing: 1px; }
+.onboarding-copy h2 { margin: 3px 0 4px; color: {{textStrong}}; font-size: 16px; line-height: 20px; }
+.onboarding-copy p { margin: 0; color: {{textSecondary}}; line-height: 19px; }
+.onboarding-action { min-height: 92px; padding-right: 195px; }
+.onboarding-action .button { position: absolute; top: 29px; right: 16px; min-width: 157px; text-align: center; }
+.onboarding-action .button .icon { margin: 0 0 0 8px; }
+.onboarding-choices { margin-top: 13px; font-size: 0; }
+.onboarding-choice { position: relative; display: inline-block; vertical-align: top; width: 48.5%; min-height: 82px; padding: 11px 12px 11px 37px; font: 13px "Segoe UI", Arial, sans-serif; text-align: left; cursor: pointer; }
+.onboarding-choice + .onboarding-choice { margin-left: 3%; }
+
+
+.onboarding-choice strong, .onboarding-choice > span { display: block; }
+.onboarding-choice strong { margin-bottom: 6px; color: {{textStrong}}; font-size: 14px; }
+.onboarding-choice > span { color: inherit; line-height: 18px; }
+.onboarding-choice .onboarding-radio { position: absolute; top: 13px; left: 12px; width: 16px; height: 16px; border: 1px solid {{borderFocus}}; border-radius: 8px; }
+.onboarding-choice.is-selected .onboarding-radio { border: 5px solid {{accentHover}}; }
+.onboarding-hint { margin: 12px 0 0; color: {{textMuted}}; font-size: 12px; }
+.onboarding-error { padding: 12px; color: {{danger}}; border: 1px solid {{danger}}; border-radius: 7px; }
+.onboarding-footer { position: absolute; bottom: 0; right: 0; left: 0; height: 58px; padding: 12px 22px; border-top: 1px solid {{borderDefault}}; background: {{surfacePrimary}}; }
+.onboarding-footer > span { display: inline-block; max-width: 70%; padding-top: 7px; color: {{textMuted}}; font-size: 12px; }
+.onboarding-footer .button { float: right; min-width: 90px; text-align: center; }
+@media (max-width: 640px) {
+    .onboarding-header { padding: 18px; }
+    .onboarding-heading h1 { font-size: 20px; }
+    .onboarding-content { padding: 16px 18px 24px; }
+    .onboarding-action { padding-right: 20px; }
+    .onboarding-action .button { position: static; margin: 14px 0 0 45px; }
+    .onboarding-choice { display: block; width: 100%; min-height: 80px; }
+    .onboarding-choice + .onboarding-choice { margin: 12px 0 0; }
+    .onboarding-footer { padding-right: 18px; padding-left: 18px; }
+}
+
+.onboarding-updates { margin-bottom: 0; }
+
+/* IE9 media widths do not reflect CSS zoom; use the shared DPI viewport classes. */
+.maxpkg-viewport-under-740 .onboarding-action { padding-right: 20px; }
+.maxpkg-viewport-under-740 .onboarding-action .button { position: static; margin: 12px 0 0 37px; }
+.maxpkg-viewport-under-740 .onboarding-choice { display: block; width: 100%; min-height: 76px; }
+.maxpkg-viewport-under-740 .onboarding-choice + .onboarding-choice { margin: 12px 0 0; }
+.maxpkg-viewport-under-540 .onboarding-header { height: 96px; padding: 12px 16px; }
+.maxpkg-viewport-under-540 .onboarding-content { top: 96px; }

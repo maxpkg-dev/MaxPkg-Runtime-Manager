@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9">
+    <meta charset="utf-8">
+    <title>Welcome to MaxPkg</title>
+    <style id="onboardingTheme"></style>
+</head>
+<body>
+    <div class="onboarding-shell">
+        <div class="onboarding-header">
+            <img class="onboarding-logo" data-icon="maxpkg-logo" alt="MaxPkg">
+            <div class="onboarding-heading"><h1>Your next steps</h1><p>You're ready to find, install, and organize your 3ds Max scripts.</p></div>
+        </div>
+        <div class="onboarding-content">
+            <div class="onboarding-card onboarding-action">
+                <img class="onboarding-icon" data-icon="search" alt="">
+                <div class="onboarding-copy"><span class="onboarding-step">01 / DISCOVER</span><h2>Find your next script</h2><p>Browse the catalog and install useful tools.</p></div>
+                <a id="browseScripts" class="button button-primary" href="maxpkg://onboarding/discover">Browse scripts <img class="icon" data-icon="arrow-right" alt=""></a>
+            </div>
+            <div class="onboarding-card onboarding-action">
+                <img class="onboarding-icon" data-icon="panel-top" alt="">
+                <div class="onboarding-copy"><span class="onboarding-step">02 / PERSONALIZE</span><h2>Set up your toolbar</h2><p>Choose your layout, button size, and theme.</p></div>
+                <a id="customizeToolbar" class="button button-primary" href="maxpkg://onboarding/toolbar">Customize toolbar <img class="icon" data-icon="arrow-right" alt=""></a>
+            </div>
+            <div class="onboarding-card onboarding-updates">
+                <img class="onboarding-icon" data-icon="refresh-cw" alt="">
+                <div class="onboarding-copy"><span class="onboarding-step">03 / UPDATES</span><h2>How should scripts update?</h2></div>
+                <div class="onboarding-choices" role="radiogroup" aria-label="Script updates">
+                    <button id="automaticUpdates" class="button button-primary onboarding-choice" type="button" role="radio" aria-checked="false"><span class="onboarding-radio"></span><strong>Automatically</strong><span>Check for updates and install new versions for me.</span></button>
+                    <button id="manualUpdates" class="button button-primary onboarding-choice" type="button" role="radio" aria-checked="false"><span class="onboarding-radio"></span><strong>Manually</strong><span>I will check and install updates myself.</span></button>
+                </div>
+                <p class="onboarding-hint">You can change this later in Settings.</p>
+            </div>
+            <p id="onboardingError" class="onboarding-error is-hidden" role="alert"></p>
+        </div>
+        <div class="onboarding-footer"><span>This window stays open while you explore.</span><a id="closeOnboarding" class="button" href="maxpkg://onboarding/close">Close</a></div>
+    </div>
+    <div id="onboardingPayload" class="is-hidden"></div>
+    <div id="themePayload" class="is-hidden"></div>
+    <script src="../common/js/common.js"></script>
+    <script src="onboarding.js"></script>
+</body>
+</html>

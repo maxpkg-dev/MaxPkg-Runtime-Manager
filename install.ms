@@ -231,29 +231,9 @@
         if (not (writeManagerMacro targetRoot)) do throw "Could not create the MaxPkg Manager MacroScript."
         fileIn (targetRoot + "startup.ms")
         if (MaxPkg == undefined) do throw "Runtime did not create the MaxPkg global."
-        if (resultDialogModule != undefined) then (
-            local successDialogInfo = resultDialogModule.createDialogData()
-            successDialogInfo.windowTitle = "MaxPkg Runtime Setup"
-            successDialogInfo.heading = "Installation complete"
-            successDialogInfo.summary = "MaxPkg is ready. Find, install, update, and organize useful 3ds Max scripts in one simple place."
-            successDialogInfo.versionText = runtimeVersion
-            successDialogInfo.startupText = "Enabled"
-            successDialogInfo.guideTitle = "Quick guide"
-            successDialogInfo.guideStepOneTitle = "Open MaxPkg Manager"
-            successDialogInfo.guideStepOneContent = "Click Open Manager below. You will see your installed scripts and the Discover catalog."
-            successDialogInfo.guideStepTwoTitle = "Find and install a script"
-            successDialogInfo.guideStepTwoContent = "Open Discover and search for a tool, for example Prune Scene. Click Install and MaxPkg will take care of the rest."
-            successDialogInfo.guideStepThreeTitle = "Run it from the toolbar"
-            successDialogInfo.guideStepThreeContent = "After installation, the script button appears on the MaxPkg toolbar. Click it whenever you need the tool."
-            successDialogInfo.primaryButtonText = "Open Manager"
-            fn showInstalledManager = (
-                if (MaxPkg != undefined and MaxPkg.isStarted()) do MaxPkg.openManager()
-                return true
-            )
-            successDialogInfo.primaryActionCallback = showInstalledManager
-            resultDialogModule.showDialog successDialogInfo
-        ) else (
-            messageBox ("MaxPkg Runtime installed.\n\n" + targetRoot) title: "MaxPkg"
+        if (resultDialogModule != undefined) do resultDialogModule.cleanupTemporaryAssets()
+        if (not (MaxPkg.showOnboarding())) do (
+            format "MaxPkg was installed, but onboarding could not be opened. See the Runtime log.\n"
         )
     ) catch (
         installationErrorMessage = getCurrentException()

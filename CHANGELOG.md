@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0
+
+- Added: A themed welcome window after installation guides you to Discover, toolbar customization, and your preferred script update mode.
+- Added: Choose automatic or manual script updates directly from the welcome window; your choice is saved immediately.
+- Added: Discover shows the total number of public scripts when the catalog provides it.
+- Fixed: Automatic script updates now install new versions after scheduled checks, respect your current preferences, and wait when another operation is running.
+- Fixed: The welcome window stays open while you explore and keeps its Close button available.
+- Fixed: Package action buttons wrap correctly without overlapping in Installed and Details.
+- Fixed: The update progress overlay remains visible until a package update finishes.
+- Changed: Updates uses clear green buttons showing the target version and hides toolbar reordering controls.
+
 ## 1.1.9
 
 - Added: Package buttons can now be reordered directly on every docked and floating toolbar by holding Alt and dragging.

@@ -8,6 +8,8 @@
     local testRoot = getFilenamePath (getSourceFileName())
     local runtimeRoot = getFilenamePath (substring testRoot 1 (testRoot.count - 1))
     local startupFile = runtimeRoot + "startup.ms"
+    if (not (fileIn (testRoot + "catalog-total.ms"))) do throw "Catalog count tests failed."
+    if (not (fileIn (testRoot + "onboarding.ms"))) do throw "Onboarding tests failed."
     local utilsModule = fileIn (runtimeRoot + @"core\utils.ms")
     local settingsModule = fileIn (runtimeRoot + @"core\settings.ms")
     settingsModule.utils = utilsModule
@@ -319,6 +321,8 @@
     if (not (doesFileExist (runtimeRoot + @"core\notifier.ms"))) do throw "Reusable Runtime notifier module is missing."
 
     local firstRuntime = MaxPkg
+    if (not (firstRuntime.openManager tab: "discover")) do throw "Manager could not open Discover before restart."
+    if (not (firstRuntime.openManager settingsPage: "toolbar")) do throw "Manager could not open toolbar settings."
     if (not (firstRuntime.openManager())) do throw "Manager could not be opened before restart."
     if (not (fileIn startupFile)) do throw "Second Runtime startup failed."
     if (MaxPkg == firstRuntime) do throw "Runtime instance was not replaced."

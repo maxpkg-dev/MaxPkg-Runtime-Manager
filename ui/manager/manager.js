@@ -17,7 +17,7 @@
         settings: {},
         collections: { loaded: false, available: false, featuredCount: 0, items: [] },
         categories: { loaded: false, available: false, items: [] },
-        discover: { available: false, message: "Repository is unavailable.", packages: [] },
+        discover: { available: false, message: "Repository is unavailable.", packages: [], totalPackages: null },
         remoteDetails: null
     };
     var activeTab = "discover";
@@ -35,6 +35,7 @@
     var activeScreenshotIndex = 0;
     var detailsListScrollTop = 0;
     var settingsSaveTimer = null;
+    var packageUpdateInProgress = false;
     var toolbarConfigurator = {
         layout: "docked",
         dockSide: "top",
@@ -485,7 +486,7 @@
     }
 
     function toolbarSortingEnabled() {
-        return activeSort === "toolbar" && !searchText;
+        return activeTab === "installed" && activeFilter !== "updates" && activeSort === "toolbar" && !searchText;
     }
 
     function toolbarHiddenIndicator(packageInfo) {
@@ -552,7 +553,7 @@
     function compactStatNumber(sourceNumber) {
         var normalizedNumber = Math.max(0, parseInt(sourceNumber, 10) || 0);
         var compactNumber;
-        if (normalizedNumber >= 1000000) {
+        if (normalizedNumber >= 999950) {
             compactNumber = Math.round(normalizedNumber / 100000) / 10;
             return compactNumber + "M";
         }
@@ -615,7 +616,7 @@
         }
         if (packageInfo.updateAvailable) {
             badges += "<span class='badge badge-warning'>v" + Common.escapeHtml(packageInfo.latestVersion) + " available</span>";
-            updateAction = "<a class='button' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update</a> ";
+            updateAction = activeFilter === "updates" ? "<a class='button button-success' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update to " + Common.escapeHtml(packageInfo.latestVersion) + "</a> " : "";
         }
         badges += purchaseIndicator(packageInfo, false);
         if (isFullCard) {
@@ -632,7 +633,7 @@
                 "</button>" + packageDetailsContent +
             "</div>" +
             "<div class='card-actions'>" + updateAction +
-                "<a class='button button-primary' href='maxpkg://manager/run/" + Common.encode(packageInfo.guid) + "' data-busy='Starting package...'>" + icon("play") + "Run</a>" +
+                (activeFilter === "updates" ? "" : "<a class='button button-primary' href='maxpkg://manager/run/" + Common.encode(packageInfo.guid) + "' data-busy='Starting package...'>" + icon("play") + "Run</a>") +
                 "<button class='icon-button more-button' type='button' title='More actions' data-action='menu' data-guid='" + Common.escapeHtml(packageInfo.guid) + "'>" + icon("ellipsis") + "</button>" +
             "</div>" +
         "</div>";
@@ -1357,7 +1358,7 @@
         } else if (!packageInfo.isRemote) {
             releaseBadges += "<span class='badge badge-warning' title='Showing package information from local manifest.ini'>Offline info</span>";
         }
-        updateButton = packageInfo.updateAvailable ? "<a class='button details-action-button' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update to " + Common.escapeHtml(packageInfo.latestVersion) + "</a>" : "";
+        updateButton = activeViewName() === "updates" && packageInfo.updateAvailable ? "<a class='button button-success details-action-button' href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>" + icon("download") + "Update to " + Common.escapeHtml(packageInfo.latestVersion) + "</a>" : "";
         actionMarkup = packageInfo.isRemote ?
             "<a class='button button-primary details-action-button' href='maxpkg://manager/install/" + Common.encode(packageInfo.guid) + "' data-busy='Installing package...'>" + icon("download") + "Install</a>" :
             "<a class='button button-primary details-action-button' href='maxpkg://manager/run/" + Common.encode(packageInfo.guid) + "' data-busy='Starting package...'>" + icon("play") + "Run</a>" +
@@ -1394,6 +1395,13 @@
     function renderStatus() {
         var packageLabel = currentState.packages.length === 1 ? " package" : " packages";
         var updateLabel = currentState.updateCount === 1 ? " update" : " updates";
+        var discoverState = currentState.discover || {};
+        var totalPackages = discoverState.totalPackages;
+        var hasCatalogTotal = discoverState.available && typeof totalPackages === "number" && isFinite(totalPackages) && totalPackages >= 0 && Math.floor(totalPackages) === totalPackages;
+        var discoverTabCount = Common.byId("discoverTabCount");
+        discoverTabCount.innerHTML = hasCatalogTotal ? compactStatNumber(totalPackages) : "";
+        discoverTabCount.title = hasCatalogTotal ? totalPackages + (totalPackages === 1 ? " public package" : " public packages") : "";
+        Common.toggleClass(discoverTabCount, "is-hidden", !hasCatalogTotal);
         Common.byId("runtimeVersion").innerHTML = "Runtime " + Common.escapeHtml(currentState.runtimeVersion);
         Common.byId("footerVersion").innerHTML = "Runtime " + Common.escapeHtml(currentState.runtimeVersion);
         Common.byId("aboutVersion").innerHTML = "MaxPkg Runtime " + Common.escapeHtml(currentState.runtimeVersion);
@@ -1416,12 +1424,15 @@
     }
 
     function updateInstalledToolsState() {
+        var isUpdatesView = activeFilter === "updates";
         var hasActiveFilter = toolbarVisibilityFilter !== "all";
         var hasCustomSort = activeSort !== "toolbar";
         window.MaxPkgDropdown.setSelectValue(Common.byId("toolbarFilterSelect"), toolbarVisibilityFilter);
         window.MaxPkgDropdown.setSelectValue(Common.byId("sortSelect"), activeSort);
         Common.toggleClass(Common.byId("toolbarFilterControl"), "has-active-filter", hasActiveFilter);
         Common.toggleClass(Common.byId("clearToolbarFilterButton"), "is-hidden", !hasActiveFilter);
+        Common.toggleClass(Common.byId("sortControl"), "is-hidden", isUpdatesView);
+        Common.toggleClass(Common.byId("installedTools"), "has-single-tool", isUpdatesView);
         Common.toggleClass(Common.byId("sortControl"), "has-custom-sort", hasCustomSort);
         Common.toggleClass(Common.byId("clearSortButton"), "is-hidden", !hasCustomSort);
     }
@@ -1488,7 +1499,9 @@
         } else {
             showTab(activeTab);
         }
-        Common.addClass(Common.byId("busyShade"), "is-hidden");
+        if (!packageUpdateInProgress) {
+            Common.addClass(Common.byId("busyShade"), "is-hidden");
+        }
     }
 
     function readRuntimeState() {
@@ -1511,7 +1524,9 @@
             }
         } catch (parseError) {
             showNotification("Manager could not read Runtime state.", "error");
-            Common.addClass(Common.byId("busyShade"), "is-hidden");
+            if (!packageUpdateInProgress) {
+                Common.addClass(Common.byId("busyShade"), "is-hidden");
+            }
         }
     }
 
@@ -1558,8 +1573,8 @@
         }
         toolbarLabel = packageInfo.toolbarVisible ? "Hide from Toolbar" : "Show in Toolbar";
         menuHtml = "<a href='maxpkg://manager/run/" + Common.encode(packageInfo.guid) + "' data-busy='Starting package...'>Run</a>";
-        if (packageInfo.updateAvailable) {
-            menuHtml += "<a href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>Update</a>";
+        if (activeViewName() === "updates" && packageInfo.updateAvailable) {
+            menuHtml += "<a href='maxpkg://manager/update/" + Common.encode(packageInfo.guid) + "' data-busy='Updating package...'>Update to " + Common.escapeHtml(packageInfo.latestVersion) + "</a>";
         }
         menuHtml += "<button type='button' data-action='details' data-guid='" + Common.escapeHtml(packageInfo.guid) + "'>Details</button>";
         if (developerModeEnabled) {
@@ -1870,6 +1885,25 @@
         Common.toggleClass(Common.byId("runtimeUninstallConfirmation"), "is-hidden", !isVisible);
     }
 
+    function finishPackageUpdate() {
+        packageUpdateInProgress = false;
+        Common.addClass(Common.byId("busyShade"), "is-hidden");
+    }
+
+    function startPackageUpdate(commandUrl) {
+        packageUpdateInProgress = true;
+        window.MaxPkgDropdown.close();
+        // Let IE paint the busy overlay before the synchronous Runtime command starts.
+        window.setTimeout(function () {
+            try {
+                window.location.href = commandUrl;
+            } catch (navigationError) {
+                finishPackageUpdate();
+                showNotification("Package update could not be started.", "error");
+            }
+        }, 50);
+    }
+
     function handleDocumentClick(eventObject) {
         var sourceElement = Common.eventTarget(eventObject);
         var actionElement = Common.closestWithAttribute(sourceElement, "data-action");
@@ -1877,9 +1911,20 @@
         var settingsPageElement = Common.closestWithAttribute(sourceElement, "data-settings-page");
         var busyElement = Common.closestWithAttribute(sourceElement, "data-busy");
         var actionName;
+        var commandUrl;
+        if (packageUpdateInProgress) {
+            Common.preventDefault(eventObject);
+            return;
+        }
         if (busyElement) {
             Common.byId("busyMessage").innerHTML = Common.escapeHtml(busyElement.getAttribute("data-busy"));
             Common.removeClass(Common.byId("busyShade"), "is-hidden");
+            commandUrl = busyElement.getAttribute("href") || "";
+            if (/^maxpkg:\/\/manager\/(update\/|update-all(?:[?#]|$))/i.test(commandUrl)) {
+                Common.preventDefault(eventObject);
+                startPackageUpdate(commandUrl);
+                return;
+            }
         }
         if (tabElement) {
             showTab(tabElement.getAttribute("data-tab"), tabElement.getAttribute("data-filter"));
@@ -2048,6 +2093,9 @@
             saveManagerView();
         });
         window.MaxPkgDropdown.bindSelect(Common.byId("sortSelect"), function (selectedValue) {
+            if (activeFilter === "updates") {
+                return;
+            }
             activeSort = selectedValue;
             updateInstalledToolsState();
             renderInstalled();
@@ -2100,6 +2148,17 @@
         window.location.href = "maxpkg://manager/ready";
     }
 
+    window.openDiscoverPage = function () {
+        if (!Common.hasClass(Common.byId("settingsShade"), "is-hidden")) {
+            hideSettingsDialog();
+        }
+        showTab("discover");
+        Common.byId("searchInput").focus();
+    };
+    window.openToolbarSettings = function () {
+        showSettingsPage("toolbar");
+    };
+    window.finishPackageUpdate = finishPackageUpdate;
     window.setRuntimeState = readRuntimeState;
     window.showRuntimeNotification = readRuntimeNotification;
 

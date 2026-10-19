@@ -59,6 +59,8 @@
         rolloutRef,
         dialogOpen = false,
         browserReady = false,
+        pendingTab = "",
+        pendingSettingsPage = "",
         focusTimer = undefined,
         imageDownloadTimer = undefined,
         runtimeUninstallTimer = undefined,
@@ -393,7 +395,7 @@
 
         fn discoverJson = (
             local responseInfo = owner.catalogState
-            if (responseInfo == undefined) do return "{\"available\":false,\"message\":\"Load the catalog to browse packages.\",\"packages\":[],\"page\":1,\"pageSize\":24,\"total\":0,\"totalPages\":0,\"featured\":false,\"collection\":\"\",\"category\":\"\"}"
+            if (responseInfo == undefined) do return "{\"available\":false,\"message\":\"Load the catalog to browse packages.\",\"packages\":[],\"page\":1,\"pageSize\":24,\"total\":0,\"totalPages\":0,\"totalPackages\":null,\"featured\":false,\"collection\":\"\",\"category\":\"\"}"
             local discoverContent = "{"
             discoverContent += "\"available\":" + (boolJson responseInfo.success) + ","
             discoverContent += "\"message\":" + (utils.jsonString responseInfo.errorMessage) + ","
@@ -404,6 +406,7 @@
             discoverContent += "\"pageSize\":" + (responseInfo.pageSize as string) + ","
             discoverContent += "\"total\":" + (responseInfo.total as string) + ","
             discoverContent += "\"totalPages\":" + (responseInfo.totalPages as string) + ","
+            discoverContent += "\"totalPackages\":" + (if (responseInfo.totalPackages >= 0) then (responseInfo.totalPackages as string) else "null") + ","
             discoverContent += "\"featured\":" + (boolJson responseInfo.featuredOnly) + ","
             discoverContent += "\"collection\":" + (utils.jsonString responseInfo.collectionSlug) + ","
             discoverContent += "\"category\":" + (utils.jsonString responseInfo.categoryFilter)
@@ -515,6 +518,27 @@
         fn refresh = (
             if (owner.settings == undefined) do return false
             return writeBrowserPayload "runtimePayload" (stateJson()) "setRuntimeState"
+        ),
+
+        fn applyPendingNavigation = (
+            if (not dialogOpen or not browserReady) do return true
+            local requestedTab = pendingTab
+            local requestedSettingsPage = pendingSettingsPage
+            pendingTab = ""
+            pendingSettingsPage = ""
+            if (requestedTab != "") do (
+                owner.settings.managerLastTab = requestedTab
+                if (not (owner.saveSettings())) do logger.logWarning "manager" "Could not save the requested Manager tab."
+            )
+            if (not (refresh())) do return false
+            try (
+                if (requestedTab == "discover") do rolloutRef.browser.Document.InvokeScript "openDiscoverPage"
+                if (requestedSettingsPage == "toolbar") do rolloutRef.browser.Document.InvokeScript "openToolbarSettings"
+                return true
+            ) catch (
+                logger.logError "manager" ("Could not navigate Manager: " + getCurrentException())
+                return false
+            )
         ),
 
         fn handleImageDownloadTimerTick eventSender eventArgs = (
@@ -700,7 +724,7 @@
                     owner.settings.managerLastTab = "discover"
                     if (not (owner.saveSettings())) do logger.logWarning "manager" "Could not save the first Manager opening state."
                 )
-                return refresh()
+                return applyPendingNavigation()
             )
             if (commandPath == "refresh") do (
                 owner.scan()
@@ -864,6 +888,17 @@
             return isSuccess
         ),
 
+        fn finishPackageUpdate = (
+            if (not dialogOpen or not browserReady) do return true
+            try (
+                rolloutRef.browser.Document.InvokeScript "finishPackageUpdate"
+                return true
+            ) catch (
+                logger.logWarning "manager" ("Could not dismiss the package update status: " + getCurrentException())
+                return false
+            )
+        ),
+
         fn onNavigate navigationArgs = (
             local navigationUrl = ""
             try (
@@ -879,11 +914,15 @@
             local queryIndex = findString commandText "?"
             local commandPath = if (queryIndex == undefined) then commandText else substring commandText 1 (queryIndex - 1)
             local queryString = if (queryIndex == undefined) then "" else substring commandText (queryIndex + 1) (commandText.count - queryIndex)
+            local isPackageUpdate = commandPath == "update-all" or (matchPattern commandPath pattern: "update/*" ignoreCase: true)
             try (
-                return handleCommand commandPath queryString
+                local isSuccess = handleCommand commandPath queryString
+                if (isPackageUpdate) do finishPackageUpdate()
+                return isSuccess
             ) catch (
                 logger.logError "manager" ("Command failed (" + commandPath + "): " + getCurrentException())
                 notify ("Manager action failed: " + commandPath) notificationType: "error"
+                if (isPackageUpdate) do finishPackageUpdate()
                 refresh()
                 return false
             )
@@ -987,8 +1026,15 @@
             return true
         ),
 
-        fn showManager = (
-            destroyManagerDialog()
+        fn showManager tab: "" settingsPage: "" = (
+            if (tab != "" and tab != "discover" and tab != "installed") do return false
+            if (settingsPage != "" and settingsPage != "toolbar") do return false
+            pendingTab = tab
+            pendingSettingsPage = settingsPage
+            if (dialogOpen) do (
+                windows.setFocus rolloutRef.hwnd
+                return applyPendingNavigation()
+            )
             dialogOpen = true
             try (
                 local screenClass = dotNetClass "System.Windows.Forms.Screen"

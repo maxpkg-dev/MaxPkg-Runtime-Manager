@@ -73,6 +73,7 @@
     uiScaleModule.logger = loggerModule
     local toolbarModule = fileIn (coreRoot + @"toolbar.ms")
     local managerModule = fileIn (runtimeRoot + @"ui\manager\manager.ms")
+    local onboardingModule = fileIn (runtimeRoot + @"ui\onboarding\onboarding.ms")
     local installerModule = fileIn (coreRoot + @"installer.ms")
     local uninstallerModule = fileIn (coreRoot + @"uninstaller.ms")
     local updaterModule = fileIn (coreRoot + @"updater.ms")
@@ -189,6 +190,7 @@
         fn shutdown = (
             runtimeAutoUpdatePending = false
             updaterModule.shutdown()
+            local isOnboardingClosed = onboardingModule.shutdown()
             local isManagerClosed = managerModule.shutdownManager()
             local isToolbarClosed = toolbarModule.shutdownToolbar()
             imageCacheModule.shutdown()
@@ -202,11 +204,11 @@
             settings = undefined
             operation = undefined
             operationModule.current = undefined
-            if (isManagerClosed and isToolbarClosed) then
+            if (isManagerClosed and isToolbarClosed and isOnboardingClosed) then
                 loggerModule.logInfo "shutdown" "MaxPkg Runtime UI was released"
             else
                 loggerModule.logError "shutdown" "MaxPkg Runtime UI could not be fully released"
-            return isManagerClosed and isToolbarClosed
+            return isManagerClosed and isToolbarClosed and isOnboardingClosed
         ),
 
         fn isStarted = (
@@ -266,8 +268,12 @@
             )
         ),
 
-        fn openManager = (
-            return managerModule.showManager()
+        fn openManager tab: "" settingsPage: "" = (
+            return managerModule.showManager tab: tab settingsPage: settingsPage
+        ),
+
+        fn showOnboarding = (
+            return onboardingModule.showOnboarding()
         ),
 
         fn getPackages = (
@@ -308,7 +314,9 @@
 
         fn saveSettings = (
             if (settings == undefined) do return false
-            return settingsModule.save()
+            local isSaved = settingsModule.save()
+            if (isSaved) do onboardingModule.refresh()
+            return isSaved
         ),
 
         fn getStatus = (
@@ -535,6 +543,14 @@
     managerModule.logger = loggerModule
     managerModule.http = httpModule
     managerModule.imageCache = imageCacheModule
+    onboardingModule.initialize MaxPkg runtimeRoot onboardingModule
+    onboardingModule.manager = managerModule
+    onboardingModule.themes = themesModule
+    onboardingModule.uiScale = uiScaleModule
+    onboardingModule.utils = utilsModule
+    onboardingModule.logger = loggerModule
+    onboardingModule.reloadCallback = selfUpdaterModule.reloadRuntime
+    selfUpdaterModule.onboarding = onboardingModule
     operationModule.owner = MaxPkg
     repositoryModule.owner = MaxPkg
     repositoryModule.runtimeRoot = runtimeRoot

@@ -72,6 +72,9 @@ Advanced users can also open it from MAXScript Listener:
 
 ```maxscript
 maxpkg.openManager()
+maxpkg.openManager tab: "discover"
+maxpkg.openManager settingsPage: "toolbar"
+maxpkg.showOnboarding()
 ```
 
 ## Make the toolbar yours
@@ -93,7 +96,19 @@ category, so you can place them where you already keep your favorite tools.
 Use `Check Updates` whenever you want to look for new versions. MaxPkg shows
 which tools can be updated and keeps the process in one place.
 
-Automatic update checks can be adjusted in `Settings > Updates`.
+After installing Runtime, the welcome window opens the catalog and toolbar
+settings and lets you choose automatic or manual script updates. It stays open
+until you click Close or the window close button. Its appearance follows the
+Manager theme.
+
+Automatically checks for and installs compatible script updates during the
+existing startup checks, using the configured interval. Manually disables both
+automatic checks and installation. Choosing a mode saves it immediately and does
+not start an installation. Closing without choosing preserves your settings.
+Runtime self-updates keep their separate preference; a pending Runtime reload
+waits until you close the welcome window.
+
+Update preferences can also be adjusted in `Settings > Updates`.
 
 Already installed scripts remain available when you are offline.
 

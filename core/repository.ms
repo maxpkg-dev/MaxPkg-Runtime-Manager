@@ -108,6 +108,7 @@
         pageSize = 24,
         total = 0,
         totalPages = 0,
+        totalPackages = -1,
         featuredOnly = false,
         collectionSlug = "",
         categoryFilter = ""
@@ -140,6 +141,11 @@
         fn findSection responseSections sectionName = (
             for responseSection in responseSections where (toLower responseSection) == (toLower sectionName) do return responseSection
             return ""
+        ),
+
+        fn readMetadata apiResponseFilePath metadataSection keys defaultValue: "" = (
+            local fallbackContent = ini.readAny apiResponseFilePath "meta" keys defaultValue: defaultValue
+            return ini.readAny apiResponseFilePath metadataSection keys defaultValue: fallbackContent
         ),
 
         fn commonFormFields channelName = (
@@ -353,10 +359,12 @@
             local metadataSection = findSection responseSections "catalog"
             if (metadataSection == "") do metadataSection = findSection responseSections "meta"
             if (metadataSection == "") do metadataSection = "catalog"
-            responseInfo.page = integerValue (ini.read apiResponseFilePath metadataSection "Page" defaultValue: "1") 1
-            responseInfo.pageSize = integerValue (ini.read apiResponseFilePath metadataSection "PageSize" defaultValue: "24") 24
-            responseInfo.total = integerValue (ini.readAny apiResponseFilePath metadataSection #("Total", "TotalItems", "Count") defaultValue: (responseInfo.packages.count as string)) responseInfo.packages.count
-            responseInfo.totalPages = integerValue (ini.read apiResponseFilePath metadataSection "TotalPages" defaultValue: "0") 0
+            responseInfo.page = integerValue (readMetadata apiResponseFilePath metadataSection #("Page") defaultValue: "1") 1
+            responseInfo.pageSize = integerValue (readMetadata apiResponseFilePath metadataSection #("PageSize") defaultValue: "24") 24
+            responseInfo.total = integerValue (readMetadata apiResponseFilePath metadataSection #("Total", "TotalItems", "Count") defaultValue: (responseInfo.packages.count as string)) responseInfo.packages.count
+            responseInfo.totalPages = integerValue (readMetadata apiResponseFilePath metadataSection #("TotalPages") defaultValue: "0") 0
+            local catalogPackageCount = integerValue (ini.read apiResponseFilePath metadataSection "TotalPackages" defaultValue: "-1") -1
+            if (catalogPackageCount != undefined and catalogPackageCount >= 0) do responseInfo.totalPackages = catalogPackageCount
             if (responseInfo.packages.count > 0) do responseInfo.packageInfo = responseInfo.packages[1]
             responseInfo.success = true
             return responseInfo

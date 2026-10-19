@@ -46,6 +46,19 @@
     color: {{textStrong}};
 }
 
+.button-success {
+    border-color: rgba(40, 167, 69, .8);
+    background: rgba(40, 167, 69, .22);
+    color: {{textStrong}};
+}
+
+.button-success:hover,
+.button-success:focus {
+    border-color: #34c759;
+    background: rgba(40, 167, 69, .36);
+    color: {{textStrong}};
+}
+
 .button-danger {
     border-color: {{dangerBorder}};
     background: {{dangerSurface}};

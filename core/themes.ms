@@ -227,6 +227,11 @@
             return renderTemplateFiles "manager" requestedThemeId (managerTemplatePaths())
         ),
 
+        fn renderOnboardingCss requestedThemeId = (
+            local templatePaths = #(@"ui\common\css\variables.css", @"ui\common\css\layout.css", @"ui\common\css\typography.css", @"ui\common\css\buttons.css", @"ui\onboarding\onboarding.css")
+            return renderTemplateFiles "manager" requestedThemeId templatePaths
+        ),
+
         fn renderToolbarCss requestedThemeId = (
             return renderTemplateFiles "toolbar" requestedThemeId (toolbarTemplatePaths())
         ),

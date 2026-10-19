@@ -11,6 +11,12 @@
         updateResponse = undefined
     )
 
+    struct MaxPkgUpdateTargetData (
+        packageGuid = "",
+        targetVersion = "",
+        downloadUrl = ""
+    )
+
     struct MaxPkgUpdaterModule (
         owner,
         operations,
@@ -24,6 +30,7 @@
         backgroundCheckInfo,
         backgroundRequestVersions = #(),
         showCompletionNotification = false,
+        automaticInstallRequested = false,
         isStopping = false,
 
         fn versionParts versionContent = (
@@ -168,6 +175,54 @@
             return checkInfo.availableUpdates
         ),
 
+        fn automaticInstallEnabled = (
+            return not isStopping and owner != undefined and owner.settings != undefined and owner.settings.autoCheckPackages and owner.settings.downloadUpdatesAutomatically
+        ),
+
+        fn applyAvailableUpdates availableUpdates automatic: false operationAlreadyStarted: false = (
+            if (availableUpdates.count == 0) do return (if (operationAlreadyStarted) then operations.finish() else true)
+            if (automatic and not (automaticInstallEnabled())) do return false
+            local updateTargets = #()
+            for packageInfo in availableUpdates do (
+                append updateTargets (MaxPkgUpdateTargetData packageGuid: packageInfo.guid targetVersion: packageInfo.latestVersion downloadUrl: packageInfo.downloadUrl)
+            )
+            if (not operationAlreadyStarted and not (operations.begin (if (automatic) then "automaticUpdate" else "updateAll"))) do return false
+            local isSuccess = true
+            try (
+                for targetInfo in updateTargets while isSuccess do (
+                    if (automatic and not (automaticInstallEnabled())) then (
+                        isSuccess = false
+                    ) else (
+                        local installedPackageInfo = api.resolve owner.packages targetInfo.packageGuid
+                        -- Ignore packages removed or already updated since the check began.
+                        if (installedPackageInfo != undefined and newer targetInfo.targetVersion installedPackageInfo.version) do (
+                            isSuccess = installer.installSource targetInfo.downloadUrl
+                            owner.scan()
+                            installedPackageInfo = api.resolve owner.packages targetInfo.packageGuid
+                            if (installedPackageInfo == undefined) then (
+                                isSuccess = false
+                            ) else if (newer targetInfo.targetVersion installedPackageInfo.version) then (
+                                isSuccess = false
+                            )
+                            if (not isSuccess) do logger.logError "updater" ("Could not install or verify update for " + targetInfo.packageGuid)
+                        )
+                    )
+                )
+            ) catch (
+                logger.logError "updater" ("Package update failed: " + getCurrentException())
+                isSuccess = false
+            )
+            try (
+                owner.scan()
+                owner.rebuildToolbar()
+                manager.refresh()
+            ) catch (
+                logger.logWarning "updater" ("Could not refresh after package updates: " + getCurrentException())
+                isSuccess = false
+            )
+            return operations.finish success: isSuccess
+        ),
+
         fn backgroundCheckDoWork eventSender eventArgs = (
             backgroundCheckInfo = fetchUpdateCheck backgroundRequestVersions
             eventArgs.Result = backgroundCheckInfo.isSuccess
@@ -176,6 +231,8 @@
 
         fn backgroundCheckCompleted eventSender eventArgs = (
             local completedCheckInfo = backgroundCheckInfo
+            local shouldInstallAutomatically = automaticInstallRequested
+            automaticInstallRequested = false
             local isCompleted = true
             backgroundWorker = undefined
             backgroundCheckInfo = undefined
@@ -199,6 +256,11 @@
                         manager.refresh()
                     ) catch (
                         logger.logWarning "updater" ("Manager refresh failed: " + getCurrentException())
+                    )
+                    if (shouldInstallAutomatically and automaticInstallEnabled() and completedCheckInfo.availableUpdates.count > 0) do (
+                        if (not (applyAvailableUpdates completedCheckInfo.availableUpdates automatic: true)) do (
+                            logger.logWarning "updater" "Automatic updates were deferred, cancelled, or failed; no immediate retry will be made."
+                        )
                     )
                     if (showCompletionNotification) do manager.notify ((completedCheckInfo.availableUpdates.count as string) + " update(s) available.")
                 )
@@ -224,6 +286,7 @@
                 backgroundCheckInfo = undefined
                 backgroundRequestVersions = packageVersions()
                 showCompletionNotification = notifyWhenComplete
+                automaticInstallRequested = not forceCheck and automaticInstallEnabled()
                 backgroundWorker = dotNetObject "CSharpUtilities.SynchronizingBackgroundWorker"
                 backgroundWorker.WorkerSupportsCancellation = true
                 dotNet.addEventHandler backgroundWorker "DoWork" backgroundCheckDoWork
@@ -263,37 +326,25 @@
             backgroundWorker = undefined
             backgroundCheckInfo = undefined
             backgroundRequestVersions = #()
+            automaticInstallRequested = false
             showCompletionNotification = false
             return true
         ),
 
         fn updateAll = (
             if (not (operations.begin "updateAll")) do return false
-            local isSuccess = false
             try (
-                local availableUpdates = checkUpdates()
-                isSuccess = true
-                for packageInfo in availableUpdates while isSuccess do isSuccess = installer.installSource packageInfo.downloadUrl
-                owner.scan()
-                for updatePackageInfo in availableUpdates while isSuccess do (
-                    local installedPackageInfo = api.resolve owner.packages updatePackageInfo.guid
-                    if (installedPackageInfo == undefined) then
-                        isSuccess = false
-                    else if (newer updatePackageInfo.latestVersion installedPackageInfo.version) then
-                        isSuccess = false
+                local checkInfo = performUpdateCheck()
+                if (not checkInfo.isSuccess) do (
+                    logger.logError "updater" checkInfo.errorMessage
+                    return operations.finish success: false
                 )
-                if (not isSuccess) do logger.logError "updater" "One or more updates could not be verified after installation."
-                owner.rebuildToolbar()
-                try (
-                    manager.refresh()
-                ) catch (
-                    logger.logWarning "updater" ("Manager refresh failed: " + getCurrentException())
-                )
+                saveUpdateCache checkInfo.availableUpdates
+                return applyAvailableUpdates checkInfo.availableUpdates operationAlreadyStarted: true
             ) catch (
-                logger.logError "updater" ("Update-all operation failed: " + getCurrentException())
-                isSuccess = false
+                logger.logError "updater" ("Update-all failed: " + getCurrentException())
+                return operations.finish success: false
             )
-            return operations.finish success: isSuccess
         )
     )
 

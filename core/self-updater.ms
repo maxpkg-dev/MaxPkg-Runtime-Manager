@@ -16,6 +16,7 @@
 
     struct MaxPkgSelfUpdaterModule (
         owner,
+        onboarding,
         operations,
         installer,
         runtimeRoot,
@@ -178,6 +179,11 @@
         ),
 
         fn reloadRuntime = (
+            if (onboarding != undefined and onboarding.dialogOpen) do (
+                onboarding.reloadWhenClosed = true
+                logger.logInfo "self-updater" "Runtime reload deferred until onboarding is closed."
+                return true
+            )
             local startupFile = runtimeRoot + "startup.ms"
             if (not (doesFileExist startupFile)) do return false
             try (
