@@ -1,5 +1,10 @@
 # MaxPkg Runtime Manager
 
+> [!WARNING]
+> **This version is no longer supported.** MaxPkg has moved to a new repository:
+> **[MaxPkg-Runtime-Manager-Qt](https://github.com/maxpkg-dev/MaxPkg-Runtime-Manager-Qt)**
+> (3ds Max 2022 and newer).
+
 ## Your 3ds Max scripts, all in one place
 
 MaxPkg makes working with scripts feel simple. Find the tool you need, install
