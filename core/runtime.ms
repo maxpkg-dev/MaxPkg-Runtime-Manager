@@ -78,6 +78,7 @@
     local uninstallerModule = fileIn (coreRoot + @"uninstaller.ms")
     local updaterModule = fileIn (coreRoot + @"updater.ms")
     local selfUpdaterModule = fileIn (coreRoot + @"self-updater.ms")
+    local manager2UpgradeModule = fileIn (coreRoot + @"manager2-upgrade.ms")
 
     struct MaxPkgRuntimeStatusData (
         isStarted = false,
@@ -588,6 +589,13 @@
     selfUpdaterModule.logger = loggerModule
     selfUpdaterModule.utils = utilsModule
     selfUpdaterModule.http = httpModule
+    selfUpdaterModule.manager2Upgrade = manager2UpgradeModule
+    manager2UpgradeModule.operations = operationModule
+    manager2UpgradeModule.logger = loggerModule
+    manager2UpgradeModule.utils = utilsModule
+    manager2UpgradeModule.ini = iniModule
+    manager2UpgradeModule.http = httpModule
+    manager2UpgradeModule.runtimeRoot = runtimeRoot
 
     MaxPkg
 )

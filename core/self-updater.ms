@@ -11,6 +11,7 @@
         updateAvailable = false,
         installed = false,
         latestVersion = "",
+        manifestContent = "",
         errorMessage = ""
     )
 
@@ -23,6 +24,7 @@
         logger,
         utils,
         http,
+        manager2Upgrade,
         latestVersionUrl = "https://raw.githubusercontent.com/maxpkg-dev/MaxPkg-Runtime-Manager/main/version.ini",
         runtimeArchiveUrl = "https://github.com/maxpkg-dev/MaxPkg-Runtime-Manager/archive/refs/heads/main.zip",
         autoUpdateWorker = undefined,
@@ -204,6 +206,7 @@
             local extractRoot = tempRoot + @"extract\"
             local isSuccess = false
             try (
+                if (matchPattern (toLower runtimeRoot) pattern: "*maxpkg-runtime-manager-qt*") do throw "Runtime 1.x updates never write into a Manager 2.0 folder."
                 makeDir tempRoot all: true
                 if (not (downloadFile runtimeArchiveUrl archiveFilePath)) do throw "Runtime archive download failed."
                 if (not (extractArchive archiveFilePath extractRoot)) do throw "Runtime archive extraction failed."
@@ -252,7 +255,9 @@
                 if (argumentParts.count >= 1) do currentVersion = argumentParts[1]
                 if (argumentParts.count >= 2) do currentChannel = argumentParts[2]
 
-                local latestInfo = latestRuntimeInfo()
+                resultInfo.manifestContent = downloadString latestVersionUrl
+                local latestInfo = #("", "")
+                if (resultInfo.manifestContent != "") do latestInfo = runtimeInfoFromContent resultInfo.manifestContent
                 resultInfo.checked = true
                 resultInfo.latestVersion = latestInfo[1]
                 local latestChannel = latestInfo[2]
@@ -285,9 +290,24 @@
             return true
         ),
 
+        fn offerManager2Upgrade manifestContent = (
+            if (manager2Upgrade == undefined or manifestContent == "") do return false
+            if (onboarding != undefined and onboarding.dialogOpen) do (
+                logger.logInfo "self-updater" "Manager 2.0 offer deferred until onboarding is closed."
+                return false
+            )
+            try (
+                return manager2Upgrade.consider manifestContent
+            ) catch (
+                logger.logError "self-updater" ("Manager 2.0 offer failed: " + getCurrentException())
+                return false
+            )
+        ),
+
         fn autoUpdateCompleted sender eventArgs = (
             local isOperationSuccess = false
             local shouldReload = false
+            local manifestContent = ""
             try (
                 if (eventArgs.Cancelled == true) then (
                     logger.logInfo "self-updater" "Background self-update was cancelled."
@@ -303,6 +323,7 @@
                     logger.logWarning "self-updater" autoUpdateResult.errorMessage
                 ) else (
                     isOperationSuccess = true
+                    manifestContent = autoUpdateResult.manifestContent
                 )
             ) catch (
                 logger.logError "self-updater" ("Background self-update completion failed: " + getCurrentException())
@@ -314,6 +335,7 @@
             if (shouldReload) do (
                 reloadRuntime()
             )
+            if (manifestContent != "") do offerManager2Upgrade manifestContent
 
             return isOperationSuccess
         ),

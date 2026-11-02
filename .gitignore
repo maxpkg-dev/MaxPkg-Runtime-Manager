@@ -6,3 +6,4 @@ data/themes/
 logs/*.log
 tests/*.log
 /dist/
+data/manager2-upgrade.ini

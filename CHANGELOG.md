@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1
+
+- Added: On 3ds Max 2022 and newer, MaxPkg can offer an optional one-time upgrade to Manager 2.0. Nothing changes until you choose Upgrade now.
+- Added: The upgrade verifies the download, backs up the current Runtime, and restores it automatically if Manager 2.0 does not start, even after a 3ds Max restart.
+- Changed: 3ds Max versions older than 2022 are never offered the upgrade and keep receiving 1.x updates.
+
 ## 1.2.0
 
 - Added: A themed welcome window after installation guides you to Discover, toolbar customization, and your preferred script update mode.
